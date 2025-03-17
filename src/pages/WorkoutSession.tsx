@@ -1,20 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getWorkoutById, updateWorkout } from '@/lib/workouts';
 import { Workout, WorkoutExercise, ExerciseSet } from '@/lib/types';
-import { getCategoryById, getCategoryByIdSync } from '@/lib/categories';
+import { getCategoryById } from '@/lib/categories';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { Clock, CheckCircle2, Award, ArrowLeft, Save, Dumbbell, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import ExerciseWorkoutCard from '@/components/workout/ExerciseWorkoutCard';
 
 const WorkoutSession = () => {
   const { id } = useParams();
@@ -243,22 +240,6 @@ const WorkoutSession = () => {
     });
   };
 
-  const getCategoryDisplay = (categoryId: string) => {
-    if (exerciseCategories[categoryId]) {
-      return (
-        <span className={cn('text-sm px-2 py-1 rounded-full', exerciseCategories[categoryId].color)}>
-          {exerciseCategories[categoryId].name}
-        </span>
-      );
-    }
-    
-    return (
-      <span className="text-sm px-2 py-1 rounded-full bg-gray-100 text-gray-800">
-        Loading...
-      </span>
-    );
-  };
-
   if (loading) {
     return (
       <PageContainer>
@@ -368,104 +349,17 @@ const WorkoutSession = () => {
 
       <div className="space-y-8 mb-8">
         {workout.exercises.map((exerciseItem, exerciseIndex) => (
-          <Card 
-            key={exerciseItem.id} 
-            id={`exercise-${exerciseIndex}`}
-            className={`overflow-hidden transition-all duration-300 ${
-              currentExerciseIndex === exerciseIndex ? 'border-primary ring-2 ring-primary/20' : ''
-            }`}
-          >
-            <div className="bg-muted/30 p-4 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                <div 
-                  className="h-16 w-16 md:h-20 md:w-20 rounded-lg bg-cover bg-center flex-shrink-0" 
-                  style={{ backgroundImage: `url(${exerciseItem.exercise.imageUrl})` }}
-                />
-                
-                <div className="flex-grow">
-                  <h3 className="text-xl font-semibold flex items-center">
-                    {exerciseItem.exercise.name}
-                    {exerciseItem.exercise.category && (
-                      <span className="ml-2">
-                        {getCategoryDisplay(exerciseItem.exercise.category)}
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-muted-foreground mt-1">{exerciseItem.exercise.description}</p>
-                  
-                  <div className="mt-3">
-                    <div className="bg-background rounded-md px-3 py-1 text-sm inline-flex items-center">
-                      <span className="font-medium">{exerciseItem.sets.length} sets</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <CardContent className="p-4 md:p-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="pb-2 text-left font-medium">Set</th>
-                      <th className="pb-2 text-left font-medium">Previous</th>
-                      <th className="pb-2 text-left font-medium">Weight (kg)</th>
-                      <th className="pb-2 text-left font-medium">Target</th>
-                      <th className="pb-2 text-left font-medium">Actual</th>
-                      <th className="pb-2 text-left font-medium">Complete</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {exerciseItem.sets.map((set, setIndex) => (
-                      <tr key={set.id} className="border-b last:border-0">
-                        <td className="py-4">
-                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center font-medium">
-                            {set.setNumber}
-                          </div>
-                        </td>
-                        <td className="py-4 text-muted-foreground">
-                          {set.weight || 0}kg × {set.targetReps}
-                        </td>
-                        <td className="py-4">
-                          <Input
-                            type="number"
-                            value={set.weight || ''}
-                            onChange={(e) => handleWeightChange(exerciseIndex, setIndex, e.target.value)}
-                            className="h-8 w-20"
-                          />
-                        </td>
-                        <td className="py-4 font-medium text-center">
-                          {set.targetReps}
-                        </td>
-                        <td className="py-4">
-                          <Input
-                            type="number"
-                            value={set.actualReps !== undefined ? set.actualReps : ''}
-                            onChange={(e) => handleActualRepsChange(exerciseIndex, setIndex, e.target.value)}
-                            className="h-8 w-20"
-                          />
-                        </td>
-                        <td className="py-4">
-                          <div className="flex justify-center">
-                            <div className={`p-1 rounded-md transition-all ${set.completed ? 'bg-green-100' : ''}`}>
-                              <Checkbox
-                                id={`set-${exerciseIndex}-${setIndex}`}
-                                checked={set.completed}
-                                onCheckedChange={(checked) => 
-                                  handleSetCompletion(exerciseIndex, setIndex, checked as boolean)
-                                }
-                                className="h-6 w-6 data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          <ExerciseWorkoutCard
+            key={exerciseItem.id}
+            exerciseItem={exerciseItem}
+            exerciseIndex={exerciseIndex}
+            currentExerciseIndex={currentExerciseIndex}
+            onSetCompletion={handleSetCompletion}
+            onWeightChange={handleWeightChange}
+            onActualRepsChange={handleActualRepsChange}
+            onNavigateToExercise={handleNavigateToExercise}
+            exerciseCategories={exerciseCategories}
+          />
         ))}
       </div>
 
