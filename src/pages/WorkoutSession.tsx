@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getWorkoutById, updateWorkout } from '@/lib/workouts';
@@ -10,8 +9,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/components/ui/use-toast';
-import { Clock, CheckCircle2, Award, ArrowLeft, Save, Dumbbell, Loader2 } from 'lucide-react';
+import { 
+  Clock, 
+  CheckCircle2, 
+  Award, 
+  ArrowLeft, 
+  Save, 
+  Dumbbell, 
+  Loader2,
+  Layers
+} from 'lucide-react';
 import ExerciseWorkoutCard from '@/components/workout/ExerciseWorkoutCard';
+import ExerciseGroupCard from '@/components/workout/ExerciseGroupCard';
+import { v4 as uuidv4 } from 'uuid';
+
+// Interface for visual grouping of exercises (not stored in database)
+interface ExerciseGroup {
+  id: string;
+  type: 'superset' | 'circuit';
+  exerciseIds: string[];
+}
 
 const WorkoutSession = () => {
   const { id } = useParams();
@@ -24,6 +41,12 @@ const WorkoutSession = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCategories, setExerciseCategories] = useState<Record<string, {name: string, color: string}>>({});
+  
+  // State for exercise grouping (visual only, not stored in DB)
+  const [exerciseGroups, setExerciseGroups] = useState<ExerciseGroup[]>([]);
+  
+  // Track if compact view is enabled
+  const [compactView, setCompactView] = useState(false);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -103,6 +126,55 @@ const WorkoutSession = () => {
       setProgress(calculatedProgress);
     }
   }, [workout]);
+
+  // Helper function to check if an exercise is in a group
+  const isExerciseInGroup = (exerciseId: string): boolean => {
+    return exerciseGroups.some(group => 
+      group.exerciseIds.includes(exerciseId)
+    );
+  };
+  
+  // Get the group that contains an exercise
+  const getExerciseGroup = (exerciseId: string): ExerciseGroup | undefined => {
+    return exerciseGroups.find(group => 
+      group.exerciseIds.includes(exerciseId)
+    );
+  };
+  
+  // Create a new group with selected exercises
+  const createGroup = (exerciseIds: string[], type: 'superset' | 'circuit') => {
+    // Remove exercises from any existing groups first
+    setExerciseGroups(prev => {
+      const updatedGroups = prev.map(group => ({
+        ...group,
+        exerciseIds: group.exerciseIds.filter(id => !exerciseIds.includes(id))
+      })).filter(group => group.exerciseIds.length > 1); // Remove groups with less than 2 exercises
+      
+      // Add the new group
+      return [
+        ...updatedGroups,
+        { id: uuidv4(), type, exerciseIds }
+      ];
+    });
+  };
+  
+  // Remove an exercise from its group
+  const removeFromGroup = (exerciseId: string) => {
+    setExerciseGroups(prev => {
+      const updatedGroups = prev.map(group => {
+        if (group.exerciseIds.includes(exerciseId)) {
+          const updatedIds = group.exerciseIds.filter(id => id !== exerciseId);
+          return {
+            ...group,
+            exerciseIds: updatedIds
+          };
+        }
+        return group;
+      }).filter(group => group.exerciseIds.length > 1); // Remove groups with less than 2 exercises
+      
+      return updatedGroups;
+    });
+  };
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -239,6 +311,66 @@ const WorkoutSession = () => {
       block: 'start'
     });
   };
+  
+  // Create a superset group with selected exercises
+  const handleCreateSuperset = () => {
+    if (!workout || workout.exercises.length < 2) return;
+    
+    // For demo purposes, just group the first two exercises that aren't already in a group
+    const availableExercises = workout.exercises
+      .filter(ex => !isExerciseInGroup(ex.id))
+      .slice(0, 2)
+      .map(ex => ex.id);
+    
+    if (availableExercises.length >= 2) {
+      createGroup(availableExercises, 'superset');
+      toast({
+        title: "Superset Created",
+        description: "Exercises have been grouped as a superset",
+      });
+    } else {
+      toast({
+        title: "Cannot Create Superset",
+        description: "Need at least 2 ungrouped exercises",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Create a circuit group with selected exercises
+  const handleCreateCircuit = () => {
+    if (!workout || workout.exercises.length < 3) return;
+    
+    // For demo purposes, group the first three exercises that aren't already in a group
+    const availableExercises = workout.exercises
+      .filter(ex => !isExerciseInGroup(ex.id))
+      .slice(0, 3)
+      .map(ex => ex.id);
+    
+    if (availableExercises.length >= 3) {
+      createGroup(availableExercises, 'circuit');
+      toast({
+        title: "Circuit Created",
+        description: "Exercises have been grouped as a circuit",
+      });
+    } else {
+      toast({
+        title: "Cannot Create Circuit",
+        description: "Need at least 3 ungrouped exercises",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Create a mapping from exercise ID to index for use in the group component
+  const createExerciseIndexMap = (): Record<string, number> => {
+    if (!workout) return {};
+    
+    return workout.exercises.reduce((map, exercise, index) => {
+      map[exercise.id] = index;
+      return map;
+    }, {} as Record<string, number>);
+  };
 
   if (loading) {
     return (
@@ -264,6 +396,8 @@ const WorkoutSession = () => {
       </PageContainer>
     );
   }
+
+  const exerciseIndexMap = createExerciseIndexMap();
 
   return (
     <PageContainer>
@@ -325,42 +459,101 @@ const WorkoutSession = () => {
         </CardContent>
       </Card>
 
-      <div className="mb-6 overflow-x-auto">
-        <div className="flex space-x-2 pb-2">
-          {workout.exercises.map((exercise, index) => {
-            const exerciseSets = exercise.sets;
-            const completedSets = exerciseSets.filter(set => set.completed).length;
-            const exerciseProgress = Math.round((completedSets / exerciseSets.length) * 100);
-            
-            return (
-              <Button
-                key={exercise.id}
-                variant={currentExerciseIndex === index ? "default" : "outline"}
-                className="whitespace-nowrap"
-                onClick={() => handleNavigateToExercise(index)}
-              >
-                {exercise.exercise.name}
-                {exerciseProgress === 100 && <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />}
-              </Button>
-            );
-          })}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex space-x-2 pb-2">
+            {workout.exercises.map((exercise, index) => {
+              const exerciseSets = exercise.sets;
+              const completedSets = exerciseSets.filter(set => set.completed).length;
+              const exerciseProgress = Math.round((completedSets / exerciseSets.length) * 100);
+              
+              return (
+                <Button
+                  key={exercise.id}
+                  variant={currentExerciseIndex === index ? "default" : "outline"}
+                  className="whitespace-nowrap"
+                  onClick={() => handleNavigateToExercise(index)}
+                >
+                  {exercise.exercise.name}
+                  {exerciseProgress === 100 && <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setCompactView(!compactView)}
+          >
+            {compactView ? "Default View" : "Compact View"}
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleCreateSuperset}
+          >
+            <Layers className="h-4 w-4 mr-2" />
+            Superset
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleCreateCircuit}
+          >
+            <Layers className="h-4 w-4 mr-2" />
+            Circuit
+          </Button>
         </div>
       </div>
 
-      <div className="space-y-8 mb-8">
-        {workout.exercises.map((exerciseItem, exerciseIndex) => (
-          <ExerciseWorkoutCard
-            key={exerciseItem.id}
-            exerciseItem={exerciseItem}
-            exerciseIndex={exerciseIndex}
-            currentExerciseIndex={currentExerciseIndex}
-            onSetCompletion={handleSetCompletion}
-            onWeightChange={handleWeightChange}
-            onActualRepsChange={handleActualRepsChange}
-            onNavigateToExercise={handleNavigateToExercise}
-            exerciseCategories={exerciseCategories}
-          />
-        ))}
+      <div className={compactView ? "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" : "space-y-8 mb-8"}>
+        {/* Render grouped exercises */}
+        {exerciseGroups.map(group => {
+          const groupExercises = workout.exercises.filter(ex => 
+            group.exerciseIds.includes(ex.id)
+          );
+          
+          if (groupExercises.length < 2) return null;
+          
+          return (
+            <ExerciseGroupCard
+              key={group.id}
+              groupType={group.type}
+              exercises={groupExercises}
+              currentExerciseIndex={currentExerciseIndex}
+              exerciseIndexMap={exerciseIndexMap}
+              exerciseCategories={exerciseCategories}
+              onSetCompletion={handleSetCompletion}
+              onWeightChange={handleWeightChange}
+              onActualRepsChange={handleActualRepsChange}
+              onNavigateToExercise={handleNavigateToExercise}
+            />
+          );
+        })}
+        
+        {/* Render ungrouped exercises */}
+        {workout.exercises.map((exerciseItem, exerciseIndex) => {
+          // Skip exercises that are in groups
+          if (isExerciseInGroup(exerciseItem.id)) return null;
+          
+          return (
+            <ExerciseWorkoutCard
+              key={exerciseItem.id}
+              exerciseItem={exerciseItem}
+              exerciseIndex={exerciseIndex}
+              currentExerciseIndex={currentExerciseIndex}
+              onSetCompletion={handleSetCompletion}
+              onWeightChange={handleWeightChange}
+              onActualRepsChange={handleActualRepsChange}
+              onNavigateToExercise={handleNavigateToExercise}
+              exerciseCategories={exerciseCategories}
+              isCompact={compactView}
+            />
+          );
+        })}
       </div>
 
       {progress === 100 && (

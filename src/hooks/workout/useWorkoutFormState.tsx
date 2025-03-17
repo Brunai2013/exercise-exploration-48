@@ -6,6 +6,13 @@ import { Workout } from '@/lib/types';
 import { getWorkoutById } from '@/lib/workouts';
 import { toast } from '@/components/ui/use-toast';
 
+// Interface for exercise grouping (visual only, not stored in database)
+export interface ExerciseGroup {
+  id: string;
+  type: 'superset' | 'circuit';
+  exerciseIds: string[];
+}
+
 export const useWorkoutFormState = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -19,6 +26,9 @@ export const useWorkoutFormState = () => {
     exercises: [],
     completed: false
   });
+  
+  // State for visual exercise grouping (not stored in database)
+  const [exerciseGroups, setExerciseGroups] = useState<ExerciseGroup[]>([]);
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     initialDateParam 
@@ -88,6 +98,36 @@ export const useWorkoutFormState = () => {
     setWorkout(prev => ({ ...prev, [name]: value }));
   };
   
+  // Function to create a new exercise group
+  const createExerciseGroup = (exerciseIds: string[], type: 'superset' | 'circuit') => {
+    const newGroup: ExerciseGroup = {
+      id: `group-${Date.now()}`,
+      type,
+      exerciseIds
+    };
+    
+    setExerciseGroups(prev => [...prev, newGroup]);
+  };
+  
+  // Function to remove an exercise group
+  const removeExerciseGroup = (groupId: string) => {
+    setExerciseGroups(prev => prev.filter(group => group.id !== groupId));
+  };
+  
+  // Function to update an exercise group
+  const updateExerciseGroup = (
+    groupId: string, 
+    updates: Partial<Omit<ExerciseGroup, 'id'>>
+  ) => {
+    setExerciseGroups(prev => 
+      prev.map(group => 
+        group.id === groupId 
+          ? { ...group, ...updates } 
+          : group
+      )
+    );
+  };
+  
   return {
     id,
     workout,
@@ -98,6 +138,12 @@ export const useWorkoutFormState = () => {
     setIsLoading,
     isSaving,
     setIsSaving,
-    handleInputChange
+    handleInputChange,
+    // Exercise grouping functions
+    exerciseGroups,
+    setExerciseGroups,
+    createExerciseGroup,
+    removeExerciseGroup,
+    updateExerciseGroup
   };
 };
