@@ -46,7 +46,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
         <div className="flex items-center">
           <Layers className="h-4 w-4 mr-2" />
           <Badge variant="outline" className="font-semibold">
-            {groupType === 'superset' ? 'Superset' : 'Circuit'}
+            Circuit
           </Badge>
           <span className="ml-2 text-sm text-muted-foreground">
             {progress}% complete
@@ -68,7 +68,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
         )}
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1">
+      <div className="grid grid-cols-2 gap-1 p-1">
         {exercises.map((exercise) => {
           const exerciseIndex = exerciseIndexMap[exercise.id];
           return (
