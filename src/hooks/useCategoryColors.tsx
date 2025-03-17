@@ -31,7 +31,7 @@ export function useCategoryColors() {
       
       return data.map(cat => ({
         ...cat,
-        color: cat.color || 'bg-[#8B5CF6] text-white' // Ensure default color
+        color: cat.color || 'bg-gray-200 text-gray-700' // Ensure default color
       })) as Category[];
     },
     staleTime: 0, // Always consider data stale to force refetch
@@ -66,7 +66,7 @@ export function useCategoryColors() {
   // Get category color by ID with fresh data
   const getCategoryColor = (categoryId: string): string => {
     const category = categories.find(c => c.id === categoryId);
-    return category?.color || 'bg-[#8B5CF6] text-white';
+    return category?.color || 'bg-gray-200 text-gray-700';
   };
   
   // Get full category by ID with fresh data
@@ -101,7 +101,7 @@ export function createCategoryColorMap(categories: Category[]): Record<string, s
   const colorMap: Record<string, string> = {};
   
   categories.forEach(category => {
-    colorMap[category.id] = category.color || 'bg-[#8B5CF6] text-white';
+    colorMap[category.id] = category.color || 'bg-gray-200 text-gray-700';
   });
   
   return colorMap;

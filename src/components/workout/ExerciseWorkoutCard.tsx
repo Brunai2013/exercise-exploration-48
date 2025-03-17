@@ -42,25 +42,18 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   const exerciseProgress = Math.round((completedSets / exerciseSets.length) * 100);
   
   const getCategory = (categoryId?: string) => {
-    if (!categoryId) return { name: 'Uncategorized', color: 'gray' };
-    return exerciseCategories[categoryId] || { name: 'Uncategorized', color: 'gray' };
+    if (!categoryId) return { name: 'Uncategorized', color: 'bg-gray-200 text-gray-700' };
+    return exerciseCategories[categoryId] || { name: 'Uncategorized', color: 'bg-gray-200 text-gray-700' };
   };
   
   const category = getCategory(exerciseItem.exercise.category);
   
-  // Display the badge with the category color
-  const categoryBadgeStyle = {
-    backgroundColor: `${category.color}20`, // 20% opacity
-    color: category.color,
-    borderColor: `${category.color}40` // 40% opacity
-  };
-  
-  // Use category color for card highlight when it's the current exercise
+  // Properly use the category color for card highlight when it's the current exercise
   const cardBorderStyle = exerciseIndex === currentExerciseIndex && !isSelected
-    ? { borderColor: category.color } // Use category color for current exercise
+    ? { borderColor: category.color.startsWith('bg-') ? undefined : category.color } 
     : isSelected 
       ? { borderColor: 'hsl(var(--primary) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.05)' } 
-      : {}; // Default border
+      : {}; 
   
   const handleCardClick = () => {
     if (onSelect) {
@@ -93,7 +86,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               <div>
                 <h4 className={`font-medium ${isCompact ? 'text-sm' : ''}`}>{exerciseItem.exercise.name}</h4>
                 <div className="flex items-center mt-1">
-                  <Badge className="mr-2" style={categoryBadgeStyle}>
+                  <Badge className={`mr-2 ${category.color}`}>
                     {category.name}
                   </Badge>
                   <span className={`text-sm ${exerciseProgress === 100 ? 'text-green-600' : 'text-muted-foreground'}`}>
@@ -159,12 +152,12 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                   <Button
                     variant={set.completed ? "default" : "outline"}
                     size="sm"
-                    className={`w-8 h-7 px-0`}
+                    className={`w-8 h-7 px-0 ${set.completed && !category.color.startsWith('bg-') ? '' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);
                     }}
-                    style={set.completed ? { backgroundColor: category.color } : {}}
+                    style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
                   >
                     {set.completed ? (
                       <Check className="h-3 w-3" />
