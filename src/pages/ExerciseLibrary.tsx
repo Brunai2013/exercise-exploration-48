@@ -37,6 +37,8 @@ const ExerciseLibrary: React.FC = () => {
   } = useExerciseData();
 
   const {
+    categoryMap,
+    categoryColorMap,
     handleAddCategory,
     handleUpdateCategory,
     handleDeleteCategory
