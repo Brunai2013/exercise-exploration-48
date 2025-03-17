@@ -29,14 +29,6 @@ const Calendar = () => {
       <PageHeader 
         title="Calendar" 
         description="Schedule and manage your workout sessions"
-        action={
-          <Link to={`/workout/new?date=${selectedDateString}`}>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              <span>Add Workout</span>
-            </Button>
-          </Link>
-        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
