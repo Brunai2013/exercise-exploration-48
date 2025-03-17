@@ -6,13 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -87,64 +80,29 @@ const ExerciseSearch: React.FC<ExerciseSearchProps> = ({
             )}
           </div>
           
-          {/* Category filters - Redesigned */}
-          <div className="mb-3 flex items-center gap-2">
-            <Button
-              variant={!selectedCategory ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleCategoryChange(null)}
-              className="rounded-full"
-            >
-              All
-            </Button>
-            
-            {/* Mobile category filter with popover */}
-            <div className="block md:hidden">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="rounded-full">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Categories
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64">
-                  <div className="grid grid-cols-2 gap-1">
-                    {categories.map((category) => (
-                      <Button
-                        key={category.id}
-                        variant={selectedCategory === category.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleCategoryChange(category.id)}
-                        className="rounded-full text-xs justify-start"
-                      >
-                        {category.name}
-                      </Button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            {/* Desktop category filter in carousel */}
-            <div className="hidden md:block w-full">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {categories.map((category) => (
-                    <CarouselItem key={category.id} className="basis-auto">
-                      <Button
-                        variant={selectedCategory === category.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleCategoryChange(category.id)}
-                        className="rounded-full whitespace-nowrap"
-                      >
-                        {category.name}
-                      </Button>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-0" />
-                <CarouselNext className="right-0" />
-              </Carousel>
+          {/* Category filters - Grid layout */}
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <Button
+                variant={!selectedCategory ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleCategoryChange(null)}
+                className="rounded-full"
+              >
+                All
+              </Button>
+              
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleCategoryChange(category.id)}
+                  className="rounded-full whitespace-nowrap"
+                >
+                  {category.name}
+                </Button>
+              ))}
             </div>
           </div>
           
@@ -178,7 +136,7 @@ const ExerciseSearch: React.FC<ExerciseSearchProps> = ({
                     onClick={() => onExerciseAdd(exercise)}
                   >
                     <div 
-                      className="h-16 w-16 rounded-md bg-cover bg-center mr-3" 
+                      className="h-20 w-20 rounded-md bg-cover bg-center mr-3" 
                       style={{ backgroundImage: `url(${exercise.imageUrl})` }}
                     />
                     <div className="flex-1">
