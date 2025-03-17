@@ -74,12 +74,16 @@ const WorkoutSession = () => {
             const categories: Record<string, {name: string, color: string}> = {};
             for (const exercise of initializedWorkout.exercises) {
               if (exercise.exercise.category) {
-                const category = await getCategoryById(exercise.exercise.category);
-                if (category) {
-                  categories[exercise.exercise.category] = {
-                    name: category.name,
-                    color: category.color
-                  };
+                try {
+                  const category = await getCategoryById(exercise.exercise.category);
+                  if (category) {
+                    categories[exercise.exercise.category] = {
+                      name: category.name,
+                      color: category.color
+                    };
+                  }
+                } catch (error) {
+                  console.error(`Error fetching category for exercise ${exercise.exercise.name}:`, error);
                 }
               }
             }

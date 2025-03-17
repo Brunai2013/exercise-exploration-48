@@ -55,6 +55,13 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     borderColor: `${category.color}40` // 40% opacity
   };
   
+  // Use category color for card highlight when it's the current exercise
+  const cardBorderStyle = exerciseIndex === currentExerciseIndex && !isSelected
+    ? { borderColor: category.color } // Use category color for current exercise
+    : isSelected 
+      ? { borderColor: 'hsl(var(--primary) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.05)' } 
+      : {}; // Default border
+  
   const handleCardClick = () => {
     if (onSelect) {
       onSelect();
@@ -70,6 +77,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
         exerciseIndex === currentExerciseIndex && !isSelected ? 'border-primary' : 
         isSelected ? 'border-primary/70 bg-primary/5' : 'border-border'
       } overflow-hidden`}
+      style={cardBorderStyle}
     >
       <div className="p-3 cursor-pointer" onClick={handleCardClick}>
         <div className="flex items-start">
@@ -156,6 +164,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                       e.stopPropagation();
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);
                     }}
+                    style={set.completed ? { backgroundColor: category.color } : {}}
                   >
                     {set.completed ? (
                       <Check className="h-3 w-3" />
