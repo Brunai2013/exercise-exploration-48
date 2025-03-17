@@ -47,8 +47,6 @@ const WorkoutSession = () => {
   
   const [exerciseGroups, setExerciseGroups] = useState<ExerciseGroup[]>([]);
   
-  const [compactView, setCompactView] = useState(true);
-  
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   
   const [groupingMode, setGroupingMode] = useState<boolean>(false);
@@ -480,7 +478,7 @@ const WorkoutSession = () => {
             <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg">
               <Dumbbell className="h-8 w-8 text-primary mb-2" />
               <span className="text-sm text-muted-foreground">Exercises</span>
-              <span className="text-2xl font-semibold">{workout.exercises.length}</span>
+              <span className="text-2xl font-semibold">{workout?.exercises.length}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg">
@@ -556,13 +554,6 @@ const WorkoutSession = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setCompactView(!compactView)}
-              >
-                {compactView ? "Default View" : "Compact View"}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
                 onClick={startGroupingMode}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -589,7 +580,7 @@ const WorkoutSession = () => {
         </div>
       )}
 
-      <div className={compactView ? "grid grid-cols-2 gap-4 mb-8" : "space-y-8 mb-8"}>
+      <div className="grid grid-cols-2 gap-4 mb-8">
         {exerciseGroups.map(group => {
           const groupExercises = workout?.exercises.filter(ex => 
             group.exerciseIds.includes(ex.id)
@@ -628,7 +619,7 @@ const WorkoutSession = () => {
               onActualRepsChange={handleActualRepsChange}
               onNavigateToExercise={handleNavigateToExercise}
               exerciseCategories={exerciseCategories}
-              isCompact={compactView}
+              isCompact={true}
               isSelected={selectedExercises.includes(exerciseItem.id)}
               onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
             />
