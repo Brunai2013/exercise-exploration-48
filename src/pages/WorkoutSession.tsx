@@ -17,13 +17,15 @@ import {
   Save, 
   Dumbbell, 
   Loader2,
-  Layers
+  Layers,
+  Plus,
+  X
 } from 'lucide-react';
 import ExerciseWorkoutCard from '@/components/workout/ExerciseWorkoutCard';
 import ExerciseGroupCard from '@/components/workout/ExerciseGroupCard';
 import { v4 as uuidv4 } from 'uuid';
+import { Badge } from '@/components/ui/badge';
 
-// Interface for visual grouping of exercises (not stored in database)
 interface ExerciseGroup {
   id: string;
   type: 'superset' | 'circuit';
@@ -42,11 +44,13 @@ const WorkoutSession = () => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCategories, setExerciseCategories] = useState<Record<string, {name: string, color: string}>>({});
   
-  // State for exercise grouping (visual only, not stored in DB)
   const [exerciseGroups, setExerciseGroups] = useState<ExerciseGroup[]>([]);
   
-  // Track if compact view is enabled
   const [compactView, setCompactView] = useState(false);
+  
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  
+  const [groupingMode, setGroupingMode] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -127,38 +131,69 @@ const WorkoutSession = () => {
     }
   }, [workout]);
 
-  // Helper function to check if an exercise is in a group
   const isExerciseInGroup = (exerciseId: string): boolean => {
     return exerciseGroups.some(group => 
       group.exerciseIds.includes(exerciseId)
     );
   };
   
-  // Get the group that contains an exercise
   const getExerciseGroup = (exerciseId: string): ExerciseGroup | undefined => {
     return exerciseGroups.find(group => 
       group.exerciseIds.includes(exerciseId)
     );
   };
   
-  // Create a new group with selected exercises
-  const createGroup = (exerciseIds: string[], type: 'superset' | 'circuit') => {
-    // Remove exercises from any existing groups first
-    setExerciseGroups(prev => {
-      const updatedGroups = prev.map(group => ({
-        ...group,
-        exerciseIds: group.exerciseIds.filter(id => !exerciseIds.includes(id))
-      })).filter(group => group.exerciseIds.length > 1); // Remove groups with less than 2 exercises
-      
-      // Add the new group
-      return [
-        ...updatedGroups,
-        { id: uuidv4(), type, exerciseIds }
-      ];
+  const toggleExerciseSelection = (exerciseId: string) => {
+    setSelectedExercises(prev => {
+      if (prev.includes(exerciseId)) {
+        return prev.filter(id => id !== exerciseId);
+      } else {
+        return [...prev, exerciseId];
+      }
     });
   };
   
-  // Remove an exercise from its group
+  const clearSelectedExercises = () => {
+    setSelectedExercises([]);
+  };
+  
+  const createGroup = (exerciseIds: string[], type: 'superset' | 'circuit') => {
+    if (exerciseIds.length < 2) {
+      toast({
+        title: "Cannot Create Group",
+        description: `Need at least 2 exercises for a ${type}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setExerciseGroups(prev => {
+      const affectedGroups = prev.filter(group => 
+        group.exerciseIds.some(id => exerciseIds.includes(id))
+      );
+      
+      if (affectedGroups.length > 0) {
+        const updatedGroups = prev.map(group => ({
+          ...group,
+          exerciseIds: group.exerciseIds.filter(id => !exerciseIds.includes(id))
+        })).filter(group => group.exerciseIds.length > 1);
+        
+        return [
+          ...updatedGroups,
+          { id: uuidv4(), type, exerciseIds }
+        ];
+      } else {
+        return [
+          ...prev,
+          { id: uuidv4(), type, exerciseIds }
+        ];
+      }
+    });
+    
+    clearSelectedExercises();
+    setGroupingMode(false);
+  };
+  
   const removeFromGroup = (exerciseId: string) => {
     setExerciseGroups(prev => {
       const updatedGroups = prev.map(group => {
@@ -170,7 +205,7 @@ const WorkoutSession = () => {
           };
         }
         return group;
-      }).filter(group => group.exerciseIds.length > 1); // Remove groups with less than 2 exercises
+      }).filter(group => group.exerciseIds.length > 1);
       
       return updatedGroups;
     });
@@ -311,12 +346,10 @@ const WorkoutSession = () => {
       block: 'start'
     });
   };
-  
-  // Create a superset group with selected exercises
+
   const handleCreateSuperset = () => {
     if (!workout || workout.exercises.length < 2) return;
     
-    // For demo purposes, just group the first two exercises that aren't already in a group
     const availableExercises = workout.exercises
       .filter(ex => !isExerciseInGroup(ex.id))
       .slice(0, 2)
@@ -336,12 +369,10 @@ const WorkoutSession = () => {
       });
     }
   };
-  
-  // Create a circuit group with selected exercises
+
   const handleCreateCircuit = () => {
     if (!workout || workout.exercises.length < 3) return;
     
-    // For demo purposes, group the first three exercises that aren't already in a group
     const availableExercises = workout.exercises
       .filter(ex => !isExerciseInGroup(ex.id))
       .slice(0, 3)
@@ -362,7 +393,24 @@ const WorkoutSession = () => {
     }
   };
 
-  // Create a mapping from exercise ID to index for use in the group component
+  const handleCreateCustomGroup = (type: 'superset' | 'circuit') => {
+    if (selectedExercises.length < (type === 'superset' ? 2 : 3)) {
+      toast({
+        title: "Not Enough Exercises",
+        description: `Select at least ${type === 'superset' ? '2' : '3'} exercises for a ${type}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createGroup(selectedExercises, type);
+    
+    toast({
+      title: `${type === 'superset' ? 'Superset' : 'Circuit'} Created`,
+      description: `${selectedExercises.length} exercises grouped successfully`,
+    });
+  };
+
   const createExerciseIndexMap = (): Record<string, number> => {
     if (!workout) return {};
     
@@ -370,6 +418,21 @@ const WorkoutSession = () => {
       map[exercise.id] = index;
       return map;
     }, {} as Record<string, number>);
+  };
+
+  const startGroupingMode = (type: 'superset' | 'circuit') => {
+    setGroupingMode(true);
+    clearSelectedExercises();
+    
+    toast({
+      title: `Creating ${type === 'superset' ? 'Superset' : 'Circuit'}`,
+      description: `Select at least ${type === 'superset' ? '2' : '3'} exercises to group`,
+    });
+  };
+
+  const cancelGroupingMode = () => {
+    setGroupingMode(false);
+    clearSelectedExercises();
   };
 
   if (loading) {
@@ -471,11 +534,18 @@ const WorkoutSession = () => {
                 <Button
                   key={exercise.id}
                   variant={currentExerciseIndex === index ? "default" : "outline"}
-                  className="whitespace-nowrap"
-                  onClick={() => handleNavigateToExercise(index)}
+                  className={`whitespace-nowrap ${selectedExercises.includes(exercise.id) ? 'ring-2 ring-primary' : ''}`}
+                  onClick={() => {
+                    if (groupingMode) {
+                      toggleExerciseSelection(exercise.id);
+                    } else {
+                      handleNavigateToExercise(index);
+                    }
+                  }}
                 >
                   {exercise.exercise.name}
-                  {exerciseProgress === 100 && <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />}
+                  {exerciseProgress === 100 && !groupingMode && <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />}
+                  {selectedExercises.includes(exercise.id) && groupingMode && <CheckCircle2 className="ml-2 h-4 w-4" />}
                 </Button>
               );
             })}
@@ -483,40 +553,80 @@ const WorkoutSession = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setCompactView(!compactView)}
-          >
-            {compactView ? "Default View" : "Compact View"}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleCreateSuperset}
-          >
-            <Layers className="h-4 w-4 mr-2" />
-            Superset
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleCreateCircuit}
-          >
-            <Layers className="h-4 w-4 mr-2" />
-            Circuit
-          </Button>
+          {groupingMode ? (
+            <>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => handleCreateCustomGroup('superset')}
+                disabled={selectedExercises.length < 2}
+              >
+                <Layers className="h-4 w-4 mr-2" />
+                Create Superset
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => handleCreateCustomGroup('circuit')}
+                disabled={selectedExercises.length < 3}
+              >
+                <Layers className="h-4 w-4 mr-2" />
+                Create Circuit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={cancelGroupingMode}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setCompactView(!compactView)}
+              >
+                {compactView ? "Default View" : "Compact View"}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => startGroupingMode('superset')}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Group Exercises
+              </Button>
+            </>
+          )}
         </div>
       </div>
+      
+      {groupingMode && (
+        <div className="bg-muted/20 p-4 rounded-lg mb-4 flex items-center">
+          <Layers className="h-5 w-5 mr-2 text-muted-foreground" />
+          <div className="flex-1">
+            <h4 className="font-medium">Create Exercise Group</h4>
+            <p className="text-sm text-muted-foreground">Select exercises to group together. Then choose Superset (2+ exercises) or Circuit (3+ exercises).</p>
+          </div>
+          <div className="flex items-center">
+            <span className="mr-2">Selected: {selectedExercises.length}</span>
+            {selectedExercises.length > 0 && (
+              <Badge variant="outline">{selectedExercises.length}</Badge>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className={compactView ? "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" : "space-y-8 mb-8"}>
-        {/* Render grouped exercises */}
         {exerciseGroups.map(group => {
           const groupExercises = workout.exercises.filter(ex => 
             group.exerciseIds.includes(ex.id)
           );
           
-          if (groupExercises.length < 2) return null;
+          if (!groupExercises || groupExercises.length < 2) return null;
           
           return (
             <ExerciseGroupCard
@@ -530,13 +640,12 @@ const WorkoutSession = () => {
               onWeightChange={handleWeightChange}
               onActualRepsChange={handleActualRepsChange}
               onNavigateToExercise={handleNavigateToExercise}
+              onRemoveFromGroup={removeFromGroup}
             />
           );
         })}
         
-        {/* Render ungrouped exercises */}
         {workout.exercises.map((exerciseItem, exerciseIndex) => {
-          // Skip exercises that are in groups
           if (isExerciseInGroup(exerciseItem.id)) return null;
           
           return (
@@ -551,6 +660,8 @@ const WorkoutSession = () => {
               onNavigateToExercise={handleNavigateToExercise}
               exerciseCategories={exerciseCategories}
               isCompact={compactView}
+              isSelected={selectedExercises.includes(exerciseItem.id)}
+              onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
             />
           );
         })}

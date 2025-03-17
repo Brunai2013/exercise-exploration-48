@@ -1,304 +1,207 @@
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
-} from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { WorkoutExercise, ExerciseSet } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { CheckCircle2, Dumbbell } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dumbbell, ChevronUp, ChevronDown, Check, X } from 'lucide-react';
+import { WorkoutExercise } from '@/lib/types';
 
 interface ExerciseWorkoutCardProps {
   exerciseItem: WorkoutExercise;
   exerciseIndex: number;
   currentExerciseIndex: number;
+  exerciseCategories: Record<string, {name: string, color: string}>;
   onSetCompletion: (exerciseIndex: number, setIndex: number, completed: boolean) => void;
   onWeightChange: (exerciseIndex: number, setIndex: number, weight: string) => void;
   onActualRepsChange: (exerciseIndex: number, setIndex: number, reps: string) => void;
   onNavigateToExercise: (index: number) => void;
-  exerciseCategories: Record<string, {name: string, color: string}>;
   isCompact?: boolean;
   inGroup?: boolean;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  onRemoveFromGroup?: () => void;
 }
 
 const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   exerciseItem,
   exerciseIndex,
   currentExerciseIndex,
+  exerciseCategories,
   onSetCompletion,
   onWeightChange,
   onActualRepsChange,
   onNavigateToExercise,
-  exerciseCategories,
   isCompact = false,
-  inGroup = false
+  inGroup = false,
+  isSelected = false,
+  onSelect,
+  onRemoveFromGroup
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [expanded, setExpanded] = useState(exerciseIndex === currentExerciseIndex);
   
   const exerciseSets = exerciseItem.sets;
   const completedSets = exerciseSets.filter(set => set.completed).length;
   const exerciseProgress = Math.round((completedSets / exerciseSets.length) * 100);
   
-  const getCategoryDisplay = (categoryId: string) => {
-    if (exerciseCategories[categoryId]) {
-      return (
-        <span className={cn('text-xs px-2 py-1 rounded-full', exerciseCategories[categoryId].color)}>
-          {exerciseCategories[categoryId].name}
-        </span>
-      );
-    }
-    
-    return null;
+  const getCategory = (categoryId?: string) => {
+    if (!categoryId) return { name: 'Uncategorized', color: 'gray' };
+    return exerciseCategories[categoryId] || { name: 'Uncategorized', color: 'gray' };
   };
-
-  // Compact layout for the card
-  if (isCompact) {
-    return (
-      <Card 
-        id={`exercise-${exerciseIndex}`}
-        className={cn(
-          "overflow-hidden transition-all duration-300",
-          currentExerciseIndex === exerciseIndex ? 'border-primary ring-1 ring-primary/20' : '',
-          inGroup ? "border border-gray-100 shadow-sm mb-1" : "mb-6"
-        )}
-        onClick={() => onNavigateToExercise(exerciseIndex)}
-      >
-        <div className="flex flex-col">
-          <div className="flex">
-            {/* Image section */}
-            <div className="w-24 h-24">
-              {!imageError && exerciseItem.exercise.imageUrl ? (
-                <img 
-                  src={exerciseItem.exercise.imageUrl} 
-                  alt={exerciseItem.exercise.name}
-                  className="object-cover w-full h-full"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full bg-muted">
-                  <Dumbbell className="h-8 w-8 text-gray-300" />
-                </div>
-              )}
-            </div>
-            
-            {/* Exercise info */}
-            <div className="p-2 flex-1">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold">{exerciseItem.exercise.name}</h3>
-                {exerciseProgress === 100 && (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
-                {exerciseItem.exercise.description}
-              </p>
-              <div className="flex items-center gap-1">
-                <div className="text-xs bg-primary/10 rounded-md px-2 py-0.5">
-                  {exerciseItem.sets.length} sets
-                </div>
-                {exerciseItem.exercise.category && getCategoryDisplay(exerciseItem.exercise.category)}
-              </div>
-            </div>
-          </div>
-          
-          {/* Compact sets table */}
-          <div className="overflow-x-auto p-2 pt-0">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px] text-xs p-1">Set</TableHead>
-                  <TableHead className="w-[60px] text-xs p-1">Prev</TableHead>
-                  <TableHead className="w-[80px] text-xs p-1">Weight</TableHead>
-                  <TableHead className="w-[40px] text-xs p-1">Tgt</TableHead>
-                  <TableHead className="w-[80px] text-xs p-1">Actual</TableHead>
-                  <TableHead className="w-[40px] text-xs p-1 text-center">✓</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {exerciseItem.sets.map((set, setIndex) => (
-                  <TableRow key={set.id} className="h-[40px]">
-                    <TableCell className="p-1">
-                      <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center font-medium text-xs">
-                        {set.setNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-[10px] p-1">
-                      {set.weight || 0}×{set.targetReps}
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          value={set.weight || ''}
-                          onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
-                          className="h-6 w-10 text-xs p-1"
-                        />
-                        <span className="text-[10px] text-muted-foreground">kg</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium text-center text-xs p-1">
-                      {set.targetReps}
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="number"
-                        value={set.actualReps !== undefined ? set.actualReps : ''}
-                        onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
-                        className="h-6 w-10 text-xs p-1"
-                      />
-                    </TableCell>
-                    <TableCell className="text-center p-1">
-                      <div className="flex justify-center">
-                        <div className={cn("rounded-md", set.completed ? 'bg-green-100' : '')}>
-                          <Checkbox
-                            id={`set-${exerciseIndex}-${setIndex}`}
-                            checked={set.completed}
-                            onCheckedChange={(checked) => 
-                              onSetCompletion(exerciseIndex, setIndex, checked as boolean)
-                            }
-                            className="h-4 w-4 data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  // Original layout for full-size cards
+  
+  const category = getCategory(exerciseItem.exercise.category);
+  
+  // Display the badge with the category color
+  const categoryBadgeStyle = {
+    backgroundColor: `${category.color}20`, // 20% opacity
+    color: category.color,
+    borderColor: `${category.color}40` // 40% opacity
+  };
+  
+  const handleCardClick = () => {
+    if (onSelect) {
+      onSelect();
+      return;
+    }
+    setExpanded(!expanded);
+    if (!expanded) {
+      onNavigateToExercise(exerciseIndex);
+    }
+  };
+  
   return (
     <Card 
       id={`exercise-${exerciseIndex}`}
-      className={cn(
-        "overflow-hidden transition-all duration-300",
-        currentExerciseIndex === exerciseIndex ? 'border-primary ring-2 ring-primary/20' : '',
-        "mb-6"
-      )}
-      onClick={() => onNavigateToExercise(exerciseIndex)}
+      className={`mb-4 ${inGroup ? 'border' : 'border-2'} ${
+        exerciseIndex === currentExerciseIndex && !isSelected ? 'border-primary' : 
+        isSelected ? 'border-primary/70 bg-primary/5' : 'border-border'
+      } overflow-hidden`}
     >
-      <div className="flex flex-col md:flex-row">
-        {/* Left side - Image and exercise info */}
-        <div className="md:w-1/3 lg:w-1/4">
-          <div className="relative h-full">
-            {!imageError && exerciseItem.exercise.imageUrl ? (
-              <img 
-                src={exerciseItem.exercise.imageUrl} 
-                alt={exerciseItem.exercise.name}
-                className="object-cover w-full h-full aspect-square"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="flex items-center justify-center w-full h-full aspect-square bg-muted">
-                <Dumbbell className="h-16 w-16 text-gray-300" />
-              </div>
-            )}
-            
-            {/* Exercise progress badge */}
-            {exerciseProgress === 100 && (
-              <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-            )}
+      <div 
+        className={`flex items-center justify-between p-4 ${isCompact ? 'py-3' : ''} cursor-pointer`}
+        onClick={handleCardClick}
+      >
+        <div className="flex items-center">
+          {isSelected && (
+            <div className="flex justify-center items-center w-6 h-6 rounded-full bg-primary mr-2">
+              <Check className="h-4 w-4 text-white" />
+            </div>
+          )}
+          
+          <div
+            className={`${isCompact ? 'h-10 w-10' : 'h-14 w-14'} rounded bg-cover bg-center mr-3`}
+            style={{ backgroundImage: `url(${exerciseItem.exercise.imageUrl})` }}
+          />
+          
+          <div>
+            <h4 className={`font-medium ${isCompact ? 'text-sm' : ''}`}>{exerciseItem.exercise.name}</h4>
+            <div className="flex items-center mt-1">
+              <Badge className="mr-2" style={categoryBadgeStyle}>
+                {category.name}
+              </Badge>
+              <span className={`text-sm ${exerciseProgress === 100 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                {completedSets}/{exerciseSets.length} sets
+              </span>
+            </div>
           </div>
         </div>
         
-        {/* Right side - Exercise details and sets */}
-        <div className="p-4 md:p-6 flex-1">
-          <div className="mb-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-              <h3 className="text-xl font-semibold">{exerciseItem.exercise.name}</h3>
-              {exerciseItem.exercise.category && getCategoryDisplay(exerciseItem.exercise.category)}
-            </div>
-            
-            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{exerciseItem.exercise.description}</p>
-            
-            <div className="inline-block bg-primary/10 rounded-lg px-3 py-1 text-xs font-medium text-primary">
-              {exerciseItem.sets.length} sets
-            </div>
-          </div>
+        <div className="flex items-center">
+          {onRemoveFromGroup && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mr-1 h-8 w-8 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveFromGroup();
+              }}
+              title="Remove from group"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
           
-          {/* Full sets table */}
-          <div className="overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]">Set</TableHead>
-                  <TableHead className="w-[90px]">Previous</TableHead>
-                  <TableHead className="w-[120px]">Weight</TableHead>
-                  <TableHead className="w-[80px]">Target</TableHead>
-                  <TableHead className="w-[120px]">Actual</TableHead>
-                  <TableHead className="w-[80px] text-center">Done</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {exerciseItem.sets.map((set, setIndex) => (
-                  <TableRow key={set.id} className="h-[52px]">
-                    <TableCell>
-                      <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center font-medium text-xs">
-                        {set.setNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {set.weight || 0}kg × {set.targetReps}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Input
-                          type="number"
-                          value={set.weight || ''}
-                          onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
-                          className="h-7 w-16 text-sm"
-                        />
-                        <span className="ml-1 text-xs text-muted-foreground">kg</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium text-center text-sm">
-                      {set.targetReps}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Input
-                          type="number"
-                          value={set.actualReps !== undefined ? set.actualReps : ''}
-                          onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
-                          className="h-7 w-16 text-sm"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        <div className={cn("p-1 rounded-md transition-all", set.completed ? 'bg-green-100' : '')}>
-                          <Checkbox
-                            id={`set-${exerciseIndex}-${setIndex}`}
-                            checked={set.completed}
-                            onCheckedChange={(checked) => 
-                              onSetCompletion(exerciseIndex, setIndex, checked as boolean)
-                            }
-                            className="h-5 w-5 data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          {!onSelect && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(!expanded);
+                if (!expanded) {
+                  onNavigateToExercise(exerciseIndex);
+                }
+              }}
+            >
+              {expanded ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
+      
+      {expanded && (
+        <CardContent className={`${isCompact ? 'p-2' : 'p-4'} pt-0`}>
+          <div className={`grid grid-cols-12 text-sm font-medium mb-2 ${isCompact ? 'gap-1 text-xs' : 'gap-2'}`}>
+            <div className="col-span-1">Set</div>
+            <div className="col-span-3">Weight</div>
+            <div className="col-span-2 text-center">Reps</div>
+            <div className="col-span-3">Actual</div>
+            <div className="col-span-3 text-right">Done</div>
+          </div>
+          
+          {exerciseItem.sets.map((set, setIndex) => (
+            <div key={set.id} className={`grid grid-cols-12 items-center ${isCompact ? 'gap-1 mb-1' : 'gap-2 mb-2'}`}>
+              <div className="col-span-1 font-medium">{setIndex + 1}</div>
+              
+              <div className="col-span-3">
+                <input
+                  type="text"
+                  placeholder="lb/kg"
+                  className={`w-full border rounded px-2 ${isCompact ? 'py-1 text-sm' : 'py-2'}`}
+                  value={set.weight || ''}
+                  onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
+                />
+              </div>
+              
+              <div className="col-span-2 text-center">
+                {set.targetReps}
+              </div>
+              
+              <div className="col-span-3">
+                <input
+                  type="text"
+                  className={`w-full border rounded px-2 ${isCompact ? 'py-1 text-sm' : 'py-2'}`}
+                  value={set.actualReps || ''}
+                  onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
+                />
+              </div>
+              
+              <div className="col-span-3 flex justify-end">
+                <Button
+                  variant={set.completed ? "default" : "outline"}
+                  size="sm"
+                  className={`w-full ${isCompact ? 'h-8' : ''}`}
+                  onClick={() => onSetCompletion(exerciseIndex, setIndex, !set.completed)}
+                >
+                  {set.completed ? (
+                    <>
+                      <Check className={`${isCompact ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
+                      {isCompact ? '' : 'Done'}
+                    </>
+                  ) : (
+                    isCompact ? 'Mark' : 'Mark Done'
+                  )}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      )}
     </Card>
   );
 };

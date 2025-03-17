@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card';
 import ExerciseWorkoutCard from './ExerciseWorkoutCard';
 import { WorkoutExercise } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { Layers } from 'lucide-react';
+import { Layers, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ExerciseGroupCardProps {
   groupType: 'superset' | 'circuit';
@@ -16,6 +17,7 @@ interface ExerciseGroupCardProps {
   onWeightChange: (exerciseIndex: number, setIndex: number, weight: string) => void;
   onActualRepsChange: (exerciseIndex: number, setIndex: number, reps: string) => void;
   onNavigateToExercise: (index: number) => void;
+  onRemoveFromGroup?: (exerciseId: string) => void;
 }
 
 const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
@@ -27,7 +29,8 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   onSetCompletion,
   onWeightChange,
   onActualRepsChange,
-  onNavigateToExercise
+  onNavigateToExercise,
+  onRemoveFromGroup
 }) => {
   // Calculate overall group completion
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
@@ -39,14 +42,30 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   
   return (
     <Card className="mb-6 overflow-hidden border-2 border-primary/20">
-      <div className="bg-primary/10 p-2 flex items-center">
-        <Layers className="h-4 w-4 mr-2" />
-        <Badge variant="outline" className="font-semibold">
-          {groupType === 'superset' ? 'Superset' : 'Circuit'}
-        </Badge>
-        <span className="ml-2 text-sm text-muted-foreground">
-          {progress}% complete
-        </span>
+      <div className="bg-primary/10 p-2 flex items-center justify-between">
+        <div className="flex items-center">
+          <Layers className="h-4 w-4 mr-2" />
+          <Badge variant="outline" className="font-semibold">
+            {groupType === 'superset' ? 'Superset' : 'Circuit'}
+          </Badge>
+          <span className="ml-2 text-sm text-muted-foreground">
+            {progress}% complete
+          </span>
+        </div>
+        
+        {onRemoveFromGroup && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-7 w-7 p-0" 
+            title="Ungroup all exercises"
+            onClick={() => {
+              exercises.forEach(ex => onRemoveFromGroup(ex.id));
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1">
@@ -65,6 +84,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
               exerciseCategories={exerciseCategories}
               isCompact={true}
               inGroup={true}
+              onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(exercise.id) : undefined}
             />
           );
         })}
