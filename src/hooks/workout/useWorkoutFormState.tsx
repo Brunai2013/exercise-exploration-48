@@ -10,11 +10,12 @@ export const useWorkoutFormState = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const initialDateParam = searchParams.get('date');
+  const isDuplicate = searchParams.get('duplicate') === 'true';
   
   const [workout, setWorkout] = useState<Partial<Workout>>({
     name: '',
     description: '',
-    date: initialDateParam || format(new Date(), 'yyyy-MM-dd'),
+    date: initialDateParam || (isDuplicate ? '' : format(new Date(), 'yyyy-MM-dd')),
     exercises: [],
     completed: false
   });
@@ -22,7 +23,7 @@ export const useWorkoutFormState = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     initialDateParam 
       ? parse(initialDateParam, 'yyyy-MM-dd', new Date()) 
-      : new Date()
+      : isDuplicate ? undefined : new Date()
   );
   
   const [isLoading, setIsLoading] = useState(true);
@@ -48,17 +49,37 @@ export const useWorkoutFormState = () => {
         } finally {
           setIsLoading(false);
         }
+      } else if (isDuplicate) {
+        // Check for duplicated workout in localStorage
+        try {
+          const duplicatedWorkoutStr = localStorage.getItem('duplicated_workout');
+          if (duplicatedWorkoutStr) {
+            const duplicatedWorkout = JSON.parse(duplicatedWorkoutStr);
+            setWorkout(duplicatedWorkout);
+            // Don't set the date - leave it blank to require user input
+            setSelectedDate(undefined);
+            // Clear the localStorage item to prevent reuse
+            localStorage.removeItem('duplicated_workout');
+          }
+        } catch (error) {
+          console.error('Error loading duplicated workout:', error);
+        } finally {
+          setIsLoading(false);
+        }
       } else {
         setIsLoading(false);
       }
     };
     
     fetchWorkout();
-  }, [id]);
+  }, [id, isDuplicate]);
   
   useEffect(() => {
     if (selectedDate) {
       setWorkout(prev => ({ ...prev, date: format(selectedDate, 'yyyy-MM-dd') }));
+    } else if (workout.date) {
+      // Clear the date field if selectedDate is undefined
+      setWorkout(prev => ({ ...prev, date: '' }));
     }
   }, [selectedDate]);
   

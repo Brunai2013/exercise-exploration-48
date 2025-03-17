@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Workout } from '@/lib/types';
 import { Link } from 'react-router-dom';
@@ -12,13 +12,14 @@ import {
   Archive,
   Sparkles,
   Flame,
-  Gem
+  Copy
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { archiveWorkout } from '@/lib/workouts';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { useDuplicateWorkout } from '@/hooks/workout/useDuplicateWorkout';
 
 interface WorkoutCardProps {
   workout: Workout;
@@ -26,6 +27,8 @@ interface WorkoutCardProps {
 }
 
 const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onArchive }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const { duplicateWorkout } = useDuplicateWorkout();
   const dateObj = parseISO(workout.date);
   const formattedDate = format(dateObj, 'EEE, MMM d');
   
@@ -60,13 +63,35 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout, onArchive }) => {
     }
   };
 
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    duplicateWorkout(workout);
+  };
+
   if (workout.archived) {
     return null; // Don't render archived workouts
   }
 
   return (
-    <Card className="workout-card border-none overflow-hidden hover:translate-y-[-5px] transition-all duration-300 cool-shadow rounded-xl bg-gradient-to-b from-white to-indigo-50/40">
-      <CardHeader className="p-5 pb-3">
+    <Card 
+      className="workout-card border-none overflow-hidden hover:translate-y-[-5px] transition-all duration-300 cool-shadow rounded-xl bg-gradient-to-b from-white to-indigo-50/40"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardHeader className="p-5 pb-3 relative">
+        {isHovered && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute right-2 top-2 h-8 w-8 text-indigo-500 opacity-80 hover:opacity-100 hover:bg-white/90 z-10 transition-all"
+            onClick={handleDuplicate}
+            title="Duplicate Workout"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        )}
+        
         <div className="flex items-center justify-between">
           <div className="flex items-center text-sm text-muted-foreground">
             <CalendarIcon className="h-4 w-4 mr-1" />

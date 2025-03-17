@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChevronLeft, Loader2, Save } from 'lucide-react';
 import PageContainer from '@/components/layout/PageContainer';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import WorkoutFormLoading from '@/components/workout/WorkoutFormLoading';
 import WorkoutFormContent from '@/components/workout/WorkoutFormContent';
 import { useWorkoutForm } from '@/hooks/workout/useWorkoutForm';
+import { toast } from '@/components/ui/use-toast';
 
 const WorkoutForm = () => {
   const {
@@ -60,6 +62,20 @@ const WorkoutForm = () => {
     );
   }
   
+  const handleSaveWorkout = () => {
+    // Validate date is selected before saving
+    if (!workout.date) {
+      toast({
+        title: "Date Required",
+        description: "Please select a date for this workout",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    saveWorkout();
+  };
+  
   return (
     <PageContainer>
       <PageHeader 
@@ -71,7 +87,7 @@ const WorkoutForm = () => {
               <ChevronLeft className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={saveWorkout} disabled={isSaving || isLoading}>
+            <Button onClick={handleSaveWorkout} disabled={isSaving || isLoading}>
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
