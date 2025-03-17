@@ -3,9 +3,18 @@ import React, { useState } from 'react';
 import { Exercise, Category } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, X } from 'lucide-react';
+import { Search, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface ExerciseSearchProps {
   searchTerm: string;
@@ -78,30 +87,82 @@ const ExerciseSearch: React.FC<ExerciseSearchProps> = ({
             )}
           </div>
           
-          {/* Category filters */}
-          <div className="mb-3 overflow-x-auto">
-            <div className="flex space-x-2 min-w-max">
-              <Button
-                variant={!selectedCategory ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleCategoryChange(null)}
-                className="rounded-full"
-              >
-                All
-              </Button>
-              {categories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleCategoryChange(category.id)}
-                  className="rounded-full"
-                >
-                  {category.name}
-                </Button>
-              ))}
+          {/* Category filters - Redesigned */}
+          <div className="mb-3 flex items-center gap-2">
+            <Button
+              variant={!selectedCategory ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleCategoryChange(null)}
+              className="rounded-full"
+            >
+              All
+            </Button>
+            
+            {/* Mobile category filter with popover */}
+            <div className="block md:hidden">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="rounded-full">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Categories
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                  <div className="grid grid-cols-2 gap-1">
+                    {categories.map((category) => (
+                      <Button
+                        key={category.id}
+                        variant={selectedCategory === category.id ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleCategoryChange(category.id)}
+                        className="rounded-full text-xs justify-start"
+                      >
+                        {category.name}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            {/* Desktop category filter in carousel */}
+            <div className="hidden md:block w-full">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {categories.map((category) => (
+                    <CarouselItem key={category.id} className="basis-auto">
+                      <Button
+                        variant={selectedCategory === category.id ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleCategoryChange(category.id)}
+                        className="rounded-full whitespace-nowrap"
+                      >
+                        {category.name}
+                      </Button>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-0" />
+                <CarouselNext className="right-0" />
+              </Carousel>
             </div>
           </div>
+          
+          {selectedCategory && (
+            <div className="mb-2">
+              <Badge variant="outline" className="flex items-center gap-1">
+                {getCategoryName(selectedCategory)}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 ml-1 p-0" 
+                  onClick={() => handleCategoryChange(null)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            </div>
+          )}
           
           <div className="max-h-[500px] overflow-y-auto">
             {isLoading ? (
@@ -109,15 +170,15 @@ const ExerciseSearch: React.FC<ExerciseSearchProps> = ({
             ) : filteredExercises.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">No exercises found</p>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {filteredExercises.map((exercise) => (
                   <div
                     key={exercise.id}
-                    className="flex items-center p-2 rounded-md hover:bg-muted/50 cursor-pointer"
+                    className="flex items-center p-3 rounded-lg hover:bg-muted/50 cursor-pointer border border-gray-100"
                     onClick={() => onExerciseAdd(exercise)}
                   >
                     <div 
-                      className="h-10 w-10 rounded bg-cover bg-center mr-3" 
+                      className="h-16 w-16 rounded-md bg-cover bg-center mr-3" 
                       style={{ backgroundImage: `url(${exercise.imageUrl})` }}
                     />
                     <div className="flex-1">
