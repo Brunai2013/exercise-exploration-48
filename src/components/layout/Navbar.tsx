@@ -60,14 +60,14 @@ const Navbar = () => {
                 <Button
                   variant={location.pathname === item.href ? "default" : "ghost"}
                   className={cn(
-                    "flex items-center justify-center px-4 rounded-full w-[160px]",
+                    "flex items-center justify-start px-4 rounded-full w-[160px]",
                     location.pathname === item.href 
                       ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-glow" 
                       : "text-muted-foreground hover:text-foreground hover:bg-indigo-50"
                   )}
                 >
                   {item.icon}
-                  {item.label}
+                  <span className="flex-1 text-center">{item.label}</span>
                   {location.pathname === item.href && <Sparkles className="h-3 w-3 ml-2 text-white/70" />}
                 </Button>
               </Link>
@@ -103,7 +103,7 @@ const Navbar = () => {
                     )}
                   >
                     {item.icon}
-                    {item.label}
+                    <span className="flex-1 text-center">{item.label}</span>
                     {location.pathname === item.href && <Sparkles className="h-3.5 w-3.5 ml-2 text-white/70" />}
                   </Button>
                 </Link>
