@@ -31,7 +31,7 @@ const AppNavigation: React.FC = () => {
             <Button
               variant={isActive(item.href) ? "default" : "ghost"}
               className={cn(
-                "flex items-center px-4 rounded-full w-[160px]",
+                "flex items-center px-4 rounded-full w-[190px]",
                 isActive(item.href) 
                   ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-glow" 
                   : "text-muted-foreground hover:text-foreground hover:bg-indigo-50"

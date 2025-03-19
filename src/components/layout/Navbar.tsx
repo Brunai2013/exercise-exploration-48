@@ -60,7 +60,7 @@ const Navbar = () => {
                 <Button
                   variant={location.pathname === item.href ? "default" : "ghost"}
                   className={cn(
-                    "flex items-center px-4 rounded-full w-[160px]",
+                    "flex items-center px-4 rounded-full w-[190px]",
                     location.pathname === item.href 
                       ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-glow" 
                       : "text-muted-foreground hover:text-foreground hover:bg-indigo-50"
