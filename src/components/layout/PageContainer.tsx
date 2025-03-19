@@ -23,9 +23,7 @@ const PageContainer: React.FC<PageContainerProps> = ({ children, className = "" 
             </div>
             FitTrack <Sparkles className="h-4 w-4 ml-1 text-indigo-400" />
           </Link>
-          <div className="flex-1 flex justify-end">
-            <AppNavigation />
-          </div>
+          <AppNavigation />
         </div>
       </header>
       

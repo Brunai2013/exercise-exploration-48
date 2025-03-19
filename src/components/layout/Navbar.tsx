@@ -44,7 +44,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link 
           to="/" 
-          className="flex items-center font-semibold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-80 transition-opacity"
+          className="flex items-center font-semibold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-80 transition-opacity shrink-0"
         >
           <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-1.5 rounded-full text-white shadow-glow mr-2">
             <Dumbbell className="h-5 w-5" />
@@ -53,8 +53,8 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center justify-end w-full min-w-[420px]">
-          <div className="flex items-center space-x-1">
+        <div className="hidden md:flex flex-1 justify-end">
+          <nav className="flex items-center space-x-1">
             {navItems.map((item) => (
               <Link key={item.href} to={item.href}>
                 <Button
@@ -72,8 +72,8 @@ const Navbar = () => {
                 </Button>
               </Link>
             ))}
-          </div>
-        </nav>
+          </nav>
+        </div>
 
         {/* Mobile Nav Toggle */}
         <Button 

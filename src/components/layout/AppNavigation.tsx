@@ -24,8 +24,8 @@ const AppNavigation: React.FC = () => {
   ];
 
   return (
-    <nav className="flex items-center justify-end w-full min-w-[420px]">
-      <div className="flex items-center space-x-1">
+    <div className="flex-1 flex justify-end">
+      <nav className="flex items-center space-x-1">
         {navItems.map((item) => (
           <Link key={item.href} to={item.href}>
             <Button
@@ -43,8 +43,8 @@ const AppNavigation: React.FC = () => {
             </Button>
           </Link>
         ))}
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 };
 
