@@ -24,24 +24,26 @@ const AppNavigation: React.FC = () => {
   ];
 
   return (
-    <nav className="flex items-center space-x-1">
-      {navItems.map((item) => (
-        <Link key={item.href} to={item.href}>
-          <Button
-            variant={isActive(item.href) ? "default" : "ghost"}
-            className={cn(
-              "flex items-center px-4 rounded-full",
-              isActive(item.href) 
-                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-glow" 
-                : "text-muted-foreground hover:text-foreground hover:bg-indigo-50"
-            )}
-          >
-            {item.icon}
-            {item.label}
-            {isActive(item.href) && <Sparkles className="h-3 w-3 ml-2 text-white/70" />}
-          </Button>
-        </Link>
-      ))}
+    <nav className="flex items-center justify-end w-full min-w-[420px]">
+      <div className="flex items-center space-x-1">
+        {navItems.map((item) => (
+          <Link key={item.href} to={item.href}>
+            <Button
+              variant={isActive(item.href) ? "default" : "ghost"}
+              className={cn(
+                "flex items-center justify-center px-4 rounded-full w-[160px]",
+                isActive(item.href) 
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-glow" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-indigo-50"
+              )}
+            >
+              {item.icon}
+              {item.label}
+              {isActive(item.href) && <Sparkles className="h-3 w-3 ml-2 text-white/70" />}
+            </Button>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 };
