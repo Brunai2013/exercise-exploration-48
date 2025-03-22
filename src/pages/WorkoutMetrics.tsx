@@ -7,6 +7,7 @@ import { useMetricsData } from '@/hooks/metrics/useMetricsData';
 import MetricsHeader from '@/components/metrics/page/MetricsHeader';
 import MetricsTimeFilter from '@/components/metrics/page/MetricsTimeFilter';
 import MetricsTabs from '@/components/metrics/page/MetricsTabs';
+import { toast } from '@/components/ui/use-toast';
 
 const WorkoutMetrics = () => {
   // Create default date range using today as the end date
@@ -17,12 +18,12 @@ const WorkoutMetrics = () => {
     from: Date;
     to: Date;
   }>({
-    from: startOfWeek(today),
+    from: startOfMonth(subMonths(today, 1)), // Changed from startOfWeek to startOfMonth with 1 month back
     to: today,
   });
   
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('week');
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('month'); // Changed default to 'month'
   
   // Update date range when time filter changes
   useEffect(() => {
@@ -46,8 +47,20 @@ const WorkoutMetrics = () => {
     exerciseData, 
     frequencyData,
     upcomingWorkoutData,
-    isLoading
+    isLoading,
+    error
   } = useMetricsData(dateRange, view);
+
+  // Show toast if there's an error
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error loading metrics data",
+        description: error,
+        variant: "destructive"
+      });
+    }
+  }, [error]);
 
   console.log('Metrics data loaded:', {
     muscleGroups: muscleGroupData.length,
