@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -132,7 +133,7 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${(Number(percent) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -143,7 +144,7 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
                 </Pie>
                 <Tooltip 
                   formatter={(value, name, props) => [
-                    `${value} exercises (${((value / totalFutureExercises) * 100).toFixed(0)}%)`, 
+                    `${value} exercises (${((Number(value) / totalFutureExercises) * 100).toFixed(0)}%)`, 
                     name
                   ]}
                 />
@@ -168,7 +169,7 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
                     </div>
                     <div className="flex items-center">
                       <span className="text-sm font-semibold">
-                        {item.value} exercises ({((item.value / totalFutureExercises) * 100).toFixed(0)}%)
+                        {item.value} exercises ({((Number(item.value) / totalFutureExercises) * 100).toFixed(0)}%)
                       </span>
                     </div>
                   </div>
