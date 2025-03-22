@@ -5,21 +5,23 @@ import {
   ChartContainer, 
   ChartTooltip, 
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent
 } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { Dumbbell, ArrowRight, InfoIcon } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Sector } from "recharts";
+import { Dumbbell, InfoIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { format } from "date-fns";
+import { useState } from "react";
 
 interface MuscleGroupsChartProps {
   data: MuscleGroupData[];
   isLoading: boolean;
+  dateRange: { from: Date; to: Date };
+  timeFilter: 'week' | 'month' | 'custom';
 }
 
 const EmptyState = () => (
@@ -46,7 +48,55 @@ const LoadingState = () => (
   </div>
 );
 
-const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading }) => {
+// Active shape for the pie chart when hovering
+const renderActiveShape = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  const sin = Math.sin(-midAngle * (Math.PI / 180));
+  const cos = Math.cos(-midAngle * (Math.PI / 180));
+  const sx = cx + (outerRadius + 10) * cos;
+  const sy = cy + (outerRadius + 10) * sin;
+  const mx = cx + (outerRadius + 30) * cos;
+  const my = cy + (outerRadius + 30) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        opacity={0.8}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+      />
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" strokeWidth={2} />
+      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333" fontSize={12}>
+        {payload.name} ({(percent * 100).toFixed(0)}%)
+      </text>
+      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999" fontSize={12}>
+        {`${value} exercises`}
+      </text>
+    </g>
+  );
+};
+
+const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, dateRange, timeFilter }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }
@@ -97,14 +147,22 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading }
     value: item.count
   }));
 
+  // Format date range for display
+  const dateRangeText = `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
+
+  const onPieEnter = (_: any, index: number) => {
+    setActiveIndex(index);
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <CardTitle>Muscle Groups Worked</CardTitle>
-            <CardDescription>
-              See which muscle groups you've been focusing on
+            <CardDescription className="mt-1">
+              {timeFilter === 'week' ? 'Last Week' : 
+               timeFilter === 'month' ? 'Last Month' : dateRangeText}
             </CardDescription>
           </div>
           <HoverCard>
@@ -124,20 +182,22 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading }
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
+        <div className="h-[350px]">
           <ChartContainer config={chartConfig}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
                   data={formattedData}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  outerRadius={120}
                   innerRadius={60}
+                  outerRadius={100}
                   fill="#8884d8"
                   dataKey="count"
                   nameKey="name"
+                  onMouseEnter={onPieEnter}
                 >
                   {formattedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -158,15 +218,6 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading }
                       }}
                     />
                   )}
-                />
-                <Legend 
-                  layout="vertical" 
-                  verticalAlign="middle" 
-                  align="right"
-                  formatter={(value, entry) => {
-                    const item = data.find(d => d.name === value);
-                    return `${value} (${item?.percentage || 0}%)`;
-                  }}
                 />
               </PieChart>
             </ResponsiveContainer>

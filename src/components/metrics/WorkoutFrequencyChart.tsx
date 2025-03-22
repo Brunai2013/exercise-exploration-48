@@ -15,11 +15,14 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { format } from "date-fns";
 
 interface WorkoutFrequencyChartProps {
   data: FrequencyData[];
   isLoading: boolean;
   view: 'weekly' | 'monthly';
+  dateRange: { from: Date; to: Date };
+  timeFilter: 'week' | 'month' | 'custom';
 }
 
 const EmptyState = () => (
@@ -41,7 +44,13 @@ const LoadingState = () => (
   </div>
 );
 
-const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isLoading, view }) => {
+const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ 
+  data, 
+  isLoading, 
+  view,
+  dateRange,
+  timeFilter
+}) => {
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }
@@ -81,20 +90,24 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isL
   const mostActivePeriod = data[mostActiveIndex];
   const avgWorkoutsPerPeriod = totalWorkouts / data.length || 0;
 
+  // Format date range for display
+  const dateRangeText = `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Workout Frequency</CardTitle>
-            <CardDescription>
-              Track how often you're working out
+            <CardDescription className="flex items-center mt-1">
+              {timeFilter === 'week' ? 'Last Week' : 
+               timeFilter === 'month' ? 'Last Month' : dateRangeText}
+              <Badge variant="outline" className="ml-2 capitalize">
+                {view} view
+              </Badge>
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="capitalize">
-              {view} view
-            </Badge>
             <HoverCard>
               <HoverCardTrigger asChild>
                 <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
