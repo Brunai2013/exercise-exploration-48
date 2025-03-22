@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FrequencyData } from "@/hooks/metrics/useMetricsData";
 import { LoadingState, EmptyStateCard } from './workout-frequency/EmptyAndLoadingStates';
 import StatsCards from './workout-frequency/StatsCards';
@@ -38,35 +38,38 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
   const avgWorkoutsPerPeriod = totalWorkouts / data.length || 0;
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-0">
-        <HeaderSection 
-          view={view} 
-          timeFilter={timeFilter} 
-          dateRange={dateRange} 
-        />
-      </CardHeader>
-
-      <CardContent className="pt-4">
-        {/* Stats summary cards */}
-        <StatsCards 
-          totalWorkouts={totalWorkouts}
-          mostActivePeriod={mostActivePeriod}
-          avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
-          view={view}
-        />
-        
-        {/* Main chart */}
-        <FrequencyChart 
-          data={data} 
-          avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
-          view={view}
-        />
-
-        {/* Explanation section */}
-        <InfoSection avgWorkoutsPerPeriod={avgWorkoutsPerPeriod} />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <Card className="shadow-sm">
+        <CardContent className="p-6">
+          {/* Header with title and info */}
+          <HeaderSection 
+            view={view} 
+            timeFilter={timeFilter} 
+            dateRange={dateRange} 
+          />
+          
+          {/* Stats summary cards */}
+          <div className="mt-6">
+            <StatsCards 
+              totalWorkouts={totalWorkouts}
+              mostActivePeriod={mostActivePeriod}
+              avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
+              view={view}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Main chart in its own card */}
+      <FrequencyChart 
+        data={data} 
+        avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
+        view={view}
+      />
+      
+      {/* Explanation section */}
+      <InfoSection avgWorkoutsPerPeriod={avgWorkoutsPerPeriod} />
+    </div>
   );
 };
 
