@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MuscleGroupData } from "@/hooks/metrics/useMetricsData";
 import { 
@@ -48,7 +47,6 @@ const LoadingState = () => (
   </div>
 );
 
-// Active shape for the pie chart when hovering
 const renderActiveShape = (props: any) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
   const sin = Math.sin(-midAngle * (Math.PI / 180));
@@ -135,19 +133,16 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
     );
   }
 
-  // Create the chart config with appropriate colors
   const chartConfig = data.reduce((config, item) => {
     config[item.name] = { color: item.color };
     return config;
   }, {} as Record<string, { color: string }>);
 
-  // Format our data for the pie chart
   const formattedData = data.map(item => ({
     ...item,
     value: item.count
   }));
 
-  // Format date range for display
   const dateRangeText = `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
 
   const onPieEnter = (_: any, index: number) => {
@@ -182,21 +177,20 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row pt-4">
-          {/* Updated chart container with increased height for full visibility */}
+        <div className="flex flex-col md:flex-row">
           <div className="w-full md:w-3/5 flex items-center justify-center">
-            <div className="w-full h-[550px] flex items-center justify-center py-6">
+            <div className="w-full h-[700px] flex items-center justify-center py-10">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <PieChart margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
                     <Pie
                       activeIndex={activeIndex}
                       activeShape={renderActiveShape}
                       data={formattedData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={90}
-                      outerRadius={160}
+                      innerRadius={100}
+                      outerRadius={180}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
