@@ -156,11 +156,11 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader>
+      <CardHeader className="pb-0">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>Muscle Groups Worked</CardTitle>
-            <CardDescription className="mt-1">
+            <CardTitle className="text-2xl font-bold">Muscle Groups Worked</CardTitle>
+            <CardDescription className="mt-1 text-base">
               {timeFilter === 'week' ? 'Last Week' : 
                timeFilter === 'month' ? 'Last Month' : dateRangeText}
             </CardDescription>
@@ -182,68 +182,90 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[350px]">
-          <ChartContainer config={chartConfig}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  activeIndex={activeIndex}
-                  activeShape={renderActiveShape}
-                  data={formattedData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="count"
-                  nameKey="name"
-                  onMouseEnter={onPieEnter}
-                >
-                  {formattedData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <ChartTooltip
-                  content={({ active, payload }) => (
-                    <ChartTooltipContent
-                      active={active}
-                      payload={payload}
-                      labelFormatter={(_, payload) => {
-                        const item = payload?.[0]?.payload as MuscleGroupData;
-                        return item ? `${item.name}` : "";
-                      }}
-                      formatter={(value, name) => {
-                        const item = data.find(d => d.name === name);
-                        return [`${value} exercises (${item?.percentage || 0}%)`, "Exercises"];
-                      }}
+        <div className="flex flex-col md:flex-row pt-6">
+          <div className="w-full md:w-3/5 h-[400px] flex items-center justify-center">
+            <div className="w-full max-w-md h-full">
+              <ChartContainer config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      activeIndex={activeIndex}
+                      activeShape={renderActiveShape}
+                      data={formattedData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={120}
+                      fill="#8884d8"
+                      dataKey="count"
+                      nameKey="name"
+                      onMouseEnter={onPieEnter}
+                      paddingAngle={2}
+                    >
+                      {formattedData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color}
+                          stroke="#fff"
+                          strokeWidth={1}
+                        />
+                      ))}
+                    </Pie>
+                    <ChartTooltip
+                      content={({ active, payload }) => (
+                        <ChartTooltipContent
+                          active={active}
+                          payload={payload}
+                          labelFormatter={(_, payload) => {
+                            const item = payload?.[0]?.payload as MuscleGroupData;
+                            return item ? `${item.name}` : "";
+                          }}
+                          formatter={(value, name) => {
+                            const item = data.find(d => d.name === name);
+                            return [`${value} exercises (${item?.percentage || 0}%)`, "Exercises"];
+                          }}
+                        />
+                      )}
                     />
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </div>
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </div>
 
-        <div className="mt-6">
-          <h4 className="text-sm font-medium mb-2">Most Worked Muscle Groups</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.slice(0, 4).map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center p-3 rounded-lg border"
-              >
-                <div 
-                  className="w-3 h-3 rounded-full mr-3" 
-                  style={{ backgroundColor: item.color }}
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{item.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {item.count} exercises ({item.percentage}%)
-                  </span>
+          <div className="w-full md:w-2/5 mt-8 md:mt-0 md:pl-6">
+            <h4 className="text-lg font-semibold mb-4 text-gray-800">Most Worked Muscle Groups</h4>
+            <div className="grid gap-4">
+              {data.slice(0, 5).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 transition-colors"
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full mr-4 flex-shrink-0" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div className="flex-1">
+                    <span className="text-base font-medium text-gray-800">{item.name}</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm text-gray-600">
+                        {item.count} exercise{item.count !== 1 ? 's' : ''}
+                      </span>
+                      <span className="text-sm font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                        {item.percentage}%
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            <div className="mt-6 px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">Pro Tip:</span> For balanced muscle development, aim to work all major 
+                muscle groups evenly over time.
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>
