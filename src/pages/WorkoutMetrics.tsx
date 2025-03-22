@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -31,7 +30,7 @@ import {
   startOfWeek,
   endOfWeek
 } from 'date-fns';
-import MuscleGroupsChart from '@/components/metrics/MuscleGroupsChart';
+import MuscleGroupsChart from '@/components/metrics/muscle-groups/MuscleGroupsChart';
 import ExerciseProgressChart from '@/components/metrics/ExerciseProgressChart';
 import WorkoutFrequencyChart from '@/components/metrics/WorkoutFrequencyChart';
 import UpcomingAnalysis from '@/components/metrics/UpcomingAnalysis';
