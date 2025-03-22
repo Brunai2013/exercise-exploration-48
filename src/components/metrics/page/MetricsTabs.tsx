@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dumbbell, LineChart, BarChart3 } from 'lucide-react';
 import MuscleGroupsChart from '@/components/metrics/muscle-groups/MuscleGroupsChart';
-import ExerciseProgressChart from '@/components/metrics/ExerciseProgressChart';
+import ExerciseProgressChart from '@/components/metrics/exercise-progress/ExerciseProgressChart';
 import WorkoutFrequencyChart from '@/components/metrics/WorkoutFrequencyChart';
 import { FrequencyData, MuscleGroupData, ExerciseProgressItem } from "@/hooks/metrics/useMetricsData";
 
