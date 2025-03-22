@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/hover-card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { getAllWorkouts } from '@/lib/workout/queries';
-import { Workout, WorkoutExercise } from '@/lib/types';
 import { parseISO, isAfter } from 'date-fns';
 
 interface ExerciseProgressFutureChartProps {
@@ -115,84 +114,23 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
     
     fetchFutureExercises();
   }, []);
-  
-  // Handle loading states
+
+  // Prepare card content
+  let content;
   if (isLoading || isLoadingExercises) {
-    return (
-      <Card>
-        <LoadingState />
-      </Card>
-    );
-  }
-  
-  // Handle empty state
-  if (!hasFutureData) {
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>Upcoming Exercise Distribution</CardTitle>
-              <CardDescription>
-                See what exercises you've planned for the future
-              </CardDescription>
-            </div>
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
-              </HoverCardTrigger>
-              <HoverCardContent className="w-80">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">About This Chart</h4>
-                  <p className="text-sm">
-                    This chart shows the distribution of specific exercises in your upcoming scheduled workouts.
-                  </p>
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <EmptyState />
-        </CardContent>
-      </Card>
-    );
-  }
+    content = <LoadingState />;
+  } else if (!hasFutureData) {
+    content = <EmptyState />;
+  } else {
+    // Prepare data for the chart
+    const chartData = futureExercises.map(item => ({
+      name: item.name,
+      exercises: item.count,
+      fill: item.color
+    }));
 
-  // Prepare data for the chart
-  const chartData = futureExercises.map(item => ({
-    name: item.name,
-    exercises: item.count,
-    fill: item.color
-  }));
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>Upcoming Exercise Distribution</CardTitle>
-            <CardDescription>
-              See what specific exercises you've planned for the future
-            </CardDescription>
-          </div>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80">
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">About This Chart</h4>
-                <p className="text-sm">
-                  This shows the distribution of specific exercises in your upcoming workouts.
-                  It helps you see what exercises you're planning to focus on.
-                </p>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
-        </div>
-      </CardHeader>
-      <CardContent>
+    content = (
+      <div>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -238,6 +176,38 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
             <span className="font-semibold">Pro Tip:</span> This shows your top 10 most frequently scheduled exercises for upcoming workouts.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Upcoming Exercise Distribution</CardTitle>
+            <CardDescription>
+              See what specific exercises you've planned for the future
+            </CardDescription>
+          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">About This Chart</h4>
+                <p className="text-sm">
+                  This shows the distribution of specific exercises in your upcoming workouts.
+                  It helps you see what exercises you're planning to focus on.
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {content}
       </CardContent>
     </Card>
   );

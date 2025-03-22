@@ -56,7 +56,6 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
-        {/* Show future muscle group data */}
         <MuscleGroupsFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
@@ -64,7 +63,6 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="exercises" className="mt-6 space-y-8">
-        {/* Updated Exercise Progress Chart with all exercises visualized */}
         <ExerciseProgressChart 
           data={exerciseData} 
           isLoading={isLoading}
@@ -72,7 +70,6 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
-        {/* Updated Future Exercise chart showing individual exercises */}
         <ExerciseProgressFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
