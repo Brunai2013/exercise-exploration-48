@@ -15,7 +15,7 @@ import {
   Cell, 
   ReferenceLine, 
   Legend,
-  Label 
+  Label as RechartsLabel 
 } from "recharts";
 import { Calendar, InfoIcon, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -249,7 +249,7 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
                   strokeWidth={2}
                   opacity={0.7}
                 >
-                  <Label 
+                  <RechartsLabel 
                     value={`Average: ${avgWorkoutsPerPeriod.toFixed(1)}`} 
                     position="right" 
                     fill="#6667AB"
