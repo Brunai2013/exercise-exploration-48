@@ -32,7 +32,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
   timeFilter
 }) => {
   return (
-    <Tabs defaultValue="muscle-groups" className="w-full mb-8">
+    <Tabs defaultValue="exercises" className="w-full mb-8">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="muscle-groups" className="flex items-center justify-center">
           <Dumbbell className="w-4 h-4 mr-2" />
@@ -56,7 +56,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
-        {/* Always render the component, let it handle empty states internally */}
+        {/* Show future muscle group data */}
         <MuscleGroupsFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
@@ -64,6 +64,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="exercises" className="mt-6 space-y-8">
+        {/* Updated Exercise Progress Chart with all exercises visualized */}
         <ExerciseProgressChart 
           data={exerciseData} 
           isLoading={isLoading}
@@ -71,7 +72,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
-        {/* Always render the component, let it handle empty states internally */}
+        {/* Updated Future Exercise chart showing individual exercises */}
         <ExerciseProgressFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
@@ -87,7 +88,6 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
-        {/* Always render the component, let it handle empty states internally */}
         <WorkoutFrequencyFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
