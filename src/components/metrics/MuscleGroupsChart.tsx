@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MuscleGroupData } from "@/hooks/metrics/useMetricsData";
 import { 
@@ -6,7 +5,7 @@ import {
   ChartTooltip, 
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Sector } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Sector, Label, LabelList } from "recharts";
 import { Dumbbell, InfoIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -48,18 +47,49 @@ const LoadingState = () => (
   </div>
 );
 
+const renderCustomizedLabel = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value, fill } = props;
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  const sin = Math.sin(-midAngle * RADIAN);
+  const cos = Math.cos(-midAngle * RADIAN);
+  const ex = cx + (outerRadius + 30) * cos;
+  const ey = cy + (outerRadius + 30) * sin;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+  
+  return (
+    <g>
+      <path d={`M${cx + outerRadius * cos},${cy + outerRadius * sin}L${ex},${ey}`} stroke={fill} fill="none" />
+      <text 
+        x={ex + (cos >= 0 ? 1 : -1) * 12} 
+        y={ey} 
+        textAnchor={textAnchor} 
+        fill="#333" 
+        fontSize={12} 
+        fontWeight="500"
+      >
+        {name} ({(percent * 100).toFixed(0)}%)
+      </text>
+      <text 
+        x={ex + (cos >= 0 ? 1 : -1) * 12} 
+        y={ey} 
+        dy={18} 
+        textAnchor={textAnchor} 
+        fill="#666" 
+        fontSize={11}
+      >
+        {value} exercises
+      </text>
+    </g>
+  );
+};
+
 const renderActiveShape = (props: any) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-  const sin = Math.sin(-midAngle * (Math.PI / 180));
-  const cos = Math.cos(-midAngle * (Math.PI / 180));
-  const sx = cx + (outerRadius + 10) * cos;
-  const sy = cy + (outerRadius + 10) * sin;
-  const mx = cx + (outerRadius + 30) * cos;
-  const my = cy + (outerRadius + 30) * sin;
-  const ex = mx + (cos >= 0 ? 1 : -1) * 22;
-  const ey = my;
-  const textAnchor = cos >= 0 ? 'start' : 'end';
-
+  
   return (
     <g>
       <Sector
@@ -81,14 +111,6 @@ const renderActiveShape = (props: any) => {
         outerRadius={outerRadius + 10}
         fill={fill}
       />
-      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" strokeWidth={2} />
-      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333" fontSize={12}>
-        {payload.name} ({(percent * 100).toFixed(0)}%)
-      </text>
-      <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999" fontSize={12}>
-        {`${value} exercises`}
-      </text>
     </g>
   );
 };
@@ -170,7 +192,7 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
                 <h4 className="text-sm font-semibold">How to Use This Chart</h4>
                 <p className="text-sm">
                   This chart shows how your workout exercises are distributed across different muscle groups.
-                  Hover over sections to see details. Use this to identify any imbalances in your training.
+                  The labels show the percentage of your total exercises dedicated to each muscle group.
                 </p>
               </div>
             </HoverCardContent>
@@ -183,20 +205,22 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
             <div className="relative w-full max-w-md aspect-square">
               <ChartContainer config={chartConfig} className="absolute inset-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
                     <Pie
                       activeIndex={activeIndex}
                       activeShape={renderActiveShape}
                       data={formattedData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={70}
-                      outerRadius={120}
+                      innerRadius={60}
+                      outerRadius={100}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
                       onMouseEnter={onPieEnter}
                       paddingAngle={2}
+                      label={renderCustomizedLabel}
+                      labelLine={false}
                     >
                       {formattedData.map((entry, index) => (
                         <Cell 
@@ -229,7 +253,7 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
             </div>
           </div>
 
-          <div className="w-full md:w-2/5 p-6 py-8 flex flex-col">
+          <div className="w-full md:w-2/5 p-6 py-6 flex flex-col">
             <h4 className="text-lg font-semibold mb-4 text-gray-800">Most Worked Muscle Groups</h4>
             <div className="grid gap-3">
               {data.slice(0, 5).map((item) => (
@@ -256,10 +280,10 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
               ))}
             </div>
             
-            <div className="mt-auto pt-4">
-              <div className="px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-sm text-blue-800">
-                  <span className="font-medium">Pro Tip:</span> For balanced muscle development, aim to work all major 
+            <div className="mt-auto pt-6">
+              <div className="px-6 py-4 bg-blue-50 rounded-lg border border-blue-100">
+                <p className="text-sm md:text-base text-blue-800 leading-relaxed">
+                  <span className="font-semibold">Pro Tip:</span> For balanced muscle development, aim to work all major 
                   muscle groups evenly over time.
                 </p>
               </div>
@@ -272,3 +296,4 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
 };
 
 export default MuscleGroupsChart;
+
