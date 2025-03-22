@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ExerciseProgressItem } from "@/hooks/metrics/useMetricsData";
-import { InfoIcon, Dumbbell, Filter } from "lucide-react";
+import { InfoIcon, Dumbbell, Filter, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   HoverCard,
@@ -11,10 +11,9 @@ import {
 } from "@/components/ui/hover-card";
 import { format, parseISO } from "date-fns";
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, 
-  Tooltip, Legend, ResponsiveContainer, Brush 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, Cell
 } from "recharts";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -23,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ExerciseProgressChartProps {
   data: ExerciseProgressItem[];
@@ -31,7 +32,7 @@ interface ExerciseProgressChartProps {
   timeFilter: 'week' | 'month' | 'custom';
 }
 
-// Component for the empty state
+// Component for empty state
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center h-80 text-center p-4">
     <div className="rounded-full bg-indigo-100 p-3 mb-4">
@@ -44,7 +45,7 @@ const EmptyState = () => (
   </div>
 );
 
-// Component for the loading state
+// Component for loading state
 const LoadingState = () => (
   <div className="space-y-4 p-6">
     <Skeleton className="h-6 w-48" />
@@ -55,7 +56,12 @@ const LoadingState = () => (
 
 // Format date for display
 const formatDate = (dateStr: string): string => {
-  return format(parseISO(dateStr), 'MMM d');
+  try {
+    return format(parseISO(dateStr), 'MMM d');
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return dateStr;
+  }
 };
 
 // Main component
@@ -65,11 +71,11 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
   dateRange,
   timeFilter
 }) => {
-  // State for filtering and view options - maintain consistent hooks
-  const [chartType, setChartType] = useState<'weight' | 'reps' | 'volume'>('weight');
+  // State for chart view and filtering options
+  const [view, setView] = useState<'weight' | 'reps' | 'volume'>('weight');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
-  const [showAll, setShowAll] = useState(true);
+  const [sortBy, setSortBy] = useState<'mostUsed' | 'alphabetical'>('mostUsed');
   
   // Format date range for display
   const dateRangeText = useMemo(() => {
@@ -80,136 +86,125 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
     return timeFilter === 'week' ? 'Last Week' : 
            timeFilter === 'month' ? 'Last Month' : dateRangeText;
   }, [timeFilter, dateRangeText]);
-  
-  // Extract unique categories and exercises
-  const { 
+
+  // Get unique categories and exercises
+  const {
     uniqueCategories,
-    uniqueExercises,
     exercisesByCategory,
     formattedData,
-    topExercises,
+    exerciseCounts,
+    exerciseColors
   } = useMemo(() => {
-    // Get unique categories
+    // Extract unique categories
     const categories = ['all', ...Array.from(new Set(data.map(item => item.category)))];
     
-    // Get unique exercises
-    const exercises = Array.from(new Set(data.map(item => item.exercise)));
+    // Count exercise occurrences
+    const counts: Record<string, number> = {};
+    const colorMap: Record<string, string> = {};
+    
+    data.forEach(item => {
+      if (!counts[item.exercise]) {
+        counts[item.exercise] = 0;
+        
+        // Assign colors for exercises
+        const hue = Math.abs(item.exercise.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360);
+        colorMap[item.exercise] = `hsl(${hue}, 70%, 50%)`;
+      }
+      counts[item.exercise]++;
+    });
     
     // Group exercises by category
-    const exerciseGroups: Record<string, string[]> = { all: exercises };
-    data.forEach(item => {
-      if (!exerciseGroups[item.category]) {
-        exerciseGroups[item.category] = [];
+    const exerciseGroups: Record<string, string[]> = {};
+    
+    categories.forEach(category => {
+      if (category === 'all') {
+        exerciseGroups[category] = Object.keys(counts);
+      } else {
+        exerciseGroups[category] = data
+          .filter(item => item.category === category)
+          .map(item => item.exercise)
+          .filter((value, index, self) => self.indexOf(value) === index);
       }
-      if (!exerciseGroups[item.category].includes(item.exercise)) {
-        exerciseGroups[item.category].push(item.exercise);
+    });
+    
+    // Prepare data for visualization - most recent value for each exercise
+    const groupedByExercise: Record<string, any> = {};
+    
+    data.forEach(item => {
+      if (!groupedByExercise[item.exercise] || parseISO(item.date) > parseISO(groupedByExercise[item.exercise].date)) {
+        groupedByExercise[item.exercise] = {
+          exercise: item.exercise,
+          category: item.category,
+          weight: item.weight,
+          reps: item.reps,
+          volume: item.weight * item.reps,
+          date: item.date,
+          count: counts[item.exercise] || 1
+        };
       }
     });
     
-    // Format data for the chart - group by date and exercise
-    const grouped: Record<string, Record<string, { weight: number; reps: number; volume: number }>> = {};
-    
-    data.forEach(item => {
-      const dateKey = formatDate(item.date);
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = {};
-      }
-      
-      // Use the latest values for each exercise on the same date
-      const volume = item.weight * item.reps;
-      grouped[dateKey][item.exercise] = { 
-        weight: item.weight,
-        reps: item.reps,
-        volume
-      };
-    });
-    
-    // Convert to array format for Recharts
-    const formatted = Object.entries(grouped).map(([date, exercises]) => {
-      const entry: any = { date };
-      Object.entries(exercises).forEach(([exercise, values]) => {
-        entry[`${exercise}_weight`] = values.weight;
-        entry[`${exercise}_reps`] = values.reps;
-        entry[`${exercise}_volume`] = values.volume;
-      });
-      return entry;
-    });
-    
-    // Sort by date
-    formatted.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA.getTime() - dateB.getTime();
-    });
-    
-    // Find top 5 exercises by frequency
-    const exerciseCounts: Record<string, number> = {};
-    data.forEach(item => {
-      exerciseCounts[item.exercise] = (exerciseCounts[item.exercise] || 0) + 1;
-    });
-    
-    const top = Object.entries(exerciseCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([exercise]) => exercise);
+    const formatted = Object.values(groupedByExercise);
     
     return {
       uniqueCategories: categories,
-      uniqueExercises: exercises,
       exercisesByCategory: exerciseGroups,
       formattedData: formatted,
-      topExercises: top,
+      exerciseCounts: counts,
+      exerciseColors: colorMap
     };
   }, [data]);
   
-  // Assign colors to exercises
-  const exerciseColors = useMemo(() => {
-    const colors = [
-      '#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', 
-      '#d0ed57', '#ffc658', '#ff8042', '#ff6b6b', '#c44dff',
-      '#4d79ff', '#ff4d4d', '#4dff88', '#ff4dd3', '#4dfff4'
-    ];
+  // Filter and sort exercises for display
+  const displayExercises = useMemo(() => {
+    let exercises = selectedCategory === 'all' 
+      ? Object.keys(exerciseCounts)
+      : exercisesByCategory[selectedCategory] || [];
     
-    const colorMap: Record<string, string> = {};
-    uniqueExercises.forEach((exercise, index) => {
-      colorMap[exercise] = colors[index % colors.length];
-    });
+    // Apply sorting
+    if (sortBy === 'mostUsed') {
+      exercises = exercises.sort((a, b) => (exerciseCounts[b] || 0) - (exerciseCounts[a] || 0));
+    } else {
+      exercises = exercises.sort((a, b) => a.localeCompare(b));
+    }
     
-    return colorMap;
-  }, [uniqueExercises]);
+    return exercises;
+  }, [selectedCategory, sortBy, exercisesByCategory, exerciseCounts]);
   
-  // Handle category change
-  const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    setSelectedExercises([]);
-    setShowAll(true);
-  };
+  // Get filtered chart data
+  const filteredChartData = useMemo(() => {
+    const exercisesToShow = selectedExercises.length > 0 ? selectedExercises : displayExercises.slice(0, 12);
+    
+    return formattedData
+      .filter(item => exercisesToShow.includes(item.exercise))
+      .sort((a, b) => {
+        if (view === 'weight') return b.weight - a.weight;
+        if (view === 'reps') return b.reps - a.reps;
+        return b.volume - a.volume;
+      });
+  }, [formattedData, displayExercises, selectedExercises, view]);
   
-  // Handle exercise selection
-  const handleExerciseToggle = (exercise: string) => {
+  // Toggle exercise selection
+  const toggleExercise = (exercise: string) => {
     if (selectedExercises.includes(exercise)) {
       setSelectedExercises(selectedExercises.filter(e => e !== exercise));
     } else {
       setSelectedExercises([...selectedExercises, exercise]);
     }
-    setShowAll(false);
   };
   
-  // Get exercises to display based on filters
-  const displayedExercises = useMemo(() => {
-    if (showAll) {
-      return selectedCategory === 'all' 
-        ? topExercises 
-        : exercisesByCategory[selectedCategory]?.slice(0, 5) || [];
-    }
-    return selectedExercises;
-  }, [selectedCategory, selectedExercises, showAll, topExercises, exercisesByCategory]);
-  
+  // Clear all selected exercises
+  const clearSelection = () => {
+    setSelectedExercises([]);
+  };
+
   // Early return for loading state
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }
   
+  const viewUnitLabel = view === 'weight' ? 'lbs' : view === 'reps' ? 'reps' : 'lbs × reps';
+
   return (
     <Card>
       <CardHeader>
@@ -226,12 +221,8 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">About This Chart</h4>
                 <p className="text-sm">
-                  Track your progress for each exercise over time. You can:
-                  <br /><br />
-                  • Filter by muscle group/category<br />
-                  • Select specific exercises to compare<br />
-                  • View weight, reps, or volume (weight × reps)<br />
-                  • Use the brush at the bottom to zoom in
+                  This chart shows your exercise progress based on the most recent workout data. 
+                  You can filter by category and view weight, reps, or total volume (weight × reps).
                 </p>
               </div>
             </HoverCardContent>
@@ -243,19 +234,19 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
           <EmptyState />
         ) : (
           <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3 pb-2">
+            {/* Controls and filters */}
+            <div className="flex flex-wrap gap-3 items-center mb-4">
               <div className="flex items-center space-x-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Filter:</span>
+                <span className="text-sm font-medium">Filters:</span>
               </div>
               
-              <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select category" />
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {uniqueCategories.map((category) => (
+                  {uniqueCategories.map(category => (
                     <SelectItem key={category} value={category}>
                       {category === 'all' ? 'All Categories' : category}
                     </SelectItem>
@@ -263,130 +254,115 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
                 </SelectContent>
               </Select>
               
-              <Select value={chartType} onValueChange={(value) => setChartType(value as any)}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Chart type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weight">Weight</SelectItem>
-                  <SelectItem value="reps">Reps</SelectItem>
-                  <SelectItem value="volume">Volume</SelectItem>
-                </SelectContent>
-              </Select>
+              <Tabs value={view} onValueChange={(value) => setView(value as any)} className="w-auto">
+                <TabsList className="h-9">
+                  <TabsTrigger value="weight" className="text-xs">Weight</TabsTrigger>
+                  <TabsTrigger value="reps" className="text-xs">Reps</TabsTrigger>
+                  <TabsTrigger value="volume" className="text-xs">Volume</TabsTrigger>
+                </TabsList>
+              </Tabs>
               
-              {showAll ? (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowAll(false)}
-                >
-                  Showing Top 5
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowAll(true)}
-                >
-                  Show Top 5
-                </Button>
-              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-9 ml-auto flex gap-1 items-center"
+                onClick={() => setSortBy(sortBy === 'mostUsed' ? 'alphabetical' : 'mostUsed')}
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                <span className="text-xs">
+                  {sortBy === 'mostUsed' ? 'Most Used' : 'A-Z'}
+                </span>
+              </Button>
             </div>
             
-            {/* Exercise selection chips */}
-            <div className="flex flex-wrap gap-2 pb-3">
-              {(selectedCategory === 'all' 
-                ? uniqueExercises 
-                : exercisesByCategory[selectedCategory] || []
-              ).slice(0, 15).map((exercise) => (
-                <div
+            {/* Exercise selection */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {selectedExercises.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearSelection}
+                  className="h-7 px-2 text-xs"
+                >
+                  Clear
+                </Button>
+              )}
+              
+              {displayExercises.slice(0, 24).map(exercise => (
+                <Badge
                   key={exercise}
-                  onClick={() => handleExerciseToggle(exercise)}
-                  className={`
-                    px-3 py-1 rounded-full text-xs font-medium cursor-pointer
-                    ${selectedExercises.includes(exercise) || (showAll && topExercises.includes(exercise))
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}
-                  `}
+                  variant={selectedExercises.includes(exercise) ? "default" : "outline"}
+                  className="cursor-pointer h-7 select-none"
                   style={{
-                    borderLeft: `3px solid ${exerciseColors[exercise]}`
+                    borderLeftColor: exerciseColors[exercise],
+                    borderLeftWidth: '3px'
                   }}
+                  onClick={() => toggleExercise(exercise)}
                 >
                   {exercise}
-                </div>
+                </Badge>
               ))}
-              {(selectedCategory !== 'all' && exercisesByCategory[selectedCategory]?.length > 15) && (
-                <div className="px-3 py-1 rounded-full bg-secondary text-xs text-secondary-foreground">
-                  +{exercisesByCategory[selectedCategory].length - 15} more
-                </div>
+              
+              {displayExercises.length > 24 && (
+                <Badge variant="outline" className="bg-muted/40">
+                  +{displayExercises.length - 24} more
+                </Badge>
               )}
             </div>
             
-            {/* Chart */}
-            <div className="h-[350px] mt-4">
+            {/* Bar chart visualization */}
+            <div className="h-[350px] mt-6">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={formattedData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
+                <BarChart
+                  data={filteredChartData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                   <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }}
-                    padding={{ left: 10, right: 10 }}
+                    type="number" 
+                    label={{ 
+                      value: view === 'weight' ? 'Weight (lbs)' : 
+                             view === 'reps' ? 'Repetitions' : 
+                             'Volume (lbs × reps)',
+                      position: 'bottom'
+                    }} 
                   />
                   <YAxis 
-                    label={{ 
-                      value: chartType === 'weight' ? 'Weight (lbs)' : 
-                             chartType === 'reps' ? 'Repetitions' : 'Volume (lbs × reps)',
-                      angle: -90, 
-                      position: 'insideLeft',
-                      style: { textAnchor: 'middle', fontSize: 12 }
-                    }}
-                    width={60}
+                    dataKey="exercise" 
+                    type="category" 
+                    width={150} 
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
                   />
                   <Tooltip 
-                    formatter={(value, name) => {
-                      const exerciseName = name.split('_')[0];
-                      return [`${value} ${chartType === 'weight' ? 'lbs' : 
-                                         chartType === 'reps' ? 'reps' : ''}`, exerciseName];
-                    }}
+                    formatter={(value: number) => [`${value} ${viewUnitLabel}`, '']}
+                    labelFormatter={(label) => `Exercise: ${label}`}
                   />
-                  <Legend 
-                    formatter={(value) => {
-                      const exerciseName = value.split('_')[0];
-                      return exerciseName;
-                    }}
-                  />
-                  <Brush 
-                    dataKey="date" 
-                    height={30} 
-                    stroke="#8884d8"
-                    startIndex={Math.max(0, formattedData.length - 10)}
-                  />
-                  
-                  {/* Render selected exercise lines */}
-                  {displayedExercises.map((exercise) => (
-                    <Line
-                      key={exercise}
-                      type="monotone"
-                      dataKey={`${exercise}_${chartType}`}
-                      name={`${exercise}_${chartType}`}
-                      stroke={exerciseColors[exercise]}
-                      activeDot={{ r: 8 }}
-                      strokeWidth={2}
-                      connectNulls
-                      dot={{ strokeWidth: 2 }}
-                    />
-                  ))}
-                </LineChart>
+                  <Bar 
+                    dataKey={view} 
+                    name={view.charAt(0).toUpperCase() + view.slice(1)}
+                    radius={[0, 4, 4, 0]}
+                  >
+                    {filteredChartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={exerciseColors[entry.exercise] || '#8884d8'} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
-
-            {/* Tips */}
-            <div className="mt-4 px-4 py-3 bg-indigo-50 rounded-lg border border-indigo-100">
-              <p className="text-sm text-indigo-800">
-                <span className="font-semibold">Pro Tip:</span> Select specific exercises to compare or use the filter to focus on a particular muscle group. Use the brush below the chart to zoom in on specific time periods.
+            
+            {/* Info section */}
+            <div className="mt-6 px-4 py-3 bg-indigo-50 rounded-lg border border-indigo-100">
+              <p className="text-sm text-indigo-800 flex items-center">
+                <InfoIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span>
+                  <span className="font-semibold">Tip:</span> Click on exercise names to compare specific exercises. 
+                  The chart shows the most recent values for each selected exercise.
+                </span>
               </p>
             </div>
           </div>
