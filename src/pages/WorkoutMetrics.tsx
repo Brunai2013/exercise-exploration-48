@@ -11,6 +11,8 @@ import MetricsTabs from '@/components/metrics/page/MetricsTabs';
 const WorkoutMetrics = () => {
   // Create default date range using today as the end date
   const today = new Date();
+  console.log('Metrics page initialized with today date:', today);
+  
   const [dateRange, setDateRange] = useState<{
     from: Date;
     to: Date;
@@ -24,6 +26,7 @@ const WorkoutMetrics = () => {
   
   // Update date range when time filter changes
   useEffect(() => {
+    console.log('Time filter changed to:', timeFilter);
     if (timeFilter === 'week') {
       setDateRange({
         from: startOfWeek(today),
@@ -36,7 +39,7 @@ const WorkoutMetrics = () => {
       });
     }
     // 'custom' doesn't automatically change the date range, allowing user selection
-  }, [timeFilter]);
+  }, [timeFilter, today]);
   
   const { 
     muscleGroupData, 
@@ -45,6 +48,14 @@ const WorkoutMetrics = () => {
     upcomingWorkoutData,
     isLoading
   } = useMetricsData(dateRange, view);
+
+  console.log('Metrics data loaded:', {
+    muscleGroups: muscleGroupData.length,
+    exercises: exerciseData.length,
+    frequency: frequencyData.length,
+    upcoming: upcomingWorkoutData.length,
+    loading: isLoading
+  });
 
   // Ensure from date is before to date
   const handleDateRangeChange = (range: { from: Date; to?: Date }) => {
@@ -57,6 +68,7 @@ const WorkoutMetrics = () => {
       setDateRange({ from: range.from, to: range.to });
       setTimeFilter('custom'); // Switch to custom when manually selecting dates
     }
+    console.log('Date range changed to:', range);
   };
 
   return (

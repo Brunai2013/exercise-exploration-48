@@ -55,12 +55,14 @@ export const useMetricsData = (
   const [upcomingWorkoutData, setUpcomingWorkoutData] = useState<CategoryAnalysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch workouts
+  // Fetch workouts - add debug logs
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching workouts for metrics with date range:', dateRange);
         const allWorkouts = await getAllWorkouts();
+        console.log('Fetched workouts count:', allWorkouts.length);
         setWorkouts(allWorkouts);
       } catch (error) {
         console.error('Error fetching workouts:', error);
@@ -79,7 +81,10 @@ export const useMetricsData = (
 
   // Process the data for muscle groups
   useEffect(() => {
-    if (!workouts.length) return;
+    if (!workouts.length) {
+      console.log('No workouts to process for muscle groups');
+      return;
+    }
 
     const fetchCategoryData = async () => {
       try {
@@ -93,6 +98,8 @@ export const useMetricsData = (
           const workoutDate = parseISO(workout.date);
           return workoutDate >= dateRange.from && workoutDate <= dateRange.to;
         });
+        
+        console.log('Filtered workouts for muscle groups:', filteredWorkouts.length);
 
         // Count exercises by category
         for (const workout of filteredWorkouts) {
@@ -122,6 +129,9 @@ export const useMetricsData = (
           }
         }
 
+        console.log('Total exercise count:', totalExerciseCount);
+        console.log('Categories found:', Object.keys(categoryMap).length);
+
         // Convert to array and calculate percentages
         const processedData: MuscleGroupData[] = [];
         
@@ -140,6 +150,7 @@ export const useMetricsData = (
 
         // Sort by count descending
         processedData.sort((a, b) => b.count - a.count);
+        console.log('Processed muscle group data:', processedData.length);
         setMuscleGroupData(processedData);
         setIsLoading(false);
       } catch (error) {
@@ -153,7 +164,10 @@ export const useMetricsData = (
 
   // Process the data for exercise progress
   useEffect(() => {
-    if (!workouts.length) return;
+    if (!workouts.length) {
+      console.log('No workouts to process for exercise progress');
+      return;
+    }
 
     const exerciseProgressItems: ExerciseProgressItem[] = [];
 
@@ -163,6 +177,8 @@ export const useMetricsData = (
       const workoutDate = parseISO(workout.date);
       return workoutDate >= dateRange.from && workoutDate <= dateRange.to;
     });
+    
+    console.log('Filtered workouts for exercise progress:', filteredWorkouts.length);
 
     // Extract exercise data
     filteredWorkouts.forEach(workout => {
@@ -175,7 +191,7 @@ export const useMetricsData = (
         if (completedSets.length > 0) {
           // Find the max weight set
           const maxWeightSet = completedSets.reduce((max, set) => 
-            (set.weight > max.weight) ? set : max, completedSets[0]);
+            (set.weight || 0) > (max.weight || 0) ? set : max, completedSets[0]);
           
           exerciseProgressItems.push({
             date: workoutDate,
@@ -192,13 +208,17 @@ export const useMetricsData = (
     exerciseProgressItems.sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
-
+    
+    console.log('Exercise progress items:', exerciseProgressItems.length);
     setExerciseData(exerciseProgressItems);
   }, [workouts, dateRange]);
 
   // Process the data for workout frequency
   useEffect(() => {
-    if (!workouts.length) return;
+    if (!workouts.length) {
+      console.log('No workouts to process for frequency data');
+      return;
+    }
 
     // Get interval data based on view selection
     let intervalData: { name: string; workouts: number; color: string }[] = [];
@@ -209,6 +229,8 @@ export const useMetricsData = (
         start: dateRange.from,
         end: dateRange.to
       });
+      
+      console.log('Week intervals count:', weekIntervals.length);
       
       // Initialize weekly data
       intervalData = weekIntervals.map((weekStart, index) => {
@@ -296,14 +318,19 @@ export const useMetricsData = (
         });
     }
     
+    console.log('Frequency data intervals:', intervalData.length);
     setFrequencyData(intervalData);
   }, [workouts, dateRange, view]);
 
   // Process data for upcoming analysis
   useEffect(() => {
-    if (!workouts.length) return;
+    if (!workouts.length) {
+      console.log('No workouts to process for upcoming analysis');
+      return;
+    }
     
     const now = new Date();
+    console.log('Current date for upcoming analysis:', now);
     
     const fetchAnalysisData = async () => {
       try {
@@ -326,11 +353,15 @@ export const useMetricsData = (
           return workoutDate <= now && workoutDate >= dateRange.from;
         });
         
+        console.log('Past workouts count:', pastWorkouts.length);
+        
         // Process future scheduled workouts
         const futureWorkouts = workouts.filter(workout => {
           const workoutDate = parseISO(workout.date);
           return workoutDate > now;
         });
+        
+        console.log('Future workouts count:', futureWorkouts.length);
         
         // Count past exercises by category
         for (const workout of pastWorkouts) {
@@ -382,6 +413,9 @@ export const useMetricsData = (
           }
         }
         
+        console.log('Past total exercises:', pastTotal);
+        console.log('Future total exercises:', futureTotal);
+        
         // Calculate percentages and determine suggestions
         const analysisData: CategoryAnalysis[] = [];
         
@@ -415,6 +449,7 @@ export const useMetricsData = (
         // Sort by past percentage (highest first)
         analysisData.sort((a, b) => b.pastPercentage - a.pastPercentage);
         
+        console.log('Analysis data items:', analysisData.length);
         setUpcomingWorkoutData(analysisData);
         setIsLoading(false);
       } catch (error) {

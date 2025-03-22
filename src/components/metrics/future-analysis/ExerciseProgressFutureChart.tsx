@@ -51,6 +51,8 @@ const LoadingState = () => (
 );
 
 const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = ({ data, isLoading }) => {
+  console.log("ExerciseProgressFutureChart data:", data, "isLoading:", isLoading);
+  
   // State for filtering
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
@@ -65,6 +67,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
     exerciseData,
     exerciseColors
   } = useMemo(() => {
+    console.log("Processing category data for exercise visualization");
     const categories = ['all', ...data.map(item => item.category)];
     
     // Generate simulated exercise data from categories
@@ -113,6 +116,8 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
     exerciseArray.forEach(ex => {
       colorMap[ex.name] = ex.color;
     });
+    
+    console.log("Generated exercise data:", exerciseArray.length, "unique categories:", categories.length);
     
     return {
       uniqueCategories: categories,
@@ -175,12 +180,15 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
     color: item.color
   }));
   
+  console.log("Filtered chart data length:", filteredChartData.length, "Chart data:", chartData.length);
+  
   // Early return for loading state
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }
   
   const hasData = data.length > 0 && chartData.length > 0;
+  console.log("Has data:", hasData, "data length:", data.length, "chart data length:", chartData.length);
 
   return (
     <Card>
