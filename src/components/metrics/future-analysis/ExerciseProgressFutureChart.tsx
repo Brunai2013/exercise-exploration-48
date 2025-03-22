@@ -111,7 +111,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
   
   // Early return for loading state
   if (isLoading) {
-    return <Card><LoadingState /></Card>;
+    return <Card className="h-full"><LoadingState /></Card>;
   }
   
   // Check if we have any data to display
@@ -120,7 +120,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
 
   if (!hasData) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>Upcoming Exercise Distribution</CardTitle>
           <CardDescription>
@@ -128,14 +128,17 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <EmptyState />
+          <EmptyState 
+            title="No exercise data available" 
+            description="Schedule future workouts to see exercise distribution data"
+          />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
@@ -193,6 +196,27 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
                 {sortBy === 'mostScheduled' ? 'Most Scheduled' : 'A-Z'}
               </span>
             </Button>
+          </div>
+          
+          {/* Category badges */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {data.slice(0, 5).map(category => (
+              <Badge 
+                key={category.id}
+                variant={selectedCategory === category.category ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => setSelectedCategory(
+                  selectedCategory === category.category ? 'all' : category.category
+                )}
+                style={{ 
+                  backgroundColor: selectedCategory === category.category ? category.color : 'transparent',
+                  borderColor: category.color,
+                  color: selectedCategory === category.category ? 'white' : 'inherit'
+                }}
+              >
+                {category.category}
+              </Badge>
+            ))}
           </div>
           
           {/* Bar chart visualization */}

@@ -45,7 +45,8 @@ export interface CategoryAnalysis {
 
 export const useMetricsData = (
   dateRange: MetricsDateRange,
-  view: 'weekly' | 'monthly'
+  view: 'weekly' | 'monthly',
+  refreshKey = 0 // Add refresh key to force data reload
 ) => {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [muscleGroupData, setMuscleGroupData] = useState<MuscleGroupData[]>([]);
@@ -76,11 +77,13 @@ export const useMetricsData = (
           })));
         } else {
           console.log('No workouts found in the database');
-          // Create demo data if no workouts exist
+          // Create demo data immediately if no workouts exist
           setMuscleGroupData(generateDemoMuscleGroupData());
           setExerciseData(generateDemoExerciseData());
           setFrequencyData(generateDemoFrequencyData(view));
           setUpcomingWorkoutData(generateDemoUpcomingData());
+          setIsLoading(false);
+          return; // Exit early since we've already set demo data
         }
         
         setWorkouts(allWorkouts);
@@ -92,13 +95,12 @@ export const useMetricsData = (
         setExerciseData(generateDemoExerciseData());
         setFrequencyData(generateDemoFrequencyData(view));
         setUpcomingWorkoutData(generateDemoUpcomingData());
-      } finally {
         setIsLoading(false);
       }
     };
 
     fetchWorkouts();
-  }, []);
+  }, [refreshKey]); // Add refreshKey to dependencies
 
   // Process the data for muscle groups
   useEffect(() => {
@@ -122,6 +124,12 @@ export const useMetricsData = (
         });
         
         console.log('Filtered workouts for muscle groups:', filteredWorkouts.length);
+
+        // If no workouts in range, use demo data
+        if (filteredWorkouts.length === 0) {
+          setMuscleGroupData(generateDemoMuscleGroupData());
+          return;
+        }
 
         // Count exercises by category
         for (const workout of filteredWorkouts) {
@@ -180,13 +188,10 @@ export const useMetricsData = (
         } else {
           setMuscleGroupData(processedData);
         }
-        
-        setIsLoading(false);
       } catch (error) {
         console.error('Error processing muscle group data:', error);
         setError('Error processing workout data. Please try again later.');
         setMuscleGroupData(generateDemoMuscleGroupData());
-        setIsLoading(false);
       }
     };
 
@@ -211,6 +216,12 @@ export const useMetricsData = (
       });
       
       console.log('Filtered workouts for exercise progress:', filteredWorkouts.length);
+
+      // If no workouts in range, use demo data
+      if (filteredWorkouts.length === 0) {
+        setExerciseData(generateDemoExerciseData());
+        return;
+      }
 
       // Extract exercise data
       filteredWorkouts.forEach(workout => {
@@ -260,12 +271,28 @@ export const useMetricsData = (
   useEffect(() => {
     if (!workouts.length) {
       console.log('No workouts to process for frequency data');
+      setFrequencyData(generateDemoFrequencyData(view));
       return;
     }
 
     try {
       // Get interval data based on view selection
       let intervalData: { name: string; workouts: number; color: string }[] = [];
+      
+      // Filter workouts by date range first
+      const filteredWorkouts = workouts.filter(workout => {
+        if (!workout.completed) return false;
+        const workoutDate = parseISO(workout.date);
+        return workoutDate >= dateRange.from && workoutDate <= dateRange.to;
+      });
+      
+      console.log('Filtered workouts for frequency data:', filteredWorkouts.length);
+      
+      // If no workouts in range, use demo data
+      if (filteredWorkouts.length === 0) {
+        setFrequencyData(generateDemoFrequencyData(view));
+        return;
+      }
       
       if (view === 'weekly') {
         // Create weekly intervals
@@ -290,11 +317,8 @@ export const useMetricsData = (
         });
         
         // Count workouts per week
-        workouts.forEach(workout => {
-          if (!workout.completed) return;
-          
+        filteredWorkouts.forEach(workout => {
           const workoutDate = parseISO(workout.date);
-          if (workoutDate < dateRange.from || workoutDate > dateRange.to) return;
           
           const weekIndex = weekIntervals.findIndex((weekStart, i) => {
             const nextWeekStart = weekIntervals[i + 1];
@@ -335,13 +359,10 @@ export const useMetricsData = (
         });
         
         // Count workouts per month
-        workouts.forEach(workout => {
-          if (!workout.completed) return;
-          
+        filteredWorkouts.forEach(workout => {
           const workoutDate = parseISO(workout.date);
-          if (workoutDate < dateRange.from || workoutDate > dateRange.to) return;
-          
           const monthKey = format(workoutDate, 'yyyy-MM');
+          
           if (monthsMap[monthKey]) {
             monthsMap[monthKey].workouts += 1;
           }
@@ -381,6 +402,8 @@ export const useMetricsData = (
   useEffect(() => {
     if (!workouts.length) {
       console.log('No workouts to process for upcoming analysis');
+      setUpcomingWorkoutData(generateDemoUpcomingData());
+      setIsLoading(false);
       return;
     }
     
@@ -389,8 +412,6 @@ export const useMetricsData = (
     
     const fetchAnalysisData = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
         const categoryMap: Record<string, { 
           id: string;
           name: string;
@@ -418,6 +439,13 @@ export const useMetricsData = (
         });
         
         console.log('Future workouts count:', futureWorkouts.length);
+        
+        // If no workouts in either category, use demo data
+        if (pastWorkouts.length === 0 && futureWorkouts.length === 0) {
+          setUpcomingWorkoutData(generateDemoUpcomingData());
+          setIsLoading(false);
+          return;
+        }
         
         // Count past exercises by category
         for (const workout of pastWorkouts) {
