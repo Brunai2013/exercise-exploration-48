@@ -20,7 +20,8 @@ import {
   Layers,
   Plus,
   X,
-  Check
+  Check,
+  Sparkles
 } from 'lucide-react';
 import ExerciseWorkoutCard from '@/components/workout/ExerciseWorkoutCard';
 import ExerciseGroupCard from '@/components/workout/ExerciseGroupCard';
@@ -502,70 +503,41 @@ const WorkoutSession = () => {
         </CardContent>
       </Card>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        <div className="flex-1 overflow-x-auto">
-          <div className="flex space-x-2 pb-2">
-            {workout?.exercises.map((exercise, index) => {
-              const exerciseSets = exercise.sets;
-              const completedSets = exerciseSets.filter(set => set.completed).length;
-              const exerciseProgress = Math.round((completedSets / exerciseSets.length) * 100);
-              
-              return (
-                <Button
-                  key={exercise.id}
-                  variant={currentExerciseIndex === index ? "default" : "outline"}
-                  className={`whitespace-nowrap ${selectedExercises.includes(exercise.id) ? 'ring-2 ring-primary' : ''}`}
-                  onClick={() => {
-                    if (groupingMode) {
-                      toggleExerciseSelection(exercise.id);
-                    } else {
-                      handleNavigateToExercise(index);
-                    }
-                  }}
-                >
-                  {exercise.exercise.name}
-                  {exerciseProgress === 100 && !groupingMode && <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />}
-                  {selectedExercises.includes(exercise.id) && groupingMode && <Check className="ml-2 h-4 w-4" />}
-                </Button>
-              );
-            })}
+      <div className="mb-6 flex justify-end">
+        {groupingMode ? (
+          <div className="flex gap-2">
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={handleCreateCustomGroup}
+              disabled={selectedExercises.length < 2}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-glow rounded-full px-5 py-2"
+            >
+              <Layers className="h-4 w-4 mr-2" />
+              Create Circuit
+              <Sparkles className="h-3 w-3 ml-2 text-white/70" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={cancelGroupingMode}
+              className="rounded-full"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
           </div>
-        </div>
-        
-        <div className="flex gap-2">
-          {groupingMode ? (
-            <>
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={handleCreateCustomGroup}
-                disabled={selectedExercises.length < 2}
-              >
-                <Layers className="h-4 w-4 mr-2" />
-                Create Circuit
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={cancelGroupingMode}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={startGroupingMode}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Group Exercises
-              </Button>
-            </>
-          )}
-        </div>
+        ) : (
+          <Button 
+            variant="secondary"
+            onClick={startGroupingMode}
+            className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md hover:shadow-lg rounded-full animate-pulse duration-3000 border-none"
+          >
+            <Layers className="h-5 w-5 mr-2" />
+            Group Exercises
+            <Sparkles className="h-4 w-4 ml-2 text-white/70" />
+          </Button>
+        )}
       </div>
       
       {groupingMode && (
