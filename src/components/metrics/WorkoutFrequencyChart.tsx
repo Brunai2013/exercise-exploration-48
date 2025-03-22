@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FrequencyData } from "@/hooks/metrics/useMetricsData";
 import { 
   ChartContainer, 
-  ChartTooltip, 
+  ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
 import { 
@@ -16,8 +16,8 @@ import {
   Cell, 
   ReferenceLine, 
   Legend,
-  Label as RechartsLabel,
-  Tooltip
+  Tooltip,
+  Label as RechartsLabel
 } from "recharts";
 import { Calendar, InfoIcon, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,8 +39,8 @@ interface WorkoutFrequencyChartProps {
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center h-80 text-center p-4">
-    <div className="rounded-full bg-cyan-100 p-3 mb-4">
-      <Calendar className="h-6 w-6 text-cyan-600" />
+    <div className="rounded-full bg-blue-50 p-3 mb-4">
+      <Calendar className="h-6 w-6 text-blue-500" />
     </div>
     <h3 className="text-lg font-semibold mb-2">No workout data available</h3>
     <p className="text-muted-foreground mb-4 max-w-md">
@@ -90,11 +90,6 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
     );
   }
 
-  const chartConfig = data.reduce((config, item) => {
-    config[item.name] = { color: item.color };
-    return config;
-  }, {} as Record<string, { color: string }>);
-
   const totalWorkouts = data.reduce((sum, item) => sum + item.workouts, 0);
   const mostActiveIndex = data.reduce((maxIndex, item, index, arr) => 
     item.workouts > arr[maxIndex].workouts ? index : maxIndex, 0);
@@ -114,14 +109,15 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
     return value;
   };
 
-  // Custom tooltip formatter
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-md shadow-lg border border-gray-200">
+        <div className="bg-white p-3 rounded-lg shadow border border-gray-100">
           <p className="font-medium text-gray-800">{formatXAxisTick(data.name)}</p>
-          <p className="text-blue-600 font-bold mt-1">{data.workouts} workout{data.workouts !== 1 ? 's' : ''}</p>
+          <p className="text-blue-600 font-bold mt-1">
+            {data.workouts} workout{data.workouts !== 1 ? 's' : ''}
+          </p>
           {data.dateRange && (
             <p className="text-gray-500 text-xs mt-1">{data.dateRange}</p>
           )}
@@ -132,177 +128,143 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden bg-white shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between mb-1">
+    <Card className="shadow-sm">
+      <CardHeader className="pb-0">
+        <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center text-xl font-bold text-gray-800">
+            <CardTitle className="flex items-center text-lg font-bold text-gray-800">
               <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
               Workout Consistency
             </CardTitle>
-            <CardDescription className="flex items-center mt-1 text-gray-500">
+            <CardDescription className="mt-1 text-gray-500">
               {timeFilter === 'week' ? 'Last Week' : 
                timeFilter === 'month' ? 'Last Month' : dateRangeText}
-              <Badge variant="outline" className="ml-2 capitalize">
-                {view} view
-              </Badge>
             </CardDescription>
           </div>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <button className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-                <InfoIcon className="h-5 w-5" />
-              </button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80">
-              <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="capitalize">
+              {view} view
+            </Badge>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <button className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100">
+                  <InfoIcon className="h-4 w-4" />
+                </button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
                 <h4 className="text-sm font-semibold">About This Chart</h4>
-                <p className="text-sm text-gray-600">
-                  This chart displays your workout frequency over time:
+                <p className="text-sm text-gray-600 mt-1">
+                  This chart shows your workout frequency over time. The dotted line represents your average.
                 </p>
-                <ul className="text-sm list-disc pl-5 space-y-1 text-gray-600">
-                  <li><strong>X-axis:</strong> Time periods ({view === 'weekly' ? 'weeks' : 'months'})</li>
-                  <li><strong>Y-axis:</strong> Number of workouts completed</li>
-                  <li><strong>Bars:</strong> Each bar represents workouts in a time period</li>
-                  <li><strong>Dotted line:</strong> Your average workouts per {view === 'weekly' ? 'week' : 'month'}</li>
-                </ul>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-0 pb-4">
+
+      <CardContent className="pt-4">
         {/* Stats summary cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 px-2">
-          <div className="bg-blue-50 p-3 rounded-xl shadow-sm">
-            <p className="text-xs text-blue-700 font-medium mb-1">Total Workouts</p>
-            <p className="text-2xl font-bold text-gray-800">{totalWorkouts}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {timeFilter === 'week' ? 'Last week' : 
-               timeFilter === 'month' ? 'Last month' : 'Selected period'}
-            </p>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-xs text-blue-700 font-medium">Total Workouts</p>
+            <p className="text-2xl font-bold">{totalWorkouts}</p>
           </div>
-          <div className="bg-violet-50 p-3 rounded-xl shadow-sm">
-            <p className="text-xs text-violet-700 font-medium mb-1">Peak Activity</p>
-            <p className="text-2xl font-bold text-gray-800">
-              {mostActivePeriod?.workouts || 0}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              {view === 'weekly' ? 'Most active week: ' : 'Most active month: '}
+          <div className="bg-purple-50 p-3 rounded-lg">
+            <p className="text-xs text-purple-700 font-medium">Peak Activity</p>
+            <p className="text-2xl font-bold">{mostActivePeriod?.workouts || 0}</p>
+            <p className="text-xs text-gray-500 truncate">
               {formatXAxisTick(mostActivePeriod?.name || 'None')}
             </p>
           </div>
-          <div className="bg-teal-50 p-3 rounded-xl shadow-sm">
-            <p className="text-xs text-teal-700 font-medium mb-1">Average Frequency</p>
-            <p className="text-2xl font-bold text-gray-800">{avgWorkoutsPerPeriod.toFixed(1)}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Workouts per {view === 'weekly' ? 'week' : 'month'}
+          <div className="bg-teal-50 p-3 rounded-lg">
+            <p className="text-xs text-teal-700 font-medium">Average</p>
+            <p className="text-2xl font-bold">{avgWorkoutsPerPeriod.toFixed(1)}</p>
+            <p className="text-xs text-gray-500">
+              per {view === 'weekly' ? 'week' : 'month'}
             </p>
           </div>
         </div>
         
         {/* Main chart */}
-        <div className="h-[320px] mt-4 px-2">
-          <ChartContainer config={chartConfig}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={data} 
-                margin={{ top: 5, right: 30, left: 10, bottom: 30 }}
-                barSize={40}
-                barGap={8}
+        <div className="h-[300px] w-full mt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={data} 
+              margin={{ top: 10, right: 30, left: 10, bottom: 30 }}
+              barSize={40}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+              <XAxis 
+                dataKey="name"
+                axisLine={{ stroke: "#ddd" }}
+                tickFormatter={formatXAxisTick}
+                tick={{ fontSize: 12, fill: "#666" }}
+                tickLine={false}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                <XAxis 
-                  dataKey="name"
-                  tick={{ fontSize: 12, fill: "#666" }}
-                  tickLine={false}
-                  axisLine={{ stroke: "#ddd" }}
-                  tickFormatter={formatXAxisTick}
-                  interval={0}
-                  padding={{ left: 15, right: 15 }}
-                >
-                  <RechartsLabel 
-                    value={view === 'weekly' ? 'Week' : 'Month'} 
-                    position="insideBottom" 
-                    offset={-5}
-                    style={{ 
-                      textAnchor: 'middle', 
-                      fill: '#666', 
-                      fontSize: 14,
-                      fontWeight: 500 
-                    }}
+                <RechartsLabel 
+                  value={view === 'weekly' ? 'Week' : 'Month'} 
+                  position="insideBottom" 
+                  offset={-10} 
+                  style={{ fontWeight: 500, fill: '#666', fontSize: 12 }}
+                />
+              </XAxis>
+              <YAxis 
+                allowDecimals={false}
+                axisLine={{ stroke: "#ddd" }}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: "#666" }}
+                domain={[0, (dataMax: number) => Math.max(dataMax + 1, 4)]}
+              >
+                <RechartsLabel 
+                  value="Workouts" 
+                  angle={-90} 
+                  position="insideLeft" 
+                  style={{ fontWeight: 500, fill: '#666', fontSize: 12 }}
+                  offset={-5}
+                />
+              </YAxis>
+              <Tooltip content={<CustomTooltip />} />
+              <ReferenceLine 
+                y={avgWorkoutsPerPeriod} 
+                stroke="#6366F1" 
+                strokeDasharray="3 3"
+                strokeWidth={1.5}
+              >
+                <RechartsLabel 
+                  value={`Avg: ${avgWorkoutsPerPeriod.toFixed(1)}`} 
+                  position="right" 
+                  style={{ fontSize: 12, fill: '#6366F1', fontWeight: 500 }}
+                />
+              </ReferenceLine>
+              <Bar 
+                dataKey="workouts" 
+                name="Workouts" 
+                radius={[4, 4, 0, 0]}
+                animationDuration={800}
+              >
+                {data.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color || "#2563EB"} 
+                    fillOpacity={0.8}
                   />
-                </XAxis>
-                <YAxis 
-                  allowDecimals={false}
-                  tickLine={false}
-                  axisLine={{ stroke: "#ddd" }}
-                  tick={{ fontSize: 12, fill: "#666" }}
-                  width={35}
-                  domain={[0, (dataMax: number) => Math.max(dataMax + 1, 4)]}
-                >
-                  <RechartsLabel 
-                    value="Workouts" 
-                    angle={-90} 
-                    position="insideLeft"
-                    style={{ 
-                      textAnchor: 'middle', 
-                      fill: '#666', 
-                      fontSize: 14,
-                      fontWeight: 500 
-                    }}
-                    offset={-5}
-                  />
-                </YAxis>
-                <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine 
-                  y={avgWorkoutsPerPeriod} 
-                  stroke="#6366F1" 
-                  strokeDasharray="5 5"
-                  strokeWidth={2}
-                  opacity={0.7}
-                >
-                  <RechartsLabel 
-                    value={`Average: ${avgWorkoutsPerPeriod.toFixed(1)}`} 
-                    position="right" 
-                    fill="#6366F1"
-                    style={{ 
-                      fontSize: '12px', 
-                      fontWeight: 'bold',
-                      fill: '#6366F1' 
-                    }}
-                  />
-                </ReferenceLine>
-                <Bar 
-                  dataKey="workouts" 
-                  name="Workouts" 
-                  radius={[4, 4, 0, 0]}
-                  animationDuration={800}
-                >
-                  {data.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color} 
-                      fillOpacity={entry.workouts === 0 ? 0.4 : 0.95}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Explanation section moved below the chart */}
-        <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100 mx-2">
-          <h4 className="font-medium text-gray-800 mb-2 flex items-center">
+        {/* Explanation section - now below the chart, not overlapping */}
+        <div className="mt-6 p-3 bg-gray-50 rounded-lg border border-gray-100">
+          <h4 className="font-medium flex items-center text-sm">
             <InfoIcon className="h-4 w-4 mr-1.5 text-blue-500" />
             Understanding Your Workout Consistency
           </h4>
-          <p className="text-sm text-gray-600">
-            This chart shows how many workouts you completed during each {view === 'weekly' ? 'week' : 'month'}.
+          <p className="text-sm text-gray-600 mt-1">
+            This chart shows your workout frequency over time. 
             {avgWorkoutsPerPeriod < 2 
-              ? ` Your average of ${avgWorkoutsPerPeriod.toFixed(1)} workouts per ${view === 'weekly' ? 'week' : 'month'} is below recommended frequency. Try to increase your consistency for better results.` 
-              : ` With an average of ${avgWorkoutsPerPeriod.toFixed(1)} workouts per ${view === 'weekly' ? 'week' : 'month'}, you're maintaining good consistency!`
+              ? " Try to increase your consistency for better results." 
+              : " You're maintaining good consistency!"
             }
           </p>
         </div>
