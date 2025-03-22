@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -128,10 +127,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <EmptyState 
-            title="No exercise data available" 
-            description="Schedule future workouts to see exercise distribution data"
-          />
+          <EmptyState />
         </CardContent>
       </Card>
     );
