@@ -183,8 +183,9 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row pt-6">
-          <div className="w-full md:w-3/5 h-[400px] flex items-center justify-center">
-            <div className="w-full max-w-md h-full">
+          {/* Updated chart container with better centering and larger size */}
+          <div className="w-full md:w-3/5 flex items-center justify-center">
+            <div className="w-full h-[450px] flex items-center justify-center">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -194,8 +195,8 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
                       data={formattedData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={70}
-                      outerRadius={120}
+                      innerRadius={80}
+                      outerRadius={140}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
