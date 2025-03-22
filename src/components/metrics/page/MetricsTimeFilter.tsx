@@ -8,7 +8,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface MetricsTimeFilterProps {
   dateRange: { from: Date; to: Date };
@@ -24,8 +23,6 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
   dateRange,
   timeFilter,
   setTimeFilter,
-  view,
-  setView,
   handleDateRangeChange
 }) => {
   return (
@@ -100,18 +97,6 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
           </PopoverContent>
         </Popover>
       </div>
-
-      <Tabs
-        defaultValue="weekly"
-        className="w-full max-w-[220px]"
-        onValueChange={(v) => setView(v as 'weekly' | 'monthly')}
-        value={view}
-      >
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="weekly">Weekly View</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly View</TabsTrigger>
-        </TabsList>
-      </Tabs>
     </div>
   );
 };
