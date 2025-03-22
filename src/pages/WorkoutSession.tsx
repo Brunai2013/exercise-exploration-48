@@ -65,18 +65,9 @@ const WorkoutSession = () => {
           setLoading(true);
           const foundWorkout = await getWorkoutById(id);
           if (foundWorkout) {
-            const initializedWorkout = {
-              ...foundWorkout,
-              exercises: foundWorkout.exercises.map(exercise => ({
-                ...exercise,
-                sets: exercise.sets.map(set => ({
-                  ...set,
-                  completed: false,
-                  actualReps: set.targetReps
-                }))
-              }))
-            };
-            setWorkout(initializedWorkout);
+            // Preserve the workout state as is from the database
+            // This ensures that completed sets, weights, and reps are retained
+            setWorkout(foundWorkout);
           }
         } catch (error) {
           console.error('Error fetching workout:', error);

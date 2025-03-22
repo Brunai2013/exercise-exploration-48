@@ -57,12 +57,14 @@ export const useWorkoutProgress = (workout: Workout | null) => {
     try {
       setIsSaving(true);
       
+      // Create a deep copy of the workout with all its current state
       const updatedWorkout = {
         ...workout,
-        progress,
-        completed: progress === 100
+        progress, // Update the progress percentage
+        completed: progress === 100 // Mark as complete if 100% done
       };
       
+      // Save the workout with all completed sets and input values
       await updateWorkout(updatedWorkout);
       
       toast({

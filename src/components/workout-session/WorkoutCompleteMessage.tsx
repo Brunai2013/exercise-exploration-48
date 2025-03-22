@@ -21,7 +21,12 @@ const WorkoutCompleteMessage: React.FC<WorkoutCompleteMessageProps> = ({
       <Award className="h-16 w-16 text-green-500 mb-4" />
       <h2 className="text-2xl font-bold text-green-700 mb-2">Workout Complete!</h2>
       <p className="text-green-600 mb-4 text-center">Congratulations on completing your workout! Save your progress to record this achievement.</p>
-      <Button onClick={saveWorkoutProgress} size="lg" className="bg-green-500 hover:bg-green-600" disabled={isSaving}>
+      <Button 
+        onClick={saveWorkoutProgress} 
+        size="lg" 
+        className="bg-green-500 hover:bg-green-600" 
+        disabled={isSaving}
+      >
         {isSaving ? (
           <>
             <Loader2 className="h-5 w-5 mr-2 animate-spin" />

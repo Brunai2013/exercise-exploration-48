@@ -85,7 +85,7 @@ export const updateWorkout = async (updatedWorkout: Workout): Promise<void> => {
         completed: updatedWorkout.completed,
         progress: updatedWorkout.progress || 0,
         archived: updatedWorkout.archived || false
-      } as any) // Use type assertion to bypass TypeScript error
+      } as any)
       .eq('id', updatedWorkout.id);
 
     if (workoutError) throw workoutError;
@@ -127,14 +127,14 @@ export const updateWorkout = async (updatedWorkout: Workout): Promise<void> => {
           const existingSet = existingSets?.find(s => s.set_number === set.setNumber);
 
           if (existingSet) {
-            // Update existing set
+            // Update existing set - make sure to save all properties including completed state
             const { error: updateSetError } = await supabase
               .from('exercise_sets')
               .update({
                 weight: set.weight || null,
                 target_reps: set.targetReps,
                 actual_reps: set.actualReps || null,
-                completed: set.completed
+                completed: set.completed // Crucial for tracking progress
               })
               .eq('id', existingSet.id);
 
@@ -218,6 +218,7 @@ export const updateWorkout = async (updatedWorkout: Workout): Promise<void> => {
     }
   } catch (error) {
     console.error('Error updating workout:', error);
+    throw error; // Re-throw to allow proper error handling at call site
   }
 };
 
