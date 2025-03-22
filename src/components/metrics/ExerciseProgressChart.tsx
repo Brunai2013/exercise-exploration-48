@@ -8,10 +8,15 @@ import {
   ChartTooltip, 
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { LineChartIcon, ArrowUp, ArrowDown } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { LineChartIcon, ArrowUp, ArrowDown, InfoIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseISO, format } from "date-fns";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface ExerciseProgressChartProps {
   data: ExerciseProgressItem[];
@@ -52,7 +57,7 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
     if (data.length) {
       // Extract unique exercise names
       const names = Array.from(new Set(data.map(item => item.exercise)));
-      setExerciseNames(names);
+      setExerciseNames(names.sort());
       
       // Select the first exercise by default
       if (names.length && !selectedExercise) {
@@ -66,42 +71,34 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
       // Filter data for the selected exercise
       const exerciseData = data.filter(item => item.exercise === selectedExercise);
       
-      // Process data for the chart
-      const processedData = exerciseData.reduce((acc: any[], curr) => {
-        // Find if we already have an entry for this date
-        const existingEntryIndex = acc.findIndex(item => item.date === curr.date);
-        
-        if (existingEntryIndex !== -1) {
-          // If the current weight is higher than what we have, update it
-          if (curr.weight > acc[existingEntryIndex].weight) {
-            acc[existingEntryIndex].weight = curr.weight;
-          }
-          // Also track the reps at max weight
-          if (curr.weight === acc[existingEntryIndex].weight && curr.reps > acc[existingEntryIndex].reps) {
-            acc[existingEntryIndex].reps = curr.reps;
-          }
-        } else {
-          // Add a new entry
-          acc.push({
+      // Group by date to get a more representative view
+      const dataByDate = exerciseData.reduce((acc: Record<string, any>, curr) => {
+        if (!acc[curr.date]) {
+          acc[curr.date] = {
             date: curr.date,
+            formattedDate: format(parseISO(curr.date), 'MMM dd, yyyy'),
             weight: curr.weight,
-            reps: curr.reps,
-            formattedDate: format(parseISO(curr.date), 'MMM dd')
-          });
+            reps: curr.reps
+          };
+        } else if (curr.weight > acc[curr.date].weight) {
+          // Update if we have a higher weight for this date
+          acc[curr.date].weight = curr.weight;
+          acc[curr.date].reps = curr.reps;
         }
-        
         return acc;
-      }, []);
+      }, {});
       
-      // Sort by date
+      // Convert to array and sort by date
+      const processedData = Object.values(dataByDate);
       processedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
       // Calculate trend
       if (processedData.length >= 2) {
-        const firstWeight = processedData[0].weight;
-        const lastWeight = processedData[processedData.length - 1].weight;
-        const weightChange = lastWeight - firstWeight;
-        const percentChange = firstWeight > 0 ? (weightChange / firstWeight) * 100 : 0;
+        const firstEntry = processedData[0];
+        const lastEntry = processedData[processedData.length - 1];
+        
+        const weightChange = lastEntry.weight - firstEntry.weight;
+        const percentChange = firstEntry.weight > 0 ? (weightChange / firstEntry.weight) * 100 : 0;
         
         setMetrics({
           trend: weightChange > 0 ? 'up' : weightChange < 0 ? 'down' : 'neutral',
@@ -109,10 +106,12 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
           maxWeight: Math.max(...processedData.map((item: any) => item.weight))
         });
       } else {
-        setMetrics({ trend: 'neutral', change: 0, maxWeight: 0 });
+        setMetrics({ trend: 'neutral', change: 0, maxWeight: processedData[0]?.weight || 0 });
       }
       
       setFilteredData(processedData);
+    } else {
+      setFilteredData([]);
     }
   }, [selectedExercise, data]);
 
@@ -124,10 +123,28 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Exercise Progress</CardTitle>
-          <CardDescription>
-            Track your progress with specific exercises over time
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Exercise Progress</CardTitle>
+              <CardDescription>
+                Track your progress with specific exercises over time
+              </CardDescription>
+            </div>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">About This Chart</h4>
+                  <p className="text-sm">
+                    Track your strength progress with specific exercises over time.
+                    The chart shows weight (kg) and reps for each completed workout.
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         </CardHeader>
         <CardContent>
           <EmptyState />
@@ -144,10 +161,29 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <CardTitle>Exercise Progress</CardTitle>
-        <CardDescription>
-          Track your progress with specific exercises over time
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Exercise Progress</CardTitle>
+            <CardDescription>
+              Track your progress with specific exercises over time
+            </CardDescription>
+          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">How to Use This Chart</h4>
+                <p className="text-sm">
+                  Select an exercise from the dropdown to view your progress over time.
+                  The chart shows weight (left axis) and reps (right axis) for each workout.
+                  The percentage shows your overall progress from first to most recent workout.
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -167,7 +203,7 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
             </SelectContent>
           </Select>
           
-          {metrics.trend !== 'neutral' && (
+          {metrics.trend !== 'neutral' && filteredData.length > 1 && (
             <div className="flex items-center">
               <div className={`flex items-center px-3 py-1 rounded-full text-sm ${
                 metrics.trend === 'up' 
@@ -194,14 +230,26 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
           <div className="h-[300px]">
             <ChartContainer config={chartConfig}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={filteredData}>
+                <LineChart data={filteredData} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="formattedDate" 
                     tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
                   />
-                  <YAxis yAxisId="left" orientation="left" />
-                  <YAxis yAxisId="right" orientation="right" />
+                  <YAxis 
+                    yAxisId="left" 
+                    orientation="left" 
+                    domain={['dataMin - 5', 'dataMax + 5']}
+                    label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right"
+                    domain={[0, 'dataMax + 2']}
+                    label={{ value: 'Reps', angle: 90, position: 'insideRight' }}
+                  />
                   <ChartTooltip
                     content={({ active, payload }) => (
                       <ChartTooltipContent
@@ -211,7 +259,6 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
                       />
                     )}
                   />
-                  <Legend />
                   <Line
                     yAxisId="left"
                     type="monotone"
@@ -220,6 +267,7 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
                     stroke="#7c3aed"
                     activeDot={{ r: 8 }}
                     strokeWidth={2}
+                    connectNulls
                   />
                   <Line
                     yAxisId="right"
@@ -228,6 +276,7 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
                     name="Reps"
                     stroke="#60a5fa"
                     strokeWidth={2}
+                    connectNulls
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -236,7 +285,17 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({ data, isL
         ) : (
           <div className="flex items-center justify-center h-[300px] border rounded-lg bg-muted/10">
             <p className="text-muted-foreground">
-              Select an exercise to view progress
+              {exerciseNames.length > 0 
+                ? "Select an exercise to view progress"
+                : "No exercise data available in the selected date range"}
+            </p>
+          </div>
+        )}
+
+        {filteredData.length > 0 && (
+          <div className="mt-4 text-sm text-muted-foreground">
+            <p>
+              Showing data for <strong>{selectedExercise}</strong> from {filteredData[0]?.formattedDate} to {filteredData[filteredData.length - 1]?.formattedDate}.
             </p>
           </div>
         )}

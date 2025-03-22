@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Calendar as CalendarIcon, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, InfoIcon } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -11,19 +11,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import MuscleGroupsChart from '@/components/metrics/MuscleGroupsChart';
 import ExerciseProgressChart from '@/components/metrics/ExerciseProgressChart';
 import WorkoutFrequencyChart from '@/components/metrics/WorkoutFrequencyChart';
 import UpcomingAnalysis from '@/components/metrics/UpcomingAnalysis';
 import { useMetricsData } from '@/hooks/metrics/useMetricsData';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const WorkoutMetrics = () => {
   const [dateRange, setDateRange] = useState<{
     from: Date;
     to: Date;
   }>({
-    from: startOfMonth(subMonths(new Date(), 1)),
+    from: startOfMonth(subMonths(new Date(), 2)),
     to: endOfMonth(new Date()),
   });
   
@@ -37,6 +42,18 @@ const WorkoutMetrics = () => {
     isLoading
   } = useMetricsData(dateRange, view);
 
+  // Ensure from date is before to date
+  const handleDateRangeChange = (range: { from: Date; to?: Date }) => {
+    if (range.from && range.to && isAfter(range.from, range.to)) {
+      // If from date is after to date, set to date to from date
+      setDateRange({ from: range.from, to: range.from });
+    } else if (range.from && !range.to) {
+      setDateRange({ from: range.from, to: range.from });
+    } else if (range.from && range.to) {
+      setDateRange({ from: range.from, to: range.to });
+    }
+  };
+
   return (
     <PageContainer>
       <div className="mb-8 text-center bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 p-6 rounded-2xl shadow-md border border-blue-100 animate-fade-in">
@@ -46,6 +63,16 @@ const WorkoutMetrics = () => {
         <p className="text-muted-foreground mt-2">
           Track your progress and analyze your workout patterns
         </p>
+        
+        <div className="mt-4 mx-auto max-w-xl p-3 bg-white/80 rounded-lg border border-blue-100 shadow-sm">
+          <div className="flex items-start">
+            <InfoIcon className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+            <p className="text-sm text-left text-slate-700">
+              Use this dashboard to analyze your workout patterns and progress. 
+              Select a date range below and toggle between weekly/monthly views to see different insights.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
@@ -60,42 +87,59 @@ const WorkoutMetrics = () => {
           </TabsList>
         </Tabs>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "justify-start text-left font-normal",
-                "border-dashed border-blue-200"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                    {format(dateRange.to, "LLL dd, y")}
-                  </>
+        <div className="flex items-center">
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help mr-2" />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Date Range Selection</h4>
+                <p className="text-sm">
+                  Select a date range to analyze your workouts. This affects all charts and analysis.
+                  Typically, a 1-3 month range works best for meaningful insights.
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  "border-dashed border-blue-200"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} -{" "}
+                      {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
                 ) : (
-                  format(dateRange.from, "LLL dd, y")
-                )
-              ) : (
-                <span>Pick a date range</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={setDateRange as any}
-              numberOfMonths={2}
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={handleDateRangeChange as any}
+                numberOfMonths={2}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <Tabs defaultValue="muscle-groups" className="w-full mb-8">

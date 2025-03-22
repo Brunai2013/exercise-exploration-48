@@ -6,10 +6,15 @@ import {
   ChartTooltip, 
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts";
-import { Calendar } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
+import { Calendar, InfoIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface WorkoutFrequencyChartProps {
   data: FrequencyData[];
@@ -45,10 +50,17 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isL
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Workout Frequency</CardTitle>
-          <CardDescription>
-            Track how often you're working out
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Workout Frequency</CardTitle>
+              <CardDescription>
+                Track how often you're working out
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="ml-2 capitalize">
+              {view} view
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <EmptyState />
@@ -79,9 +91,26 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isL
               Track how often you're working out
             </CardDescription>
           </div>
-          <Badge variant="outline" className="ml-2 capitalize">
-            {view} view
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="capitalize">
+              {view} view
+            </Badge>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">How to Use This Chart</h4>
+                  <p className="text-sm">
+                    This chart shows how many workouts you completed in each {view === 'weekly' ? 'week' : 'month'}.
+                    The dotted line shows your average workouts per {view === 'weekly' ? 'week' : 'month'}.
+                    Toggle between weekly and monthly views using the tabs at the top of the page.
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -93,6 +122,7 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isL
           <div className="bg-purple-50 p-4 rounded-lg">
             <p className="text-sm text-purple-700 mb-1">Most Active</p>
             <p className="text-2xl font-bold">{mostActivePeriod?.name || 'N/A'}</p>
+            <p className="text-xs text-purple-700">{mostActivePeriod?.workouts || 0} workouts</p>
           </div>
           <div className="bg-teal-50 p-4 rounded-lg">
             <p className="text-sm text-teal-700 mb-1">Avg. Workouts {view === 'weekly' ? '/Week' : '/Month'}</p>
@@ -103,17 +133,23 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isL
         <div className="h-[300px]">
           <ChartContainer config={chartConfig}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
+              <BarChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis 
                   dataKey="name"
                   tick={{ fontSize: 12 }}
                   tickLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
                 />
                 <YAxis 
                   allowDecimals={false}
                   tickLine={false}
+                  domain={[0, 'dataMax + 1']}
+                  label={{ value: 'Workouts', angle: -90, position: 'insideLeft' }}
                 />
+                <ReferenceLine y={avgWorkoutsPerPeriod} stroke="#888" strokeDasharray="3 3" />
                 <ChartTooltip
                   content={({ active, payload }) => (
                     <ChartTooltipContent
@@ -129,12 +165,22 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({ data, isL
                   radius={[4, 4, 0, 0]}
                 >
                   {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color} 
+                      fillOpacity={entry.workouts === 0 ? 0.3 : 1}
+                    />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
+        </div>
+
+        <div className="mt-4 text-sm text-muted-foreground">
+          <p>
+            The dashed line represents your average of {avgWorkoutsPerPeriod.toFixed(1)} workouts per {view === 'weekly' ? 'week' : 'month'}.
+          </p>
         </div>
       </CardContent>
     </Card>

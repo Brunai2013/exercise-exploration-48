@@ -2,8 +2,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUp, ArrowDown, Minus, PieChart, XCircle } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, PieChart, XCircle, InfoIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface UpcomingAnalysisProps {
   data: CategoryAnalysis[];
@@ -68,10 +73,28 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Workout Analysis</CardTitle>
-          <CardDescription>
-            Compare your upcoming workouts with your past training
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Upcoming Workout Analysis</CardTitle>
+              <CardDescription>
+                Compare your upcoming workouts with your past training
+              </CardDescription>
+            </div>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">About This Analysis</h4>
+                  <p className="text-sm">
+                    This analysis compares your upcoming workouts with your past training patterns.
+                    It helps identify if any muscle groups are being over or under-trained in your future plans.
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         </CardHeader>
         <CardContent>
           <EmptyState />
@@ -88,12 +111,31 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Workout Analysis</CardTitle>
-          <CardDescription>
-            {!hasPastWorkouts 
-              ? "Complete some workouts first to enable analysis" 
-              : "Schedule future workouts to compare with your past training"}
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Upcoming Workout Analysis</CardTitle>
+              <CardDescription>
+                {!hasPastWorkouts 
+                  ? "Complete some workouts first to enable analysis" 
+                  : "Schedule future workouts to compare with your past training"}
+              </CardDescription>
+            </div>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">How to Use This Analysis</h4>
+                  <p className="text-sm">
+                    {!hasPastWorkouts 
+                      ? "You need completed workouts in your history to use this feature." 
+                      : "Schedule future workouts to see how they compare with your past training patterns."}
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center h-80 text-center p-4">
@@ -119,15 +161,37 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <CardTitle>Upcoming Workout Analysis</CardTitle>
-        <CardDescription>
-          Compare your upcoming workouts with your past training
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Upcoming Workout Analysis</CardTitle>
+            <CardDescription>
+              Compare your upcoming workouts with your past training
+            </CardDescription>
+          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">How to Use This Analysis</h4>
+                <p className="text-sm">
+                  This tool compares your upcoming scheduled workouts with your past training patterns.
+                  <ul className="list-disc pl-5 mt-1">
+                    <li><span className="text-green-600">Increase</span>: Add more of these exercises</li>
+                    <li><span className="text-red-600">Decrease</span>: Reduce focus on these muscle groups</li>
+                    <li><span className="text-blue-600">Maintain</span>: Good balance between past and future</li>
+                  </ul>
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           {data.map((item) => (
-            <div key={item.category} className="border rounded-lg p-4">
+            <div key={item.id} className="border rounded-lg p-4">
               <div className="flex flex-wrap justify-between items-start mb-2">
                 <div className="flex items-center mb-2">
                   <div 
@@ -175,11 +239,11 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
               
               <p className="mt-3 text-sm text-muted-foreground">
                 {item.suggestion === 'increase' && 
-                  "Consider adding more of these exercises to your upcoming workouts."}
+                  "Consider adding more of these exercises to your upcoming workouts to maintain balance."}
                 {item.suggestion === 'decrease' && 
-                  "Your upcoming workouts may have too much focus on this muscle group."}
+                  "Your upcoming workouts may have too much focus on this muscle group compared to your past training."}
                 {item.suggestion === 'maintain' && 
-                  "Your upcoming workouts maintain a good balance with your past training."}
+                  "Your upcoming workouts maintain a good balance with your past training for this muscle group."}
               </p>
             </div>
           ))}
