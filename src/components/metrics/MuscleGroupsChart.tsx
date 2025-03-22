@@ -178,21 +178,20 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-3/5 h-auto">
-            {/* Solution 1: Explicitly set aspect ratio container */}
-            <div className="relative aspect-square w-full">
+        <div className="flex flex-col md:flex-row h-full">
+          <div className="w-full md:w-3/5 flex items-center justify-center py-6">
+            <div className="relative w-full max-w-md aspect-square">
               <ChartContainer config={chartConfig} className="absolute inset-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 60, right: 60, bottom: 60, left: 60 }}>
+                  <PieChart>
                     <Pie
                       activeIndex={activeIndex}
                       activeShape={renderActiveShape}
                       data={formattedData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={80}
-                      outerRadius={150}
+                      innerRadius={70}
+                      outerRadius={120}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
@@ -230,21 +229,21 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
             </div>
           </div>
 
-          <div className="w-full md:w-2/5 p-6">
+          <div className="w-full md:w-2/5 p-6 py-8 flex flex-col">
             <h4 className="text-lg font-semibold mb-4 text-gray-800">Most Worked Muscle Groups</h4>
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {data.slice(0, 5).map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 transition-colors"
+                  className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 transition-colors"
                 >
                   <div 
-                    className="w-4 h-4 rounded-full mr-4 flex-shrink-0" 
+                    className="w-4 h-4 rounded-full mr-3 flex-shrink-0" 
                     style={{ backgroundColor: item.color }}
                   />
                   <div className="flex-1">
                     <span className="text-base font-medium text-gray-800">{item.name}</span>
-                    <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">
                         {item.count} exercise{item.count !== 1 ? 's' : ''}
                       </span>
@@ -257,11 +256,13 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
               ))}
             </div>
             
-            <div className="mt-6 px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">Pro Tip:</span> For balanced muscle development, aim to work all major 
-                muscle groups evenly over time.
-              </p>
+            <div className="mt-auto pt-4">
+              <div className="px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
+                <p className="text-sm text-blue-800">
+                  <span className="font-medium">Pro Tip:</span> For balanced muscle development, aim to work all major 
+                  muscle groups evenly over time.
+                </p>
+              </div>
             </div>
           </div>
         </div>
