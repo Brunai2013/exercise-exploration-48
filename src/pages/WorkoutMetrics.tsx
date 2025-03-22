@@ -7,7 +7,6 @@ import { useMetricsData } from '@/hooks/metrics/useMetricsData';
 import MetricsHeader from '@/components/metrics/page/MetricsHeader';
 import MetricsTimeFilter from '@/components/metrics/page/MetricsTimeFilter';
 import MetricsTabs from '@/components/metrics/page/MetricsTabs';
-import FutureAnalysisSection from '@/components/metrics/page/FutureAnalysisSection';
 
 const WorkoutMetrics = () => {
   // Create default date range using today as the end date
@@ -76,21 +75,16 @@ const WorkoutMetrics = () => {
         handleDateRangeChange={handleDateRangeChange}
       />
 
-      {/* Main Content Tabs */}
+      {/* Main Content Tabs with integrated future analysis sections */}
       <MetricsTabs 
         muscleGroupData={muscleGroupData}
         exerciseData={exerciseData}
         frequencyData={frequencyData}
+        upcomingWorkoutData={upcomingWorkoutData}
         isLoading={isLoading}
         view={view}
         dateRange={dateRange}
         timeFilter={timeFilter}
-      />
-      
-      {/* Upcoming Analysis Section */}
-      <FutureAnalysisSection 
-        data={upcomingWorkoutData} 
-        isLoading={isLoading} 
       />
     </PageContainer>
   );
