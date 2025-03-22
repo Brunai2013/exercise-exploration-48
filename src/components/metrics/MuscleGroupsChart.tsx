@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MuscleGroupData } from "@/hooks/metrics/useMetricsData";
 import { 
@@ -56,8 +57,9 @@ const renderCustomizedLabel = (props: any) => {
 
   const sin = Math.sin(-midAngle * RADIAN);
   const cos = Math.cos(-midAngle * RADIAN);
-  const ex = cx + (outerRadius + 30) * cos;
-  const ey = cy + (outerRadius + 30) * sin;
+  // Increase the distance of the label from the pie chart
+  const ex = cx + (outerRadius + 40) * cos;
+  const ey = cy + (outerRadius + 40) * sin;
   const textAnchor = cos >= 0 ? 'start' : 'end';
   
   return (
@@ -173,7 +175,7 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden h-full">
       <CardHeader className="pb-0">
         <div className="flex justify-between items-start">
           <div>
@@ -201,19 +203,21 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
       </CardHeader>
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row h-full">
-          <div className="w-full md:w-3/5 flex items-center justify-center py-6">
-            <div className="relative w-full max-w-md aspect-square">
-              <ChartContainer config={chartConfig} className="absolute inset-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+          {/* Increase the chart container width and ensure full height */}
+          <div className="w-full md:w-3/5 h-full flex items-center justify-center py-8">
+            <div className="w-full h-full" style={{ minHeight: '450px' }}>
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <ResponsiveContainer width="100%" height="100%" minHeight={450}>
+                  <PieChart margin={{ top: 40, right: 80, bottom: 40, left: 80 }}>
                     <Pie
                       activeIndex={activeIndex}
                       activeShape={renderActiveShape}
                       data={formattedData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
+                      // Increase the size of the pie chart
+                      innerRadius={80}
+                      outerRadius={130}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
@@ -253,7 +257,8 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
             </div>
           </div>
 
-          <div className="w-full md:w-2/5 p-6 py-6 flex flex-col">
+          {/* Right side with muscle group tiles */}
+          <div className="w-full md:w-2/5 p-6 py-8 flex flex-col">
             <h4 className="text-lg font-semibold mb-4 text-gray-800">Most Worked Muscle Groups</h4>
             <div className="grid gap-3">
               {data.slice(0, 5).map((item) => (
@@ -280,9 +285,10 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
               ))}
             </div>
             
-            <div className="mt-auto pt-6">
-              <div className="px-6 py-4 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-sm md:text-base text-blue-800 leading-relaxed">
+            {/* Pro Tip section - improved positioning and size */}
+            <div className="mt-auto pt-8">
+              <div className="px-6 py-5 bg-blue-50 rounded-lg border border-blue-100">
+                <p className="text-base text-blue-800 leading-relaxed">
                   <span className="font-semibold">Pro Tip:</span> For balanced muscle development, aim to work all major 
                   muscle groups evenly over time.
                 </p>
@@ -296,4 +302,3 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
 };
 
 export default MuscleGroupsChart;
-
