@@ -1,26 +1,14 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { InfoIcon, Search } from "lucide-react";
+import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
+import { InfoIcon, LineChart } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface ExerciseProgressFutureChartProps {
   data: CategoryAnalysis[];
@@ -28,13 +16,13 @@ interface ExerciseProgressFutureChartProps {
 }
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center h-80 text-center p-4">
-    <div className="rounded-full bg-blue-100 p-3 mb-4">
-      <InfoIcon className="h-6 w-6 text-blue-600" />
+  <div className="flex flex-col items-center justify-center h-60 text-center p-4">
+    <div className="rounded-full bg-purple-100 p-3 mb-4">
+      <LineChart className="h-6 w-6 text-purple-600" />
     </div>
-    <h3 className="text-lg font-semibold mb-2">No future exercises</h3>
+    <h3 className="text-lg font-semibold mb-2">No upcoming exercise data</h3>
     <p className="text-muted-foreground mb-4 max-w-md">
-      Schedule future workouts to analyze your upcoming exercise distribution
+      Schedule future workouts to see your planned exercise distribution
     </p>
   </div>
 );
@@ -42,37 +30,36 @@ const EmptyState = () => (
 const LoadingState = () => (
   <div className="space-y-4 p-6">
     <Skeleton className="h-6 w-48" />
-    <div className="flex gap-2 mt-4">
-      <Skeleton className="h-10 w-36" />
-      <Skeleton className="h-10 w-full" />
-    </div>
-    <Skeleton className="h-[300px] w-full rounded-lg" />
+    <Skeleton className="h-4 w-32 mt-1" />
+    <Skeleton className="h-[200px] w-full rounded-lg mt-4" />
   </div>
 );
 
-const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = ({ 
-  data, 
-  isLoading 
-}) => {
-  // State for selected category
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = ({ data, isLoading }) => {
+  const [hasFutureData, setHasFutureData] = useState(false);
   
+  React.useEffect(() => {
+    const hasValidData = data && data.length > 0 && data.some(item => item.futureCount > 0);
+    setHasFutureData(hasValidData);
+  }, [data]);
+
   if (isLoading) {
-    return <Card><LoadingState /></Card>;
+    return (
+      <Card>
+        <LoadingState />
+      </Card>
+    );
   }
   
-  // Filter to only categories with future data
-  const categoriesWithFutureData = data.filter(item => item.futureCount > 0);
-  
-  if (categoriesWithFutureData.length === 0) {
+  if (!hasFutureData) {
     return (
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>Future Exercise Analysis</CardTitle>
+              <CardTitle>Upcoming Exercise Distribution</CardTitle>
               <CardDescription>
-                Exercise distribution in your upcoming workouts
+                See what exercises you've planned for the future
               </CardDescription>
             </div>
             <HoverCard>
@@ -83,8 +70,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">About This Chart</h4>
                   <p className="text-sm">
-                    This chart shows the distribution of exercise categories in your future workouts.
-                    Schedule upcoming workouts to see this analysis.
+                    This chart shows the distribution of muscle groups in your upcoming scheduled workouts.
                   </p>
                 </div>
               </HoverCardContent>
@@ -98,33 +84,23 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
     );
   }
 
-  // Select first category if none selected
-  useMemo(() => {
-    if (categoriesWithFutureData.length > 0 && !selectedCategory) {
-      setSelectedCategory(categoriesWithFutureData[0].id);
-    }
-  }, [categoriesWithFutureData, selectedCategory]);
-
-  // Prepare data for the chart
-  const chartData = categoriesWithFutureData.map(item => ({
-    name: item.category,
-    value: item.futureCount,
-    percentage: item.futurePercentage,
-    color: item.color,
-    id: item.id
-  }));
-
-  // Get the selected category data
-  const selectedCategoryData = chartData.find(item => item.id === selectedCategory);
+  const futureData = data
+    .filter(item => item.futureCount > 0)
+    .map(item => ({
+      name: item.category,
+      exercises: item.futureCount,
+      fill: item.color
+    }))
+    .sort((a, b) => b.exercises - a.exercises);
 
   return (
-    <Card className="overflow-hidden">
+    <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>Future Exercise Analysis</CardTitle>
+            <CardTitle>Upcoming Exercise Distribution</CardTitle>
             <CardDescription>
-              Exercise distribution in your upcoming workouts
+              See what exercises you've planned for the future
             </CardDescription>
           </div>
           <HoverCard>
@@ -135,8 +111,8 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">About This Chart</h4>
                 <p className="text-sm">
-                  This analysis shows how your future workouts distribute exercises across categories,
-                  helping you plan a balanced training regimen.
+                  This shows the distribution of exercises by muscle group in your upcoming workouts.
+                  It helps you see what areas you're planning to focus on.
                 </p>
               </div>
             </HoverCardContent>
@@ -144,110 +120,51 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {/* Category Selection */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex-shrink-0">
-              <label htmlFor="category-select" className="block text-sm font-medium text-gray-700 mb-1">
-                Select Category
-              </label>
-              <Select 
-                value={selectedCategory} 
-                onValueChange={setSelectedCategory}
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={futureData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis 
+                dataKey="name" 
+                angle={-45} 
+                textAnchor="end" 
+                height={70} 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                label={{ 
+                  value: 'Number of Exercises', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle' }
+                }} 
+              />
+              <Tooltip 
+                formatter={(value) => [`${value} exercises`, 'Scheduled']}
+                labelFormatter={(label) => `Muscle Group: ${label}`}
+              />
+              <Legend />
+              <Bar 
+                dataKey="exercises" 
+                name="Scheduled Exercises" 
+                fill="#8884d8"
+                radius={[4, 4, 0, 0]}
               >
-                <SelectTrigger id="category-select" className="w-[220px]">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {chartData.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
-                      <div className="flex items-center">
-                        <div 
-                          className="w-2 h-2 rounded-full mr-2" 
-                          style={{ backgroundColor: category.color }}
-                        />
-                        {category.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Chart Section */}
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
-                barSize={50}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={{ stroke: "#E5E7EB" }}
-                  tick={{ fontSize: 12, fill: "#6B7280" }}
-                  tickLine={false}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis 
-                  label={{ 
-                    value: "Number of Exercises", 
-                    angle: -90, 
-                    position: "insideLeft",
-                    offset: -5,
-                    style: { textAnchor: 'middle', fill: '#6B7280', fontSize: 12 }
-                  }}
-                  axisLine={{ stroke: "#E5E7EB" }}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#6B7280" }}
-                />
-                <Tooltip 
-                  formatter={(value, name, props) => [`${value} exercises (${props.payload.percentage}%)`, 'Exercises']}
-                  labelFormatter={(value) => `Category: ${value}`}
-                />
-                <Bar 
-                  dataKey="value" 
-                  radius={[4, 4, 0, 0]}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`}
-                      fill={entry.id === selectedCategory ? entry.color : `${entry.color}80`}
-                      stroke={entry.id === selectedCategory ? "#fff" : "none"}
-                      strokeWidth={1}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          
-          {/* Selected Category Details */}
-          {selectedCategoryData && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <h3 className="text-lg font-semibold mb-2 flex items-center">
-                <div 
-                  className="w-3 h-3 rounded-full mr-2" 
-                  style={{ backgroundColor: selectedCategoryData.color }}
-                />
-                {selectedCategoryData.name} Details
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Total Exercises</p>
-                  <p className="text-xl font-bold">{selectedCategoryData.value}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Percentage of Total</p>
-                  <p className="text-xl font-bold">{selectedCategoryData.percentage}%</p>
-                </div>
-              </div>
-            </div>
-          )}
+                {futureData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        
+        <div className="mt-6 px-4 py-3 bg-purple-50 rounded-lg border border-purple-100">
+          <p className="text-sm text-purple-800">
+            <span className="font-semibold">Pro Tip:</span> Compare this with your past workout data to ensure you're maintaining a balanced training approach.
+          </p>
         </div>
       </CardContent>
     </Card>

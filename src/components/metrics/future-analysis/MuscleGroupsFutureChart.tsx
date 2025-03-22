@@ -1,17 +1,14 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { InfoIcon } from "lucide-react";
+import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
+import { InfoIcon, PieChart } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { renderCustomizedLabel, renderActiveShape, usePieActiveState } from "../muscle-groups/MuscleGroupChartRenderers";
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 interface MuscleGroupsFutureChartProps {
   data: CategoryAnalysis[];
@@ -19,13 +16,13 @@ interface MuscleGroupsFutureChartProps {
 }
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center h-80 text-center p-4">
-    <div className="rounded-full bg-purple-100 p-3 mb-4">
-      <InfoIcon className="h-6 w-6 text-purple-600" />
+  <div className="flex flex-col items-center justify-center h-60 text-center p-4">
+    <div className="rounded-full bg-blue-100 p-3 mb-4">
+      <PieChart className="h-6 w-6 text-blue-600" />
     </div>
-    <h3 className="text-lg font-semibold mb-2">No future workout data</h3>
+    <h3 className="text-lg font-semibold mb-2">No upcoming workout data</h3>
     <p className="text-muted-foreground mb-4 max-w-md">
-      Schedule future workouts to see muscle group distribution analysis
+      Schedule future workouts to see your planned muscle group focus
     </p>
   </div>
 );
@@ -33,32 +30,38 @@ const EmptyState = () => (
 const LoadingState = () => (
   <div className="space-y-4 p-6">
     <Skeleton className="h-6 w-48" />
-    <Skeleton className="h-[300px] w-full rounded-lg" />
+    <Skeleton className="h-4 w-32 mt-1" />
+    <Skeleton className="h-[200px] w-full rounded-lg mt-4" />
   </div>
 );
 
-const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ 
-  data, 
-  isLoading 
-}) => {
-  const { activeIndex, onPieEnter } = usePieActiveState();
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+
+const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data, isLoading }) => {
+  const [hasFutureData, setHasFutureData] = useState(false);
   
+  React.useEffect(() => {
+    const hasValidData = data && data.length > 0 && data.some(item => item.futureCount > 0);
+    setHasFutureData(hasValidData);
+  }, [data]);
+
   if (isLoading) {
-    return <Card><LoadingState /></Card>;
+    return (
+      <Card>
+        <LoadingState />
+      </Card>
+    );
   }
   
-  // Filter to only categories with future data
-  const categoriesWithFutureData = data.filter(item => item.futureCount > 0);
-  
-  if (categoriesWithFutureData.length === 0) {
+  if (!hasFutureData) {
     return (
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>Future Muscle Group Analysis</CardTitle>
+              <CardTitle>Upcoming Muscle Group Focus</CardTitle>
               <CardDescription>
-                Distribution of muscle groups in your upcoming workouts
+                See what muscle groups you've planned to work on
               </CardDescription>
             </div>
             <HoverCard>
@@ -69,8 +72,7 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">About This Chart</h4>
                   <p className="text-sm">
-                    This chart shows how your upcoming workouts focus on different muscle groups.
-                    Schedule future workouts to see this analysis.
+                    This chart shows the distribution of muscle groups in your upcoming scheduled workouts.
                   </p>
                 </div>
               </HoverCardContent>
@@ -84,28 +86,24 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({
     );
   }
 
-  // Prepare data for the pie chart
-  const chartData = categoriesWithFutureData.map(item => ({
-    name: item.category,
-    value: item.futureCount,
-    percentage: item.futurePercentage,
-    color: item.color
-  }));
+  const futureData = data
+    .filter(item => item.futureCount > 0)
+    .map(item => ({
+      name: item.category,
+      value: item.futureCount,
+      color: item.color
+    }));
 
-  // Generate chart configuration from data
-  const chartConfig = chartData.reduce((config, item) => {
-    config[item.name] = { color: item.color };
-    return config;
-  }, {} as Record<string, { color: string }>);
+  const totalFutureExercises = futureData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <Card className="overflow-hidden">
+    <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>Future Muscle Group Analysis</CardTitle>
+            <CardTitle>Upcoming Muscle Group Focus</CardTitle>
             <CardDescription>
-              Distribution of muscle groups in your upcoming workouts
+              See what muscle groups you've planned to work on
             </CardDescription>
           </div>
           <HoverCard>
@@ -116,8 +114,8 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">About This Chart</h4>
                 <p className="text-sm">
-                  This chart shows how your upcoming workouts focus on different muscle groups,
-                  helping you ensure balanced training in your future plans.
+                  This pie chart shows the distribution of muscle groups in your upcoming workouts,
+                  helping you see if your planned training is balanced.
                 </p>
               </div>
             </HoverCardContent>
@@ -125,79 +123,63 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-3/5 h-full flex items-center justify-center py-8">
-            <div className="w-full h-full" style={{ height: '450px' }}>
-              <ChartContainer config={chartConfig} className="w-full h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 40, right: 80, bottom: 40, left: 80 }}>
-                    <Pie
-                      activeIndex={activeIndex}
-                      activeShape={renderActiveShape}
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={80}
-                      outerRadius={130}
-                      fill="#8884d8"
-                      dataKey="value"
-                      nameKey="name"
-                      onMouseEnter={onPieEnter}
-                      paddingAngle={2}
-                      label={renderCustomizedLabel}
-                      labelLine={false}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.color}
-                          stroke="#fff"
-                          strokeWidth={1}
-                        />
-                      ))}
-                    </Pie>
-                    <ChartTooltip
-                      content={({ active, payload }) => (
-                        <ChartTooltipContent
-                          active={active}
-                          payload={payload}
-                          labelFormatter={(_, payload) => {
-                            const item = payload?.[0]?.payload;
-                            return item ? `${item.name}` : "";
-                          }}
-                          formatter={(value, name) => {
-                            const item = chartData.find(d => d.name === name);
-                            return [`${value} exercises (${item?.percentage || 0}%)`, "Exercises"];
-                          }}
-                        />
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
+        <div className="flex flex-col md:flex-row items-center">
+          <div className="w-full md:w-1/2 h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart>
+                <Pie
+                  data={futureData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {futureData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value, name, props) => [
+                    `${value} exercises (${((value / totalFutureExercises) * 100).toFixed(0)}%)`, 
+                    name
+                  ]}
+                />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
           </div>
-          
-          <div className="w-full md:w-2/5 border-l border-gray-100">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Muscle Group Distribution</h3>
-              <div className="space-y-4">
-                {chartData.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between">
+          <div className="w-full md:w-1/2 p-4">
+            <h3 className="text-lg font-medium mb-3">Top Focus Areas</h3>
+            <div className="space-y-3">
+              {futureData
+                .sort((a, b) => b.value - a.value)
+                .slice(0, 3)
+                .map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center">
                       <div 
                         className="w-3 h-3 rounded-full mr-2" 
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-sm font-medium">{item.name}</span>
+                      <span>{item.name}</span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm text-muted-foreground">{item.value} exercises</span>
-                      <span className="text-sm font-semibold">{item.percentage}%</span>
+                    <div className="flex items-center">
+                      <span className="text-sm font-semibold">
+                        {item.value} exercises ({((item.value / totalFutureExercises) * 100).toFixed(0)}%)
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              }
+            </div>
+            
+            <div className="mt-4 px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">Pro Tip:</span> Plan your workouts to target all major muscle groups evenly for balanced development.
+              </p>
             </div>
           </div>
         </div>

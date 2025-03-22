@@ -56,6 +56,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
+        {/* Always render the component, let it handle empty states internally */}
         <MuscleGroupsFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
@@ -70,6 +71,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
+        {/* Always render the component, let it handle empty states internally */}
         <ExerciseProgressFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
@@ -85,6 +87,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           timeFilter={timeFilter}
         />
         
+        {/* Always render the component, let it handle empty states internally */}
         <WorkoutFrequencyFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
