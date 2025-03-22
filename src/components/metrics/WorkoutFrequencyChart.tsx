@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FrequencyData } from "@/hooks/metrics/useMetricsData";
 import { 
@@ -6,7 +5,18 @@ import {
   ChartTooltip, 
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, ReferenceLine, Legend } from "recharts";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  ResponsiveContainer, 
+  Cell, 
+  ReferenceLine, 
+  Legend,
+  Label 
+} from "recharts";
 import { Calendar, InfoIcon, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -83,26 +93,21 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
     return config;
   }, {} as Record<string, { color: string }>);
 
-  // Calculate stats
   const totalWorkouts = data.reduce((sum, item) => sum + item.workouts, 0);
   const mostActiveIndex = data.reduce((maxIndex, item, index, arr) => 
     item.workouts > arr[maxIndex].workouts ? index : maxIndex, 0);
   const mostActivePeriod = data[mostActiveIndex];
   const avgWorkoutsPerPeriod = totalWorkouts / data.length || 0;
 
-  // Format date range for display
   const dateRangeText = `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
 
-  // Custom tick formatter to make labels more readable
   const formatXAxisTick = (value: string) => {
-    // For weekly view, simplify to just "Week X" 
     if (view === 'weekly' && value.includes('Week')) {
       const match = value.match(/Week (\d+)/);
       return match ? `Week ${match[1]}` : value;
     }
-    // For monthly view, just show month name
     if (view === 'monthly' && value.includes(' ')) {
-      return value.split(' ')[0]; // Just return the month name
+      return value.split(' ')[0];
     }
     return value;
   };
