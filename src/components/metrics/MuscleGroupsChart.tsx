@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MuscleGroupData } from "@/hooks/metrics/useMetricsData";
 import { 
@@ -176,21 +177,22 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
           </HoverCard>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-3/5 flex items-center justify-center">
-            <div className="w-full h-[700px] flex items-center justify-center py-10">
-              <ChartContainer config={chartConfig}>
+          <div className="w-full md:w-3/5 h-auto">
+            {/* Solution 1: Explicitly set aspect ratio container */}
+            <div className="relative aspect-square w-full">
+              <ChartContainer config={chartConfig} className="absolute inset-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
+                  <PieChart margin={{ top: 60, right: 60, bottom: 60, left: 60 }}>
                     <Pie
                       activeIndex={activeIndex}
                       activeShape={renderActiveShape}
                       data={formattedData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={100}
-                      outerRadius={180}
+                      innerRadius={80}
+                      outerRadius={150}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
@@ -228,7 +230,7 @@ const MuscleGroupsChart: React.FC<MuscleGroupsChartProps> = ({ data, isLoading, 
             </div>
           </div>
 
-          <div className="w-full md:w-2/5 mt-8 md:mt-0 md:pl-6">
+          <div className="w-full md:w-2/5 p-6">
             <h4 className="text-lg font-semibold mb-4 text-gray-800">Most Worked Muscle Groups</h4>
             <div className="grid gap-4">
               {data.slice(0, 5).map((item) => (
