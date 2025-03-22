@@ -1,14 +1,13 @@
 
 import React from 'react';
-import { format } from "date-fns";
-import { TrendingUp, InfoIcon } from "lucide-react";
-import { CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
+import { format } from 'date-fns';
+import { InfoIcon } from 'lucide-react';
+import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface HeaderSectionProps {
   view: 'weekly' | 'monthly';
@@ -20,36 +19,31 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ view, timeFilter, dateRan
   const dateRangeText = `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
 
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <CardTitle className="flex items-center text-lg font-bold text-gray-800">
-          <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
-          Workout Consistency
-        </CardTitle>
-        <CardDescription className="mt-1 text-gray-500">
-          {timeFilter === 'week' ? 'Last Week' : 
-           timeFilter === 'month' ? 'Last Month' : dateRangeText}
-        </CardDescription>
-      </div>
-      <div className="flex items-center gap-2">
-        <Badge variant="outline" className="capitalize">
-          {view} view
-        </Badge>
+    <CardHeader className="pb-0">
+      <div className="flex justify-between items-start">
+        <div>
+          <CardTitle className="text-2xl font-bold">Workout Consistency</CardTitle>
+          <CardDescription className="mt-1 text-base">
+            {timeFilter === 'week' ? 'Last Week' : 
+             timeFilter === 'month' ? 'Last Month' : dateRangeText}
+          </CardDescription>
+        </div>
         <HoverCard>
           <HoverCardTrigger asChild>
-            <button className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100">
-              <InfoIcon className="h-4 w-4" />
-            </button>
+            <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
           </HoverCardTrigger>
           <HoverCardContent className="w-80">
-            <h4 className="text-sm font-semibold">About This Chart</h4>
-            <p className="text-sm text-gray-600 mt-1">
-              This chart shows your workout frequency over time. The dotted line represents your average.
-            </p>
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold">How to Use This Chart</h4>
+              <p className="text-sm">
+                This chart shows your workout frequency over time. The bars represent the number of workouts 
+                completed each {view === 'weekly' ? 'week' : 'month'}. The dotted line shows your average workout frequency.
+              </p>
+            </div>
           </HoverCardContent>
         </HoverCard>
       </div>
-    </div>
+    </CardHeader>
   );
 };
 

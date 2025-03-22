@@ -1,11 +1,13 @@
 
 import React from 'react';
-import { formatXAxisTick } from './utils';
-import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
+import { BarChart3, Calendar, TrendingUp } from 'lucide-react';
 
 interface StatsCardsProps {
   totalWorkouts: number;
-  mostActivePeriod: { name: string; workouts: number } | undefined;
+  mostActivePeriod: {
+    name: string;
+    workouts: number;
+  };
   avgWorkoutsPerPeriod: number;
   view: 'weekly' | 'monthly';
 }
@@ -17,41 +19,37 @@ const StatsCards: React.FC<StatsCardsProps> = ({
   view
 }) => {
   return (
-    <div className="grid grid-cols-3 gap-4 mb-6">
-      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-        <div className="flex items-center mb-2">
-          <div className="bg-blue-50 p-2 rounded-full mr-3">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-          </div>
-          <p className="text-sm text-gray-700 font-medium">Total Workouts</p>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center space-x-4">
+        <div className="rounded-full p-3 bg-blue-100 flex-shrink-0">
+          <BarChart3 className="h-5 w-5 text-blue-600" />
         </div>
-        <p className="text-2xl font-bold text-gray-900">{totalWorkouts}</p>
+        <div>
+          <p className="text-sm text-gray-500 font-medium">Total Workouts</p>
+          <p className="text-2xl font-bold text-gray-800">{totalWorkouts}</p>
+        </div>
       </div>
       
-      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-        <div className="flex items-center mb-2">
-          <div className="bg-purple-50 p-2 rounded-full mr-3">
-            <TrendingUp className="h-5 w-5 text-purple-600" />
-          </div>
-          <p className="text-sm text-gray-700 font-medium">Peak Activity</p>
+      <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center space-x-4">
+        <div className="rounded-full p-3 bg-indigo-100 flex-shrink-0">
+          <TrendingUp className="h-5 w-5 text-indigo-600" />
         </div>
-        <p className="text-2xl font-bold text-gray-900">{mostActivePeriod?.workouts || 0}</p>
-        <p className="text-xs text-gray-500 truncate mt-1">
-          {formatXAxisTick(mostActivePeriod?.name || 'None')}
-        </p>
+        <div>
+          <p className="text-sm text-gray-500 font-medium">Peak Activity</p>
+          <p className="text-2xl font-bold text-gray-800">{mostActivePeriod.workouts}</p>
+          <p className="text-xs text-gray-500">{mostActivePeriod.name}</p>
+        </div>
       </div>
       
-      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-        <div className="flex items-center mb-2">
-          <div className="bg-teal-50 p-2 rounded-full mr-3">
-            <Calendar className="h-5 w-5 text-teal-600" />
-          </div>
-          <p className="text-sm text-gray-700 font-medium">Average</p>
+      <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center space-x-4">
+        <div className="rounded-full p-3 bg-purple-100 flex-shrink-0">
+          <Calendar className="h-5 w-5 text-purple-600" />
         </div>
-        <p className="text-2xl font-bold text-gray-900">{avgWorkoutsPerPeriod.toFixed(1)}</p>
-        <p className="text-xs text-gray-500 mt-1">
-          per {view === 'weekly' ? 'week' : 'month'}
-        </p>
+        <div>
+          <p className="text-sm text-gray-500 font-medium">Average</p>
+          <p className="text-2xl font-bold text-gray-800">{avgWorkoutsPerPeriod.toFixed(1)}</p>
+          <p className="text-xs text-gray-500">per {view === 'weekly' ? 'week' : 'month'}</p>
+        </div>
       </div>
     </div>
   );

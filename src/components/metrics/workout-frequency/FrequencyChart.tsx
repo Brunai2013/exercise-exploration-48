@@ -12,6 +12,7 @@ import {
   Tooltip,
 } from "recharts";
 import { formatXAxisTick, CustomTooltip } from './utils';
+import { Card } from '@/components/ui/card';
 
 interface FrequencyChartProps {
   data: any[];
@@ -20,27 +21,27 @@ interface FrequencyChartProps {
 }
 
 const FrequencyChart: React.FC<FrequencyChartProps> = ({ data, avgWorkoutsPerPeriod, view }) => {
-  // Generate colors based on data
+  // Generate colors based on data - using blue tones to match muscle groups chart
   const enhancedData = data.map(item => ({
     ...item,
     color: item.workouts > avgWorkoutsPerPeriod ? '#4F46E5' : '#93C5FD'
   }));
   
   return (
-    <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-gray-800">Workout Frequency</h3>
-        <p className="text-sm text-gray-500">
+    <Card className="overflow-hidden border border-gray-100 shadow-sm">
+      <div className="p-6 pb-0">
+        <h3 className="text-2xl font-bold text-gray-800">Workout Frequency</h3>
+        <p className="text-base text-gray-500 mt-1">
           {view === 'weekly' ? 'Number of workouts completed each week' : 'Number of workouts completed each month'}
         </p>
       </div>
       
-      <div className="h-[350px] w-full">
+      <div className="h-[400px] w-full p-6">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={enhancedData} 
-            margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
-            barSize={view === 'weekly' ? 35 : 50}
+            margin={{ top: 20, right: 30, left: 0, bottom: 40 }}
+            barSize={view === 'weekly' ? 60 : 80}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF2F6" />
             <XAxis 
@@ -104,7 +105,7 @@ const FrequencyChart: React.FC<FrequencyChartProps> = ({ data, avgWorkoutsPerPer
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 };
 

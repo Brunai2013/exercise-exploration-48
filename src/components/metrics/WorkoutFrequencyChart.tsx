@@ -38,38 +38,45 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
   const avgWorkoutsPerPeriod = totalWorkouts / data.length || 0;
 
   return (
-    <div className="space-y-4">
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          {/* Header with title and info */}
-          <HeaderSection 
-            view={view} 
-            timeFilter={timeFilter} 
-            dateRange={dateRange} 
+    <Card className="overflow-hidden h-full shadow-sm">
+      <CardContent className="p-0">
+        {/* Header with title and info */}
+        <HeaderSection 
+          view={view} 
+          timeFilter={timeFilter} 
+          dateRange={dateRange} 
+        />
+        
+        {/* Stats summary cards */}
+        <div className="p-6 pt-0">
+          <StatsCards 
+            totalWorkouts={totalWorkouts}
+            mostActivePeriod={mostActivePeriod}
+            avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
+            view={view}
           />
-          
-          {/* Stats summary cards */}
-          <div className="mt-6">
-            <StatsCards 
-              totalWorkouts={totalWorkouts}
-              mostActivePeriod={mostActivePeriod}
-              avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
-              view={view}
-            />
+        </div>
+        
+        {/* Main chart */}
+        <div className="px-6 pb-6">
+          <FrequencyChart 
+            data={data} 
+            avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
+            view={view}
+          />
+        </div>
+        
+        {/* Pro Tip section similar to Muscle Groups */}
+        <div className="px-6 pb-6">
+          <div className="px-6 py-5 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-base text-blue-800 leading-relaxed">
+              <span className="font-semibold">Pro Tip:</span> Consistency is key for long-term fitness results. 
+              Aim for 3-4 workouts per week for optimal progress while allowing proper recovery.
+            </p>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Main chart in its own card */}
-      <FrequencyChart 
-        data={data} 
-        avgWorkoutsPerPeriod={avgWorkoutsPerPeriod}
-        view={view}
-      />
-      
-      {/* Explanation section */}
-      <InfoSection avgWorkoutsPerPeriod={avgWorkoutsPerPeriod} />
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
