@@ -97,8 +97,15 @@ export function useExerciseProgressData(
     const endDate = dateRange.to;
     const daysBetween = differenceInDays(endDate, startDate) + 1;
     
-    // Get categories with appropriate IDs
-    const availableCategories = categories.slice(0, 5);
+    // Check if we have categories available
+    if (!categories || categories.length === 0) {
+      console.warn('No categories available for generating demo data');
+      setExerciseData([]);
+      return;
+    }
+    
+    // Get categories with appropriate IDs (use only the first 5 or fewer if not enough)
+    const availableCategories = categories.slice(0, Math.min(5, categories.length));
     
     for (let i = 0; i < daysBetween; i += 2) { // Every other day
       const currentDate = new Date(startDate);
@@ -112,6 +119,11 @@ export function useExerciseProgressData(
       
       for (let j = 0; j < exercisesPerDay; j++) {
         const randomExerciseIndex = Math.floor(Math.random() * exercises.length);
+        // Make sure we have at least one category
+        if (availableCategories.length === 0) {
+          console.warn('No available categories for demo data generation');
+          continue;
+        }
         const randomCategoryIndex = Math.floor(Math.random() * availableCategories.length);
         
         // Add 3-5 sets per exercise
@@ -121,7 +133,7 @@ export function useExerciseProgressData(
           exerciseProgress.push({
             id: `demo-${i}-${j}-${k}`,
             exercise: exercises[randomExerciseIndex],
-            category: availableCategories[randomCategoryIndex].id,
+            category: availableCategories[randomCategoryIndex]?.id || 'default',
             date: format(currentDate, 'yyyy-MM-dd'),
             weight: Math.floor(Math.random() * 100) + 50, // 50-150 lbs
             reps: Math.floor(Math.random() * 8) + 5 // 5-12 reps
