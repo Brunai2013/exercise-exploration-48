@@ -11,15 +11,20 @@ interface WorkoutHeaderProps {
   isSaving: boolean;
   progress: number;
   saveWorkoutProgress: () => Promise<void>;
+  allSetsCompleted?: boolean;
 }
 
 const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   workout,
   isSaving,
   progress,
-  saveWorkoutProgress
+  saveWorkoutProgress,
+  allSetsCompleted = false
 }) => {
   const navigate = useNavigate();
+  
+  // If all sets are completed, treat as 100% progress
+  const isComplete = progress === 100 || allSetsCompleted;
   
   return (
     <PageHeader
@@ -40,7 +45,7 @@ const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                {progress === 100 ? "Complete Workout" : "Save Progress"}
+                {isComplete ? "Complete Workout" : "Save Progress"}
               </>
             )}
           </Button>

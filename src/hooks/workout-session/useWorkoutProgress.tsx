@@ -11,6 +11,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
   const [isSaving, setIsSaving] = useState(false);
   const [startTime] = useState(new Date());
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [allSetsCompleted, setAllSetsCompleted] = useState(false);
   
   // Track elapsed time
   useEffect(() => {
@@ -21,7 +22,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
     return () => clearInterval(timer);
   }, [startTime]);
 
-  // Calculate progress percentage
+  // Calculate progress percentage and check if all sets are completed
   useEffect(() => {
     if (workout) {
       const totalSets = workout.exercises.reduce(
@@ -38,6 +39,9 @@ export const useWorkoutProgress = (workout: Workout | null) => {
       const calculatedProgress = totalSets > 0 
         ? Math.round((completedSets / totalSets) * 100) 
         : 0;
+      
+      // Check if all sets are completed
+      setAllSetsCompleted(totalSets > 0 && completedSets === totalSets);
       
       setProgress(calculatedProgress);
     }
@@ -57,19 +61,22 @@ export const useWorkoutProgress = (workout: Workout | null) => {
     try {
       setIsSaving(true);
       
+      // Force completed flag to true if all sets are completed
+      const isComplete = progress === 100 || allSetsCompleted;
+      
       // Create a deep copy of the workout with all its current state
       const updatedWorkout = {
         ...workout,
-        progress, // Update the progress percentage
-        completed: progress === 100 // Mark as complete if 100% done
+        progress: isComplete ? 100 : progress, // Ensure 100% if all sets completed
+        completed: isComplete // Mark as complete if all sets done
       };
       
       // Save the workout with all completed sets and input values
       await updateWorkout(updatedWorkout);
       
       toast({
-        title: progress === 100 ? "Workout Complete! 💪" : "Progress Saved!",
-        description: progress === 100 
+        title: isComplete ? "Workout Complete! 💪" : "Progress Saved!",
+        description: isComplete 
           ? "Congratulations on completing your workout!" 
           : "Your workout progress has been saved.",
       });
@@ -92,6 +99,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
     isSaving,
     elapsedTime,
     formatTime,
-    saveWorkoutProgress
+    saveWorkoutProgress,
+    allSetsCompleted
   };
 };

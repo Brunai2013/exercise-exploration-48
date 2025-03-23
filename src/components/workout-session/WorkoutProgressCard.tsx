@@ -10,14 +10,19 @@ interface WorkoutProgressCardProps {
   progress: number;
   elapsedTime: number;
   formatTime: (seconds: number) => string;
+  allSetsCompleted?: boolean;
 }
 
 const WorkoutProgressCard: React.FC<WorkoutProgressCardProps> = ({
   workout,
   progress,
   elapsedTime,
-  formatTime
+  formatTime,
+  allSetsCompleted = false
 }) => {
+  // If all sets are completed, show 100% regardless of calculated progress
+  const displayProgress = allSetsCompleted ? 100 : progress;
+
   return (
     <Card className="mb-6 border-2 border-primary/10">
       <CardContent className="p-6">
@@ -37,16 +42,16 @@ const WorkoutProgressCard: React.FC<WorkoutProgressCardProps> = ({
           <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg">
             <CheckCircle2 className="h-8 w-8 text-primary mb-2" />
             <span className="text-sm text-muted-foreground">Completion</span>
-            <span className="text-2xl font-semibold">{progress}%</span>
+            <span className="text-2xl font-semibold">{displayProgress}%</span>
           </div>
         </div>
         
         <div className="mt-6">
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium">Progress</span>
-            <span className="text-sm font-medium">{progress}%</span>
+            <span className="text-sm font-medium">{displayProgress}%</span>
           </div>
-          <Progress value={progress} className="h-3" />
+          <Progress value={displayProgress} className="h-3" />
         </div>
       </CardContent>
     </Card>

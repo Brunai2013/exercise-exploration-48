@@ -7,14 +7,17 @@ interface WorkoutCompleteMessageProps {
   progress: number;
   isSaving: boolean;
   saveWorkoutProgress: () => Promise<void>;
+  allSetsCompleted?: boolean;
 }
 
 const WorkoutCompleteMessage: React.FC<WorkoutCompleteMessageProps> = ({
   progress,
   isSaving,
-  saveWorkoutProgress
+  saveWorkoutProgress,
+  allSetsCompleted = false
 }) => {
-  if (progress !== 100) return null;
+  // Show if either progress is 100% OR all sets are completed
+  if (progress !== 100 && !allSetsCompleted) return null;
   
   return (
     <div className="flex flex-col items-center justify-center bg-green-50 p-8 rounded-lg mb-8 animate-fade-in">

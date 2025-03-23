@@ -44,7 +44,8 @@ const WorkoutSession = () => {
     isSaving,
     elapsedTime,
     formatTime,
-    saveWorkoutProgress
+    saveWorkoutProgress,
+    allSetsCompleted
   } = useWorkoutProgress(workout);
   
   const {
@@ -116,6 +117,7 @@ const WorkoutSession = () => {
         isSaving={isSaving} 
         progress={progress} 
         saveWorkoutProgress={saveWorkoutProgress}
+        allSetsCompleted={allSetsCompleted}
       />
 
       <WorkoutProgressCard 
@@ -123,6 +125,7 @@ const WorkoutSession = () => {
         progress={progress} 
         elapsedTime={elapsedTime} 
         formatTime={formatTime}
+        allSetsCompleted={allSetsCompleted}
       />
 
       <CircuitActions 
@@ -159,6 +162,7 @@ const WorkoutSession = () => {
         progress={progress}
         isSaving={isSaving}
         saveWorkoutProgress={saveWorkoutProgress}
+        allSetsCompleted={allSetsCompleted}
       />
     </PageContainer>
   );
