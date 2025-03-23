@@ -16,7 +16,7 @@ interface MetricsTimeFilterProps {
   setTimeFilter: React.Dispatch<React.SetStateAction<'week' | 'month' | 'custom'>>;
   view: 'weekly' | 'monthly';
   setView: React.Dispatch<React.SetStateAction<'weekly' | 'monthly'>>;
-  handleDateRangeChange: (range: { from: Date; to?: Date }) => void;
+  handleDateRangeChange: (range: { from?: Date; to?: Date } | undefined) => void;
 }
 
 const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
@@ -70,15 +70,11 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
               disabled={timeFilter !== 'custom'}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                    {format(dateRange.to, "LLL dd, y")}
-                  </>
-                ) : (
-                  format(dateRange.from, "LLL dd, y")
-                )
+              {dateRange?.from && dateRange?.to ? (
+                <>
+                  {format(dateRange.from, "LLL dd, y")} -{" "}
+                  {format(dateRange.to, "LLL dd, y")}
+                </>
               ) : (
                 <span>Pick a date range</span>
               )}
@@ -89,8 +85,11 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
               initialFocus
               mode="range"
               defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={handleDateRangeChange as any}
+              selected={{ 
+                from: dateRange?.from, 
+                to: dateRange?.to 
+              }}
+              onSelect={handleDateRangeChange}
               numberOfMonths={2}
               className={cn("p-3 pointer-events-auto")}
             />

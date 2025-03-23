@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
-import { isAfter } from 'date-fns';
-import { startOfWeek, startOfMonth, subMonths, subYears, format } from 'date-fns';
+import { isAfter, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subYears, format } from 'date-fns';
 import { useMetricsData } from '@/hooks/metrics/useMetricsData';
 import MetricsHeader from '@/components/metrics/page/MetricsHeader';
 import MetricsTimeFilter from '@/components/metrics/page/MetricsTimeFilter';
@@ -20,31 +19,33 @@ const WorkoutMetrics = () => {
     from: Date;
     to: Date;
   }>({
-    from: subYears(today, 1), // Changed to go back 1 year for more data
+    from: subDays(today, 7), // Default to last week
     to: today,
   });
   
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('custom'); // Changed to 'custom' to use our 1 year range
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('week'); // Changed default to 'week'
   const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force data reload
   
   // Update date range when time filter changes
   useEffect(() => {
     console.log('Time filter changed to:', timeFilter);
     if (timeFilter === 'week') {
+      const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Start on Monday
       setDateRange({
-        from: startOfWeek(today),
+        from: weekStart,
         to: today
       });
     } else if (timeFilter === 'month') {
+      const monthStart = startOfMonth(new Date()); // Current month start
       setDateRange({
-        from: startOfMonth(subMonths(today, 1)),
+        from: monthStart,
         to: today
       });
-    } else if (timeFilter === 'custom' && dateRange.from === dateRange.to) {
-      // If custom is selected but dates are the same, set a reasonable default range
+    } else if (timeFilter === 'custom' && (!dateRange.from || !dateRange.to)) {
+      // If custom is selected but dates are invalid, set a reasonable default range
       setDateRange({
-        from: subYears(today, 1),
+        from: subDays(today, 30),
         to: today
       });
     }
@@ -74,30 +75,35 @@ const WorkoutMetrics = () => {
   // Debug logs to help diagnose the issue
   useEffect(() => {
     console.log('Current date range:', {
-      from: format(dateRange.from, 'yyyy-MM-dd'),
-      to: format(dateRange.to, 'yyyy-MM-dd')
+      from: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : 'undefined',
+      to: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : 'undefined'
     });
     console.log('Metrics data loaded:', {
-      muscleGroups: muscleGroupData.length,
-      exercises: exerciseData.length,
-      frequency: frequencyData.length,
-      upcoming: upcomingWorkoutData.length,
+      muscleGroups: muscleGroupData?.length || 0,
+      exercises: exerciseData?.length || 0,
+      frequency: frequencyData?.length || 0,
+      upcoming: upcomingWorkoutData?.length || 0,
       loading: isLoading
     });
   }, [dateRange, muscleGroupData, exerciseData, frequencyData, upcomingWorkoutData, isLoading]);
 
   // Ensure from date is before to date
-  const handleDateRangeChange = (range: { from: Date; to?: Date }) => {
-    if (range.from && range.to && isAfter(range.from, range.to)) {
-      // If from date is after to date, set to date to from date
-      setDateRange({ from: range.from, to: range.from });
-    } else if (range.from && !range.to) {
-      setDateRange({ from: range.from, to: range.from });
-    } else if (range.from && range.to) {
-      setDateRange({ from: range.from, to: range.to });
-      setTimeFilter('custom'); // Switch to custom when manually selecting dates
+  const handleDateRangeChange = (range: { from?: Date; to?: Date } | undefined) => {
+    if (!range) return;
+    
+    // Handle undefined values
+    const newFrom = range.from || dateRange.from;
+    const newTo = range.to || (range.from || dateRange.from);
+    
+    // If from date is after to date, adjust accordingly
+    if (isAfter(newFrom, newTo)) {
+      setDateRange({ from: newFrom, to: newFrom });
+    } else {
+      setDateRange({ from: newFrom, to: newTo });
     }
-    console.log('Date range changed to:', range);
+    
+    setTimeFilter('custom'); // Switch to custom when manually selecting dates
+    console.log('Date range changed to:', { from: newFrom, to: newTo });
   };
 
   // Add a manual refresh function

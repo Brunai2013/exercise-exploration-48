@@ -27,6 +27,9 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
 }) => {
   // Format date range for display
   const dateRangeText = useMemo(() => {
+    if (!dateRange || !dateRange.from || !dateRange.to) {
+      return "No date range selected";
+    }
     return `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
   }, [dateRange]);
 
@@ -40,6 +43,8 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
     if (!data || data.length === 0) {
       return [];
     }
+    
+    console.log('Processing exercise data:', data.length, 'items');
     
     // Group exercises by name and count occurrences
     const exerciseCounts: Record<string, number> = {};
@@ -83,7 +88,7 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
   }
   
   // Check if we have any data to display
-  const hasData = exerciseData.length > 0;
+  const hasData = exerciseData && exerciseData.length > 0;
 
   if (!hasData) {
     return (

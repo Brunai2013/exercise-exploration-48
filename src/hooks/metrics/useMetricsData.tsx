@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format, parseISO, eachDayOfInterval, eachWeekOfInterval, getWeek, getMonth } from 'date-fns';
 import { getAllWorkouts } from '@/lib/workouts';
@@ -109,6 +108,13 @@ export const useMetricsData = (
       return;
     }
 
+    // Guard against invalid date ranges
+    if (!dateRange || !dateRange.from || !dateRange.to) {
+      console.log('Invalid date range for muscle groups, using demo data');
+      setMuscleGroupData(generateDemoMuscleGroupData());
+      return;
+    }
+
     const fetchCategoryData = async () => {
       try {
         setIsLoading(true);
@@ -205,6 +211,13 @@ export const useMetricsData = (
       return;
     }
 
+    // Guard against invalid date ranges
+    if (!dateRange || !dateRange.from || !dateRange.to) {
+      console.log('Invalid date range for exercise progress, using demo data');
+      setExerciseData(generateDemoExerciseData());
+      return;
+    }
+
     try {
       const exerciseProgressItems: ExerciseProgressItem[] = [];
 
@@ -260,10 +273,13 @@ export const useMetricsData = (
       } else {
         setExerciseData(exerciseProgressItems);
       }
+      
+      setIsLoading(false);
     } catch (error) {
       console.error('Error processing exercise data:', error);
       setError('Error processing exercise data. Please try again later.');
       setExerciseData(generateDemoExerciseData());
+      setIsLoading(false);
     }
   }, [workouts, dateRange]);
 
@@ -571,34 +587,43 @@ export const useMetricsData = (
     const today = new Date();
     const data: ExerciseProgressItem[] = [];
     
-    // Generate data for past 14 days
-    for (let i = 14; i >= 0; i -= 2) {
+    // Generate more diverse exercise data
+    const exercises = [
+      { name: 'Bench Press', category: 'Chest', baseWeight: 80 },
+      { name: 'Squat', category: 'Legs', baseWeight: 120 },
+      { name: 'Deadlift', category: 'Back', baseWeight: 140 },
+      { name: 'Overhead Press', category: 'Shoulders', baseWeight: 60 },
+      { name: 'Bicep Curl', category: 'Arms', baseWeight: 20 },
+      { name: 'Tricep Extension', category: 'Arms', baseWeight: 25 },
+      { name: 'Lat Pulldown', category: 'Back', baseWeight: 70 },
+      { name: 'Leg Press', category: 'Legs', baseWeight: 150 },
+      { name: 'Lateral Raise', category: 'Shoulders', baseWeight: 15 },
+      { name: 'Cable Fly', category: 'Chest', baseWeight: 35 },
+      { name: 'Romanian Deadlift', category: 'Legs', baseWeight: 100 },
+      { name: 'Face Pull', category: 'Shoulders', baseWeight: 40 },
+      { name: 'Plank', category: 'Core', baseWeight: 0 },
+      { name: 'Russian Twist', category: 'Core', baseWeight: 10 },
+      { name: 'Seated Row', category: 'Back', baseWeight: 65 }
+    ];
+    
+    // Generate data for past 14 days with different exercise frequencies
+    for (let i = 20; i >= 0; i -= 2) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
+      const formattedDate = format(date, 'yyyy-MM-dd');
       
-      data.push({
-        date: format(date, 'yyyy-MM-dd'),
-        exercise: 'Bench Press',
-        weight: 80 + Math.floor(Math.random() * 10),
-        reps: 8 + Math.floor(Math.random() * 4),
-        category: 'Chest'
-      });
+      // Add 3-5 exercises per workout day
+      const exerciseCount = 3 + Math.floor(Math.random() * 3);
+      const shuffledExercises = [...exercises].sort(() => Math.random() - 0.5);
       
-      data.push({
-        date: format(date, 'yyyy-MM-dd'),
-        exercise: 'Squat',
-        weight: 120 + Math.floor(Math.random() * 15),
-        reps: 6 + Math.floor(Math.random() * 3),
-        category: 'Legs'
-      });
-      
-      if (i % 4 === 0) {
+      for (let j = 0; j < exerciseCount; j++) {
+        const exercise = shuffledExercises[j];
         data.push({
-          date: format(date, 'yyyy-MM-dd'),
-          exercise: 'Deadlift',
-          weight: 140 + Math.floor(Math.random() * 20),
-          reps: 5 + Math.floor(Math.random() * 3),
-          category: 'Back'
+          date: formattedDate,
+          exercise: exercise.name,
+          weight: exercise.baseWeight + Math.floor(Math.random() * 20),
+          reps: 6 + Math.floor(Math.random() * 6),
+          category: exercise.category
         });
       }
     }
