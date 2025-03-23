@@ -112,7 +112,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               )}
             </div>
             
-            {/* Always show sets - no more expanding/collapsing */}
+            {/* Sets grid */}
             <div className={`grid grid-cols-12 text-xs font-medium mb-1 gap-1`}>
               <div className="col-span-1">#</div>
               <div className="col-span-3">Weight</div>
@@ -132,6 +132,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                     className={`w-full border rounded px-2 py-1 text-xs`}
                     value={set.weight || ''}
                     onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
                 
@@ -145,6 +146,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                     className={`w-full border rounded px-2 py-1 text-xs`}
                     value={set.actualReps || ''}
                     onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
                 

@@ -26,6 +26,8 @@ const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   // If all sets are completed, treat as 100% progress
   const isComplete = progress === 100 || allSetsCompleted;
   
+  console.log('WorkoutHeader rendering with:', { progress, allSetsCompleted, isComplete });
+  
   return (
     <PageHeader
       title={`${workout?.name}`}

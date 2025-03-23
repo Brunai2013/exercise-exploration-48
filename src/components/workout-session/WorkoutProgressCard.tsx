@@ -22,6 +22,8 @@ const WorkoutProgressCard: React.FC<WorkoutProgressCardProps> = ({
 }) => {
   // If all sets are completed, show 100% regardless of calculated progress
   const displayProgress = allSetsCompleted ? 100 : progress;
+  
+  console.log('WorkoutProgressCard rendering with:', { progress, allSetsCompleted, displayProgress });
 
   return (
     <Card className="mb-6 border-2 border-primary/10">

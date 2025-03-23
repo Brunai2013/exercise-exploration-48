@@ -36,13 +36,22 @@ export const useWorkoutProgress = (workout: Workout | null) => {
         0
       );
       
+      // Calculate progress percentage
       const calculatedProgress = totalSets > 0 
         ? Math.round((completedSets / totalSets) * 100) 
         : 0;
       
       // Check if all sets are completed
-      setAllSetsCompleted(totalSets > 0 && completedSets === totalSets);
+      const allCompleted = totalSets > 0 && completedSets === totalSets;
       
+      console.log('Progress calculation:', {
+        totalSets,
+        completedSets,
+        calculatedProgress,
+        allCompleted
+      });
+      
+      setAllSetsCompleted(allCompleted);
       setProgress(calculatedProgress);
     }
   }, [workout]);

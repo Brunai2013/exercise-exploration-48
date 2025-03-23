@@ -16,8 +16,13 @@ const WorkoutCompleteMessage: React.FC<WorkoutCompleteMessageProps> = ({
   saveWorkoutProgress,
   allSetsCompleted = false
 }) => {
-  // Show if either progress is 100% OR all sets are completed
-  if (progress !== 100 && !allSetsCompleted) return null;
+  // Only show the complete message if progress is 100% OR all sets are completed
+  if (progress !== 100 && !allSetsCompleted) {
+    console.log('WorkoutCompleteMessage not showing because:', { progress, allSetsCompleted });
+    return null;
+  }
+  
+  console.log('WorkoutCompleteMessage showing because:', { progress, allSetsCompleted });
   
   return (
     <div className="flex flex-col items-center justify-center bg-green-50 p-8 rounded-lg mb-8 animate-fade-in">
