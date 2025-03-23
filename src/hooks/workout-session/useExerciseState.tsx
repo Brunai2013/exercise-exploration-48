@@ -31,11 +31,17 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     });
 
     if (completed) {
-      const audio = new Audio('/completion-sound.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(() => {
-        // Ignore errors on audio play (common in some browsers)
-      });
+      // Play completion sound when a set is marked as completed
+      try {
+        const audio = new Audio('/completion-sound.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(e => {
+          // Ignore errors on audio play (common in some browsers)
+          console.log('Audio play error (ignorable):', e);
+        });
+      } catch (error) {
+        // Ignore audio errors completely
+      }
     }
   };
 

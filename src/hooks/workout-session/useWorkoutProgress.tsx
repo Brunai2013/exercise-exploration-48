@@ -25,12 +25,15 @@ export const useWorkoutProgress = (workout: Workout | null) => {
   // Calculate progress percentage and check if all sets are completed
   useEffect(() => {
     if (workout) {
-      const totalSets = workout.exercises.reduce(
+      // Count only non-empty exercises (those that have sets)
+      const exercisesWithSets = workout.exercises.filter(ex => ex.sets && ex.sets.length > 0);
+      
+      const totalSets = exercisesWithSets.reduce(
         (total, exercise) => total + exercise.sets.length, 
         0
       );
       
-      const completedSets = workout.exercises.reduce(
+      const completedSets = exercisesWithSets.reduce(
         (total, exercise) => 
           total + exercise.sets.filter(set => set.completed).length, 
         0
