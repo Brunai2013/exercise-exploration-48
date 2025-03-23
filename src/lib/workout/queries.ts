@@ -12,8 +12,7 @@ export const getRecentWorkouts = async (): Promise<Workout[]> => {
       *,
       workout_exercises(
         *,
-        exercises(id, name, description, category, image_url),
-        exercise_sets(*)
+        exercises(id, name, description, category, image_url)
       )
     `)
     .eq('completed', true)
@@ -47,8 +46,7 @@ export const getTodayWorkouts = async (): Promise<Workout[]> => {
       *,
       workout_exercises(
         *,
-        exercises(id, name, description, category, image_url),
-        exercise_sets(*)
+        exercises(id, name, description, category, image_url)
       )
     `)
     .eq('date', todayString)
@@ -80,8 +78,7 @@ export const getUpcomingWorkouts = async (): Promise<Workout[]> => {
       *,
       workout_exercises(
         *,
-        exercises(id, name, description, category, image_url),
-        exercise_sets(*)
+        exercises(id, name, description, category, image_url)
       )
     `)
     .gt('date', todayString)
@@ -106,8 +103,7 @@ export const getWorkoutsByDate = async (date: string): Promise<Workout[]> => {
       *,
       workout_exercises(
         *,
-        exercises(id, name, description, category, image_url),
-        exercise_sets(*)
+        exercises(id, name, description, category, image_url)
       )
     `)
     .eq('date', date)
@@ -130,8 +126,7 @@ export const getAllWorkouts = async (): Promise<Workout[]> => {
       *,
       workout_exercises(
         *,
-        exercises(id, name, description, category, image_url),
-        exercise_sets(*)
+        exercises(id, name, description, category, image_url)
       )
     `)
     .eq('archived', false) // Filter out archived workouts
@@ -154,8 +149,7 @@ export const getWorkoutById = async (id: string): Promise<Workout | null> => {
       *,
       workout_exercises(
         *,
-        exercises(id, name, description, category, image_url),
-        exercise_sets(*)
+        exercises(id, name, description, category, image_url)
       )
     `)
     .eq('id', id)

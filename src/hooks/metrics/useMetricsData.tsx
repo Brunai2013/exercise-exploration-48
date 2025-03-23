@@ -106,6 +106,7 @@ export function useMetricsData(
         });
         
         // Fetch real workout data from Supabase between the dates
+        // Modified query to fix the column issue
         const { data: workoutData, error: workoutError } = await supabase
           .from('workouts')
           .select(`
@@ -115,8 +116,7 @@ export function useMetricsData(
             completed,
             workout_exercises(
               id,
-              exercises(id, name, category),
-              exercise_sets(weight, reps)
+              exercises(id, name, category)
             )
           `)
           .gte('date', format(dateRange.from, 'yyyy-MM-dd'))
@@ -160,7 +160,7 @@ export function useMetricsData(
     fetchData();
     
     return () => { isMounted = false; };
-  }, [dateRange.from, dateRange.to, view, refreshKey, validDateRange]);
+  }, [dateRange.from, dateRange.to, view, refreshKey, validDateRange, categories]);
   
   // Process workout data into muscle group statistics
   const processMuscleGroupData = (workoutData: any[]) => {
@@ -310,12 +310,14 @@ export function useMetricsData(
       const colorMatch = category.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
       const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1'; // Default to indigo if no match
       
+      const count = Math.floor(Math.random() * 50) + 10; // Random value between 10-60
+      
       return {
         id: category.id,
         name: category.name,
-        value: Math.floor(Math.random() * 50) + 10, // Random value between 10-60
+        value: count,
         color,
-        count: Math.floor(Math.random() * 50) + 10,
+        count,
         percentage: Math.floor(Math.random() * 50) + 10
       };
     });
@@ -422,18 +424,24 @@ export function useMetricsData(
     // Generate upcoming workout analysis
     const upcomingAnalysis: CategoryAnalysis[] = [];
     for (let i = 0; i < 5; i++) {
-      const randomCategoryIndex = Math.floor(Math.random() * availableCategories.length);
+      const randomCategoryIndex = Math.floor(Math.random() * categories.length);
+      const category = categories[randomCategoryIndex];
+      
+      // Extract color from Tailwind class for consistent coloring
+      const colorMatch = category.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
+      const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1';
+      
       upcomingAnalysis.push({
         id: `upcoming-${i}`,
-        category: availableCategories[randomCategoryIndex].id,
-        name: availableCategories[randomCategoryIndex].name,
+        category: category.id,
+        name: category.name,
         prediction: `${Math.floor(Math.random() * 30) + 70}%`,
         pastCount: Math.floor(Math.random() * 50) + 10,
         futureCount: Math.floor(Math.random() * 50) + 10,
         pastPercentage: Math.floor(Math.random() * 50) + 10,
         futurePercentage: Math.floor(Math.random() * 50) + 10,
-        color: '#6366F1',
-        suggestion: 'increase'
+        color,
+        suggestion: ['increase', 'decrease', 'maintain'][Math.floor(Math.random() * 3)] as 'increase' | 'decrease' | 'maintain'
       });
     }
     
@@ -449,6 +457,13 @@ export function useMetricsData(
     // This would typically use ML or statistical analysis of past workouts
     // For now, we'll use placeholders
     const upcomingAnalysis: CategoryAnalysis[] = categories.slice(0, 5).map((category, index) => {
+      // Extract color from Tailwind class for consistent coloring
+      const colorMatch = category.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
+      const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1';
+      
+      const suggestionOptions: ('increase' | 'decrease' | 'maintain')[] = ['increase', 'decrease', 'maintain'];
+      const randomSuggestion = suggestionOptions[Math.floor(Math.random() * suggestionOptions.length)];
+      
       return {
         id: `upcoming-${index}`,
         category: category.id,
@@ -458,8 +473,8 @@ export function useMetricsData(
         futureCount: Math.floor(Math.random() * 50) + 10,
         pastPercentage: Math.floor(Math.random() * 50) + 10,
         futurePercentage: Math.floor(Math.random() * 50) + 10,
-        color: '#6366F1',
-        suggestion: 'increase'
+        color,
+        suggestion: randomSuggestion
       };
     });
     
