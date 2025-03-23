@@ -8,14 +8,24 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
-const FutureExerciseChartHeader: React.FC = () => {
+interface FutureExerciseChartHeaderProps {
+  title: string;
+  description: string;
+  tooltipContent: string;
+}
+
+const FutureExerciseChartHeader: React.FC<FutureExerciseChartHeaderProps> = ({ 
+  title, 
+  description, 
+  tooltipContent 
+}) => {
   return (
     <CardHeader>
       <div className="flex justify-between items-start">
         <div>
-          <CardTitle>Upcoming Exercise Distribution</CardTitle>
+          <CardTitle>{title}</CardTitle>
           <CardDescription>
-            See which exercises you'll be doing most in your scheduled workouts
+            {description}
           </CardDescription>
         </div>
         <HoverCard>
@@ -26,8 +36,7 @@ const FutureExerciseChartHeader: React.FC = () => {
             <div className="space-y-2">
               <h4 className="text-sm font-semibold">About This Chart</h4>
               <p className="text-sm">
-                This breakdown shows the distribution of exercises in your upcoming scheduled workouts.
-                The percentages indicate how frequently you'll be doing each exercise.
+                {tooltipContent}
               </p>
             </div>
           </HoverCardContent>

@@ -151,7 +151,7 @@ export function useUpcomingAnalysis(rawWorkoutData: any[] = []) {
     }
     
     // This would typically use ML or statistical analysis of past workouts
-    const upcomingAnalysis: CategoryAnalysis[] = validCategories.slice(0, Math.min(5, validCategories.length)).map((category, index) => {
+    const upcomingAnalysis: CategoryAnalysis[] = validCategories.slice(0, Math.min(6, validCategories.length)).map((category, index) => {
       // Extract color from Tailwind class for consistent coloring
       const colorMatch = category.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
       const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1';
