@@ -29,7 +29,7 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
         return prevWorkout;
       }
       
-      // Simply use the completed parameter directly without additional comparison
+      // Update the completed status
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
         completed: completed

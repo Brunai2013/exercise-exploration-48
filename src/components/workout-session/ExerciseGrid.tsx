@@ -44,7 +44,7 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
   toggleExerciseSelection
 }) => {
   return (
-    <div className="grid grid-cols-2 gap-4 mb-8">
+    <div className="grid grid-cols-1 gap-4 mb-8">
       {exerciseGroups.map(group => {
         const groupExercises = workout?.filter(ex => 
           group.exerciseIds.includes(ex.id)
@@ -83,7 +83,7 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
             onActualRepsChange={onActualRepsChange}
             onNavigateToExercise={onNavigateToExercise}
             exerciseCategories={exerciseCategories}
-            isCompact={true}
+            isCompact={false}
             isSelected={selectedExercises.includes(exerciseItem.id)}
             onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
           />
