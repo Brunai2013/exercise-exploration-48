@@ -37,6 +37,15 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   onSelect,
   onRemoveFromGroup
 }) => {
+  // Add more explicit logging to debug issues
+  console.log("ExerciseWorkoutCard rendering:", { 
+    exerciseName: exerciseItem.exercise.name,
+    exerciseId: exerciseItem.id,
+    sets: exerciseItem.sets,
+    index: exerciseIndex,
+    isCurrentExercise: exerciseIndex === currentExerciseIndex
+  });
+  
   const exerciseSets = exerciseItem.sets || [];
   const completedSets = exerciseSets.filter(set => set.completed).length;
   const exerciseProgress = exerciseSets.length > 0 ? Math.round((completedSets / exerciseSets.length) * 100) : 0;
@@ -55,20 +64,14 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
       ? { borderColor: 'hsl(var(--primary) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.05)' } 
       : {};
   
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    console.log("Card clicked:", exerciseItem.exercise.name);
     if (onSelect) {
       onSelect();
       return;
     }
     onNavigateToExercise(exerciseIndex);
   };
-  
-  // Log information to help debug
-  console.log(`Rendering exercise card #${exerciseIndex}:`, { 
-    exerciseName: exerciseItem.exercise.name,
-    setCount: exerciseSets.length,
-    completedSets
-  });
   
   return (
     <Card 
@@ -84,7 +87,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
           {/* Exercise image */}
           <div 
             className={`${isCompact ? 'h-24 w-24' : 'h-32 w-32'} rounded bg-cover bg-center mr-3 flex-shrink-0`}
-            style={{ backgroundImage: `url(${exerciseItem.exercise.imageUrl})` }}
+            style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
           />
           
           <div className="flex-1">
@@ -129,62 +132,68 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
             </div>
             
             {/* Individual sets */}
-            {exerciseSets.map((set, setIndex) => (
-              <div key={set.id} className="grid grid-cols-12 items-center gap-1 mb-1">
-                <div className="col-span-1 font-medium text-xs">{setIndex + 1}</div>
-                
-                <div className="col-span-3">
-                  <input
-                    type="text"
-                    placeholder="lb/kg"
-                    className="w-full border rounded px-2 py-1 text-xs"
-                    value={set.weight || ''}
-                    onChange={(e) => {
-                      console.log('Weight changed:', e.target.value);
-                      onWeightChange(exerciseIndex, setIndex, e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
+            {exerciseSets.length > 0 ? (
+              exerciseSets.map((set, setIndex) => (
+                <div key={set.id} className="grid grid-cols-12 items-center gap-1 mb-1">
+                  <div className="col-span-1 font-medium text-xs">{setIndex + 1}</div>
+                  
+                  <div className="col-span-3">
+                    <input
+                      type="text"
+                      placeholder="lb/kg"
+                      className="w-full border rounded px-2 py-1 text-xs"
+                      value={set.weight !== undefined ? set.weight : ''}
+                      onChange={(e) => {
+                        console.log('Weight changed:', e.target.value);
+                        onWeightChange(exerciseIndex, setIndex, e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  
+                  <div className="col-span-2 text-center text-xs">
+                    {set.targetReps}
+                  </div>
+                  
+                  <div className="col-span-3">
+                    <input
+                      type="text"
+                      className="w-full border rounded px-2 py-1 text-xs"
+                      value={set.actualReps !== undefined ? set.actualReps : ''}
+                      onChange={(e) => {
+                        console.log('Actual reps changed:', e.target.value);
+                        onActualRepsChange(exerciseIndex, setIndex, e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  
+                  <div className="col-span-3 flex justify-end">
+                    <Button
+                      variant={set.completed ? "default" : "outline"}
+                      size="sm"
+                      className="w-8 h-7 px-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Set completion toggled:', !set.completed);
+                        onSetCompletion(exerciseIndex, setIndex, !set.completed);
+                      }}
+                      style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
+                    >
+                      {set.completed ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <span className="text-xs">✓</span>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                
-                <div className="col-span-2 text-center text-xs">
-                  {set.targetReps}
-                </div>
-                
-                <div className="col-span-3">
-                  <input
-                    type="text"
-                    className="w-full border rounded px-2 py-1 text-xs"
-                    value={set.actualReps || ''}
-                    onChange={(e) => {
-                      console.log('Actual reps changed:', e.target.value);
-                      onActualRepsChange(exerciseIndex, setIndex, e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                
-                <div className="col-span-3 flex justify-end">
-                  <Button
-                    variant={set.completed ? "default" : "outline"}
-                    size="sm"
-                    className="w-8 h-7 px-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Set completion toggled:', !set.completed);
-                      onSetCompletion(exerciseIndex, setIndex, !set.completed);
-                    }}
-                    style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
-                  >
-                    {set.completed ? (
-                      <Check className="h-3 w-3" />
-                    ) : (
-                      <span className="text-xs">✓</span>
-                    )}
-                  </Button>
-                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground py-2">
+                No sets defined for this exercise
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

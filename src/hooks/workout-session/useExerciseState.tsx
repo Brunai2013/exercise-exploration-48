@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Workout, WorkoutExercise } from '@/lib/types';
+import { toast } from '@/components/ui/use-toast';
 
 export const useExerciseState = (workout: Workout | null, setWorkout: React.Dispatch<React.SetStateAction<Workout | null>>) => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -46,17 +47,18 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
       };
     });
 
-    // Play completion sound when a set is marked as completed
+    // Play completion sound when a set is marked as completed, using a safer approach
     if (completed) {
       try {
         const audio = new Audio('/completion-sound.mp3');
         audio.volume = 0.5;
         audio.play().catch(e => {
-          // Ignore errors on audio play (common in some browsers)
-          console.log('Audio play error (ignorable):', e);
+          // Just log errors with audio playback
+          console.log('Audio play error:', e);
         });
       } catch (error) {
-        // Ignore audio errors completely
+        // Ignore audio errors
+        console.log('Audio creation error:', error);
       }
     }
   };
@@ -65,6 +67,15 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     if (!workout) return;
     
     console.log(`Updating weight for set ${setIndex} of exercise ${exerciseIndex} to ${weight}`);
+    
+    // Use a safer approach to parse float
+    let weightValue: number | undefined = undefined;
+    if (weight && weight.trim() !== '') {
+      const parsed = parseFloat(weight);
+      if (!isNaN(parsed)) {
+        weightValue = parsed;
+      }
+    }
     
     setWorkout(prevWorkout => {
       if (!prevWorkout) return null;
@@ -82,7 +93,7 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        weight: weight ? parseFloat(weight) : undefined
+        weight: weightValue
       };
       
       exerciseCopy.sets = updatedSets;
@@ -100,6 +111,15 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     
     console.log(`Updating actual reps for set ${setIndex} of exercise ${exerciseIndex} to ${reps}`);
     
+    // Use a safer approach to parse integer
+    let repsValue: number | undefined = undefined;
+    if (reps && reps.trim() !== '') {
+      const parsed = parseInt(reps, 10);
+      if (!isNaN(parsed)) {
+        repsValue = parsed;
+      }
+    }
+    
     setWorkout(prevWorkout => {
       if (!prevWorkout) return null;
       
@@ -116,7 +136,7 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        actualReps: reps ? parseInt(reps, 10) : undefined
+        actualReps: repsValue
       };
       
       exerciseCopy.sets = updatedSets;
@@ -132,10 +152,19 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
   const handleNavigateToExercise = (index: number) => {
     console.log(`Navigating to exercise ${index}`);
     setCurrentExerciseIndex(index);
-    document.getElementById(`exercise-${index}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
+    
+    // Use a more direct approach to scroll to the element
+    setTimeout(() => {
+      const element = document.getElementById(`exercise-${index}`);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      } else {
+        console.log(`Could not find element with id exercise-${index}`);
+      }
+    }, 50);
   };
 
   const createExerciseIndexMap = (): Record<string, number> => {
