@@ -30,7 +30,12 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
     if (!dateRange || !dateRange.from || !dateRange.to) {
       return "No date range selected";
     }
-    return `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
+    try {
+      return `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")}`;
+    } catch (error) {
+      console.error('Error formatting date range:', error);
+      return "Invalid date range";
+    }
   }, [dateRange]);
 
   const timeDescription = useMemo(() => {
@@ -41,6 +46,7 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
   // Process data for exercise breakdown
   const exerciseData = useMemo(() => {
     if (!data || data.length === 0) {
+      console.log('No exercise data available to process');
       return [];
     }
     
@@ -142,56 +148,62 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* First Column */}
           <div className="space-y-3">
-            {firstColumnExercises.map((exercise) => (
-              <div key={exercise.id} className="space-y-1">
-                <div className="flex items-center">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-2" 
-                    style={{ backgroundColor: exercise.color }}
-                  />
-                  <span className="text-sm font-medium">{exercise.name}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+            {firstColumnExercises.length > 0 ? (
+              firstColumnExercises.map((exercise) => (
+                <div key={exercise.id} className="space-y-1">
+                  <div className="flex items-center">
                     <div 
-                      className="h-1.5 rounded-full" 
-                      style={{ 
-                        width: `${exercise.percentage}%`,
-                        backgroundColor: exercise.color 
-                      }}
+                      className="w-3 h-3 rounded-full mr-2" 
+                      style={{ backgroundColor: exercise.color }}
                     />
+                    <span className="text-sm font-medium">{exercise.name}</span>
                   </div>
-                  <span className="ml-3 whitespace-nowrap">{exercise.displayText}</span>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full" 
+                        style={{ 
+                          width: `${exercise.percentage}%`,
+                          backgroundColor: exercise.color 
+                        }}
+                      />
+                    </div>
+                    <span className="ml-3 whitespace-nowrap">{exercise.displayText}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-4">No exercise data available</div>
+            )}
           </div>
           
           {/* Second Column */}
           <div className="space-y-3">
-            {secondColumnExercises.map((exercise) => (
-              <div key={exercise.id} className="space-y-1">
-                <div className="flex items-center">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-2" 
-                    style={{ backgroundColor: exercise.color }}
-                  />
-                  <span className="text-sm font-medium">{exercise.name}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+            {secondColumnExercises.length > 0 ? (
+              secondColumnExercises.map((exercise) => (
+                <div key={exercise.id} className="space-y-1">
+                  <div className="flex items-center">
                     <div 
-                      className="h-1.5 rounded-full" 
-                      style={{ 
-                        width: `${exercise.percentage}%`,
-                        backgroundColor: exercise.color 
-                      }}
+                      className="w-3 h-3 rounded-full mr-2" 
+                      style={{ backgroundColor: exercise.color }}
                     />
+                    <span className="text-sm font-medium">{exercise.name}</span>
                   </div>
-                  <span className="ml-3 whitespace-nowrap">{exercise.displayText}</span>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full" 
+                        style={{ 
+                          width: `${exercise.percentage}%`,
+                          backgroundColor: exercise.color 
+                        }}
+                      />
+                    </div>
+                    <span className="ml-3 whitespace-nowrap">{exercise.displayText}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : null}
           </div>
         </div>
         

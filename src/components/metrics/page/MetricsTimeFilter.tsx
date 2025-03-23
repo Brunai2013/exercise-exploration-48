@@ -30,7 +30,13 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
       <div className="flex items-center space-x-2">
         <Clock className="h-5 w-5 text-muted-foreground" />
         <span className="text-sm font-medium">Time Period:</span>
-        <Select value={timeFilter} onValueChange={(value) => setTimeFilter(value as 'week' | 'month' | 'custom')}>
+        <Select 
+          value={timeFilter} 
+          onValueChange={(value) => {
+            console.log('Time filter changed to:', value);
+            setTimeFilter(value as 'week' | 'month' | 'custom');
+          }}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
@@ -89,7 +95,10 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
                 from: dateRange?.from, 
                 to: dateRange?.to 
               }}
-              onSelect={handleDateRangeChange}
+              onSelect={(range) => {
+                console.log('Calendar selection changed:', range);
+                handleDateRangeChange(range);
+              }}
               numberOfMonths={2}
               className={cn("p-3 pointer-events-auto")}
             />

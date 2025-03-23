@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format, parseISO, eachDayOfInterval, eachWeekOfInterval, getWeek, getMonth } from 'date-fns';
 import { getAllWorkouts } from '@/lib/workouts';
@@ -61,7 +62,22 @@ export const useMetricsData = (
       try {
         setIsLoading(true);
         setError(null);
-        console.log('Fetching workouts for metrics with date range:', dateRange);
+        console.log('Fetching workouts for metrics with date range:', {
+          from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : 'undefined',
+          to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : 'undefined'
+        });
+        
+        // Validate date range
+        if (!dateRange || !dateRange.from || !dateRange.to) {
+          console.log('Invalid date range, using demo data');
+          setMuscleGroupData(generateDemoMuscleGroupData());
+          setExerciseData(generateDemoExerciseData());
+          setFrequencyData(generateDemoFrequencyData(view));
+          setUpcomingWorkoutData(generateDemoUpcomingData());
+          setIsLoading(false);
+          return;
+        }
+        
         const allWorkouts = await getAllWorkouts();
         console.log('Fetched workouts count:', allWorkouts.length);
         
@@ -99,7 +115,7 @@ export const useMetricsData = (
     };
 
     fetchWorkouts();
-  }, [refreshKey]); // Add refreshKey to dependencies
+  }, [refreshKey, dateRange]); // Add dateRange to dependencies to refresh when it changes
 
   // Process the data for muscle groups
   useEffect(() => {
@@ -148,17 +164,28 @@ export const useMetricsData = (
             if (!categoryId) continue;
 
             if (!categoryMap[categoryId]) {
-              // Get the category color from the database
-              const category = await getCategoryById(categoryId);
-              const hue = Math.abs((categoryId || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360);
-              
-              categoryMap[categoryId] = { 
-                id: categoryId,
-                count: 0, 
-                color: category?.color ? 
-                  category.color.split(' ')[0].replace('bg-[', '').replace(']', '') :
-                  `hsl(${hue}, 70%, 50%)` 
-              };
+              try {
+                // Get the category color from the database
+                const category = await getCategoryById(categoryId);
+                const hue = Math.abs((categoryId || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360);
+                
+                categoryMap[categoryId] = { 
+                  id: categoryId,
+                  count: 0, 
+                  color: category?.color ? 
+                    category.color.split(' ')[0].replace('bg-[', '').replace(']', '') :
+                    `hsl(${hue}, 70%, 50%)` 
+                };
+              } catch (error) {
+                console.error('Error fetching category:', error);
+                // Use a default color if the category fetch fails
+                const hue = Math.abs((categoryId || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360);
+                categoryMap[categoryId] = { 
+                  id: categoryId,
+                  count: 0, 
+                  color: `hsl(${hue}, 70%, 50%)`
+                };
+              }
             }
             categoryMap[categoryId].count += 1;
             totalExerciseCount += 1;
@@ -172,11 +199,32 @@ export const useMetricsData = (
         const processedData: MuscleGroupData[] = [];
         
         for (const [id, { count, color }] of Object.entries(categoryMap)) {
-          const category = await getCategoryById(id);
-          if (category) {
+          try {
+            const category = await getCategoryById(id);
+            if (category) {
+              processedData.push({
+                id,
+                name: category.name,
+                count,
+                percentage: totalExerciseCount > 0 ? Math.round((count / totalExerciseCount) * 100) : 0,
+                color
+              });
+            } else {
+              // Use a generic name if the category is not found
+              processedData.push({
+                id,
+                name: `Category ${id.substring(0, 6)}`,
+                count,
+                percentage: totalExerciseCount > 0 ? Math.round((count / totalExerciseCount) * 100) : 0,
+                color
+              });
+            }
+          } catch (error) {
+            console.error('Error processing category:', error);
+            // Add the category with a generic name on error
             processedData.push({
               id,
-              name: category.name,
+              name: `Category ${id.substring(0, 6)}`,
               count,
               percentage: totalExerciseCount > 0 ? Math.round((count / totalExerciseCount) * 100) : 0,
               color
@@ -208,6 +256,8 @@ export const useMetricsData = (
   useEffect(() => {
     if (!workouts.length) {
       console.log('No workouts to process for exercise progress');
+      setExerciseData(generateDemoExerciseData());
+      setIsLoading(false);
       return;
     }
 
@@ -215,6 +265,7 @@ export const useMetricsData = (
     if (!dateRange || !dateRange.from || !dateRange.to) {
       console.log('Invalid date range for exercise progress, using demo data');
       setExerciseData(generateDemoExerciseData());
+      setIsLoading(false);
       return;
     }
 
@@ -232,7 +283,9 @@ export const useMetricsData = (
 
       // If no workouts in range, use demo data
       if (filteredWorkouts.length === 0) {
+        console.log('No workouts in date range, using demo data');
         setExerciseData(generateDemoExerciseData());
+        setIsLoading(false);
         return;
       }
 
@@ -269,6 +322,7 @@ export const useMetricsData = (
       
       // If no data was found, create demo data
       if (exerciseProgressItems.length === 0) {
+        console.log('No exercise progress items found, using demo data');
         setExerciseData(generateDemoExerciseData());
       } else {
         setExerciseData(exerciseProgressItems);
@@ -606,7 +660,7 @@ export const useMetricsData = (
       { name: 'Seated Row', category: 'Back', baseWeight: 65 }
     ];
     
-    // Generate data for past 14 days with different exercise frequencies
+    // Generate data for past 20 days with different exercise frequencies
     for (let i = 20; i >= 0; i -= 2) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
@@ -628,6 +682,7 @@ export const useMetricsData = (
       }
     }
     
+    console.log('Generated demo exercise data:', data.length, 'items');
     return data;
   }
 
