@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { isAfter, subDays, format } from 'date-fns';
@@ -10,25 +11,26 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 const WorkoutMetrics = () => {
-  // Create default date range - one week ago to today
+  // Create default date range - today only for more accurate data display
   const today = new Date();
-  const oneWeekAgo = subDays(today, 7);
+  // Format today for consistent display
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); 
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayFormatted = `${year}-${month}-${day}`;
   
-  console.log('Metrics page initialized with date range:', {
-    from: format(oneWeekAgo, 'yyyy-MM-dd'),
-    to: format(today, 'yyyy-MM-dd')
-  });
+  console.log('Metrics page initialized with today\'s date:', todayFormatted);
   
   const [dateRange, setDateRange] = useState<{
     from: Date;
     to: Date;
   }>({
-    from: oneWeekAgo,
-    to: today,
+    from: today, // Today as default start date
+    to: today,   // Today as default end date
   });
   
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('week');
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('custom');
   const [refreshKey, setRefreshKey] = useState(0);
   
   // Update date range when time filter changes

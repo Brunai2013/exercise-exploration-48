@@ -165,10 +165,11 @@ export const getWorkoutById = async (id: string): Promise<Workout | null> => {
   return formatWorkoutFromDb(data);
 };
 
-// New function specifically for metrics - gets all completed workouts in date range
+// Improved function specifically for metrics - gets all completed workouts in date range
 export const getWorkoutsForMetrics = async (from: string, to: string): Promise<any[]> => {
   console.log(`Fetching metrics data from ${from} to ${to}`);
   
+  // Use a more optimized query specifically for metrics
   const { data, error } = await supabase
     .from('workouts')
     .select(`
@@ -176,6 +177,7 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
       name, 
       date, 
       completed,
+      archived,
       workout_exercises(
         id,
         exercises(id, name, category)
@@ -184,7 +186,7 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
     .gte('date', from)
     .lte('date', to)
     .eq('completed', true)
-    .eq('archived', false)
+    .eq('archived', false) // Explicitly filter out archived workouts
     .order('date', { ascending: false });
   
   if (error) {
@@ -192,6 +194,12 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
     return [];
   }
   
-  console.log(`Found ${data?.length || 0} workouts for metrics`);
+  console.log(`Found ${data?.length || 0} workouts for metrics within range ${from} to ${to}`);
+  
+  // Log the first workout found (if any) to help with debugging
+  if (data && data.length > 0) {
+    console.log('Sample workout data:', JSON.stringify(data[0], null, 2));
+  }
+  
   return data || [];
 };

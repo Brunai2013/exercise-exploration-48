@@ -90,7 +90,7 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
               <h4 className="text-sm font-semibold">Date Range Selection</h4>
               <p className="text-sm">
                 Quick select a time period or choose a custom date range to analyze your workouts.
-                This affects all charts and analyses.
+                This affects all charts and analyses. For today's workouts, select the same date for both start and end.
               </p>
             </div>
           </HoverCardContent>

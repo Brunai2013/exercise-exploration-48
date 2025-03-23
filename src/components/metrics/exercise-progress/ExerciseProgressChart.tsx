@@ -113,8 +113,8 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
   }
 
   // Split exercises into two columns
-  const firstColumnExercises = exerciseData.slice(0, 15);
-  const secondColumnExercises = exerciseData.slice(15, 30);
+  const firstColumnExercises = exerciseData.slice(0, Math.ceil(exerciseData.length / 2));
+  const secondColumnExercises = exerciseData.slice(Math.ceil(exerciseData.length / 2));
 
   return (
     <Card>
