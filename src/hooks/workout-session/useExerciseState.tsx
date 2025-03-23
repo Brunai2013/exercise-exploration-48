@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Workout, WorkoutExercise } from '@/lib/types';
 
@@ -31,7 +32,7 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
       // Ensure we're setting the completed property to a boolean
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        completed: completed === true
+        completed: completed === true // Force boolean conversion
       };
       
       updatedExercises[exerciseIndex] = {
@@ -132,56 +133,8 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
   return {
     currentExerciseIndex,
     handleSetCompletion,
-    handleWeightChange: (exerciseIndex: number, setIndex: number, weight: string) => {
-      if (!workout) return;
-      
-      setWorkout(prevWorkout => {
-        if (!prevWorkout) return null;
-        
-        const updatedExercises = [...prevWorkout.exercises];
-        const updatedSets = [...updatedExercises[exerciseIndex].sets];
-        
-        updatedSets[setIndex] = {
-          ...updatedSets[setIndex],
-          weight: parseInt(weight) || 0
-        };
-        
-        updatedExercises[exerciseIndex] = {
-          ...updatedExercises[exerciseIndex],
-          sets: updatedSets
-        };
-        
-        return {
-          ...prevWorkout,
-          exercises: updatedExercises
-        };
-      });
-    },
-    handleActualRepsChange: (exerciseIndex: number, setIndex: number, reps: string) => {
-      if (!workout) return;
-      
-      setWorkout(prevWorkout => {
-        if (!prevWorkout) return null;
-        
-        const updatedExercises = [...prevWorkout.exercises];
-        const updatedSets = [...updatedExercises[exerciseIndex].sets];
-        
-        updatedSets[setIndex] = {
-          ...updatedSets[setIndex],
-          actualReps: parseInt(reps) || 0
-        };
-        
-        updatedExercises[exerciseIndex] = {
-          ...updatedExercises[exerciseIndex],
-          sets: updatedSets
-        };
-        
-        return {
-          ...prevWorkout,
-          exercises: updatedExercises
-        };
-      });
-    },
+    handleWeightChange,
+    handleActualRepsChange,
     handleNavigateToExercise,
     createExerciseIndexMap
   };

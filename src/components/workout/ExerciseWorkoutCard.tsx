@@ -152,7 +152,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                 
                 <div className="col-span-3 flex justify-end">
                   <Button
-                    variant={set.completed === true ? "default" : "outline"}
+                    variant={set.completed === true ? "default" : "outline"} 
                     size="sm"
                     className={`w-8 h-7 px-0`}
                     onClick={(e) => {

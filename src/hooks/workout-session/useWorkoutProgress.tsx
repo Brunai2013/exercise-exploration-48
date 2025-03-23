@@ -74,7 +74,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
       setIsSaving(true);
       
       // Force completed flag to true if all sets are completed
-      const isComplete = progress === 100 || allSetsCompleted;
+      const isComplete = progress === 100 || allSetsCompleted === true;
       
       // Create a deep copy of the workout with all its current state
       const updatedWorkout = {
