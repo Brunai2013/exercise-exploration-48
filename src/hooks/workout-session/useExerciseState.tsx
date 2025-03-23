@@ -46,8 +46,8 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
       };
     });
 
+    // Play completion sound when a set is marked as completed
     if (completed) {
-      // Play completion sound when a set is marked as completed
       try {
         const audio = new Audio('/completion-sound.mp3');
         audio.volume = 0.5;

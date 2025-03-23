@@ -160,6 +160,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                       e.stopPropagation();
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);
                     }}
+                    style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
                   >
                     {set.completed ? (
                       <Check className="h-3 w-3" />
