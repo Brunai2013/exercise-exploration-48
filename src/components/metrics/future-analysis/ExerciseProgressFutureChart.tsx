@@ -51,7 +51,11 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
   if (!hasData) {
     return (
       <Card>
-        <FutureExerciseChartHeader />
+        <FutureExerciseChartHeader 
+          title="Upcoming Exercise Distribution"
+          description="See what exercises you'll be doing in your future workouts"
+          tooltipContent="This chart shows the exercises you'll be performing in your upcoming workouts, giving you insight into your future training plan."
+        />
         <CardContent>
           <EmptyState />
         </CardContent>
@@ -61,7 +65,11 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
 
   return (
     <Card>
-      <FutureExerciseChartHeader />
+      <FutureExerciseChartHeader 
+        title="Upcoming Exercise Distribution"
+        description="See what exercises you'll be doing in your future workouts"
+        tooltipContent="This chart shows the exercises you'll be performing in your upcoming workouts, giving you insight into your future training plan."
+      />
       <CardContent>
         <h3 className="font-medium text-gray-700 text-lg mb-4">Exercise Breakdown</h3>
         
