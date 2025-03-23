@@ -44,24 +44,41 @@ export function useExerciseProgressData(
         // Process workout exercises
         if (workout.workout_exercises && Array.isArray(workout.workout_exercises)) {
           workout.workout_exercises.forEach((exerciseEntry: any) => {
-            // Process sets for this exercise
-            if (exerciseEntry.exercise_sets && Array.isArray(exerciseEntry.exercise_sets)) {
-              exerciseEntry.exercise_sets.forEach((set: any) => {
-                // Make sure we have an exercise and valid data
-                if (exerciseEntry.exercises && set.weight !== undefined && set.reps !== undefined) {
-                  const exercise = exerciseEntry.exercises;
-                  
-                  exerciseProgress.push({
-                    id: `${workout.id}-${exerciseEntry.id}-${set.id || Math.random().toString(36).substr(2, 9)}`,
-                    exercise: exercise.name,
-                    category: exercise.category,
-                    date: workout.date,
-                    weight: parseFloat(set.weight) || 0,
-                    reps: parseInt(set.reps) || 0
-                  });
-                }
-              });
+            // Get the exercise data
+            const exercise = exerciseEntry.exercises;
+            
+            // If there are no exercise_sets, create a default one for metrics
+            // This is important for workouts that don't have explicit sets but still have exercises
+            if (!exerciseEntry.exercise_sets || !Array.isArray(exerciseEntry.exercise_sets) || exerciseEntry.exercise_sets.length === 0) {
+              if (exercise && exercise.id) {
+                // Add a default entry for this exercise
+                exerciseProgress.push({
+                  id: `${workout.id}-${exerciseEntry.id}-default`,
+                  exercise: exercise.name,
+                  category: exercise.category,
+                  date: workout.date,
+                  weight: 0, // Default weight
+                  reps: 1,   // Default rep count
+                });
+              }
+              return; // Skip to the next exercise
             }
+            
+            // Process sets for this exercise if they exist
+            exerciseEntry.exercise_sets && Array.isArray(exerciseEntry.exercise_sets) &&
+            exerciseEntry.exercise_sets.forEach((set: any) => {
+              // Make sure we have an exercise and valid data
+              if (exercise && exercise.id) {
+                exerciseProgress.push({
+                  id: `${workout.id}-${exerciseEntry.id}-${set.id || Math.random().toString(36).substr(2, 9)}`,
+                  exercise: exercise.name,
+                  category: exercise.category,
+                  date: workout.date,
+                  weight: parseFloat(set.weight || 0),
+                  reps: parseInt(set.reps || 0),
+                });
+              }
+            });
           });
         }
       });
