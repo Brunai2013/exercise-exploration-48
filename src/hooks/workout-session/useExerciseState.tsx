@@ -41,36 +41,29 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
       exerciseCopy.sets = updatedSets;
       updatedExercises[exerciseIndex] = exerciseCopy;
       
+      // Play completion sound when a set is marked as completed
+      if (completed) {
+        playCompletionSound();
+      }
+      
       return {
         ...prevWorkout,
         exercises: updatedExercises
       };
     });
+  };
 
-    // Play completion sound when a set is marked as completed, using a CSP-friendly approach
-    if (completed) {
-      try {
-        // Create audio element directly without dynamic URL evaluation
-        const audio = document.createElement('audio');
-        audio.src = '/completion-sound.mp3';
-        audio.volume = 0.5;
-        
-        // Use the play method as a simple method call, not a promise chain
-        const playPromise = audio.play();
-        
-        // Handle the promise without arrow functions or eval
-        if (playPromise !== undefined) {
-          playPromise.catch(function(error) {
-            console.log('Audio playback error:', error.message);
-          });
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.log('Audio creation error:', error.message);
-        } else {
-          console.log('Unknown audio error occurred');
-        }
-      }
+  // Separate function for playing sound to avoid CSP issues
+  const playCompletionSound = () => {
+    try {
+      const audio = new Audio();
+      audio.src = '/completion-sound.mp3';
+      audio.volume = 0.5;
+      
+      // Simple play without promise chains
+      audio.play();
+    } catch (error) {
+      console.log('Audio error occurred');
     }
   };
 
@@ -79,11 +72,11 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     
     console.log(`Updating weight for set ${setIndex} of exercise ${exerciseIndex} to ${weight}`);
     
-    // Parse weight value safely without eval
+    // Parse weight value safely
     let weightValue: number | undefined = undefined;
     if (weight && weight.trim() !== '') {
-      const parsed = Number(weight);
-      if (!Number.isNaN(parsed)) {
+      const parsed = parseFloat(weight);
+      if (!isNaN(parsed)) {
         weightValue = parsed;
       }
     }
@@ -122,12 +115,12 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     
     console.log(`Updating actual reps for set ${setIndex} of exercise ${exerciseIndex} to ${reps}`);
     
-    // Parse reps value safely without eval
+    // Parse reps value safely
     let repsValue: number | undefined = undefined;
     if (reps && reps.trim() !== '') {
-      const parsed = Number(reps);
-      if (!Number.isNaN(parsed)) {
-        repsValue = Math.floor(parsed); // Ensure integer
+      const parsed = parseInt(reps, 10);
+      if (!isNaN(parsed)) {
+        repsValue = parsed;
       }
     }
     
@@ -164,18 +157,22 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     console.log(`Navigating to exercise ${index}`);
     setCurrentExerciseIndex(index);
     
-    // Use requestAnimationFrame instead of setTimeout to avoid CSP issues
-    requestAnimationFrame(() => {
-      const element = document.getElementById(`exercise-${index}`);
-      if (element) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      } else {
-        console.log(`Could not find element with id exercise-${index}`);
+    // Safer DOM manipulation with document.getElementById instead of querySelector
+    window.setTimeout(() => {
+      try {
+        const element = document.getElementById(`exercise-${index}`);
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        } else {
+          console.log(`Could not find element with id exercise-${index}`);
+        }
+      } catch (error) {
+        console.error('Error scrolling to element:', error);
       }
-    });
+    }, 100);
   };
 
   const createExerciseIndexMap = (): Record<string, number> => {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getWorkoutById } from '@/lib/workouts';
 import { Workout } from '@/lib/types';
@@ -26,6 +26,7 @@ const WorkoutSession = () => {
   const navigate = useNavigate();
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const { 
     exerciseGroups, 
@@ -59,32 +60,42 @@ const WorkoutSession = () => {
   
   const { exerciseCategories } = useCategoryData(workout);
 
-  useEffect(() => {
-    const fetchWorkout = async () => {
-      if (id) {
-        try {
-          setLoading(true);
-          const foundWorkout = await getWorkoutById(id);
-          if (foundWorkout) {
-            // Preserve the workout state as is from the database
-            // This ensures that completed sets, weights, and reps are retained
-            setWorkout(foundWorkout);
-          }
-        } catch (error) {
-          console.error('Error fetching workout:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load workout. Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setLoading(false);
-        }
+  const fetchWorkout = useCallback(async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching workout with ID:', id);
+      
+      const foundWorkout = await getWorkoutById(id);
+      
+      if (foundWorkout) {
+        console.log('Workout found:', foundWorkout.name);
+        console.log('Exercise count:', foundWorkout.exercises?.length || 0);
+        setWorkout(foundWorkout);
+      } else {
+        console.error('No workout found with ID:', id);
+        setError('Workout not found');
       }
-    };
-
-    fetchWorkout();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching workout:', errorMessage);
+      setError('Failed to load workout. Please try again.');
+      
+      toast({
+        title: "Error",
+        description: "Failed to load workout. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchWorkout();
+  }, [fetchWorkout]);
 
   if (loading) {
     return (
@@ -97,16 +108,23 @@ const WorkoutSession = () => {
     );
   }
 
-  if (!workout) {
+  if (error || !workout) {
     return (
       <PageContainer>
         <div className="flex flex-col justify-center items-center min-h-[60vh]">
           <h2 className="text-2xl font-bold mb-4">Workout Not Found</h2>
-          <p className="mb-6">The workout you're looking for doesn't exist.</p>
+          <p className="mb-6">{error || "The workout you're looking for doesn't exist."}</p>
         </div>
       </PageContainer>
     );
   }
+
+  // Log workout details for debugging
+  console.log('Rendering workout:', {
+    name: workout.name,
+    exerciseCount: workout.exercises?.length || 0,
+    hasExerciseSets: workout.exercises?.some(ex => ex.sets && ex.sets.length > 0)
+  });
 
   const exerciseIndexMap = createExerciseIndexMap();
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X } from 'lucide-react';
@@ -57,33 +57,25 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   
   const category = getCategory(exerciseItem.exercise.category);
   
-  // Safe way to set card style without using string interpolation that might trigger CSP
+  // Determine card classes based on conditions
   const getCardClasses = () => {
-    let baseClasses = `mb-4 ${inGroup ? 'border' : 'border-2'} overflow-hidden relative`;
+    const classes = [];
     
+    // Base classes
+    classes.push('mb-4');
+    classes.push(inGroup ? 'border' : 'border-2');
+    classes.push('overflow-hidden', 'relative');
+    
+    // Conditional classes
     if (exerciseIndex === currentExerciseIndex && !isSelected) {
-      return `${baseClasses} border-primary`;
+      classes.push('border-primary');
     } else if (isSelected) {
-      return `${baseClasses} border-primary/70 bg-primary/5`;
+      classes.push('border-primary/70', 'bg-primary/5');
     } else {
-      return `${baseClasses} border-border`;
-    }
-  };
-  
-  // Handle card style props separately to avoid CSP issues with inline styles
-  const getCardStyle = () => {
-    const style: React.CSSProperties = {};
-    
-    if (exerciseIndex === currentExerciseIndex && !isSelected) {
-      if (category.color && !category.color.startsWith('bg-')) {
-        style.borderColor = category.color;
-      }
-    } else if (isSelected) {
-      style.borderColor = 'hsl(var(--primary) / 0.7)';
-      style.backgroundColor = 'hsl(var(--primary) / 0.05)';
+      classes.push('border-border');
     }
     
-    return style;
+    return classes.join(' ');
   };
   
   const handleCardClick = (e: React.MouseEvent) => {
@@ -95,29 +87,36 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     }
   };
 
-  // Handle weight change with direct function
   const handleWeightChange = (setIndex: number, value: string) => {
     console.log('Weight changed:', value);
     onWeightChange(exerciseIndex, setIndex, value);
   };
 
-  // Handle reps change with direct function
   const handleRepsChange = (setIndex: number, value: string) => {
     console.log('Actual reps changed:', value);
     onActualRepsChange(exerciseIndex, setIndex, value);
   };
 
-  // Handle set completion with direct function
   const handleSetComplete = (setIndex: number, completed: boolean) => {
-    console.log('Set completion toggled:', !completed);
+    console.log('Set completion toggled from', completed, 'to', !completed);
     onSetCompletion(exerciseIndex, setIndex, !completed);
+  };
+  
+  // Safely extract color from category for set completion buttons
+  const getCompletedButtonStyle = (completed: boolean) => {
+    if (!completed) return {};
+    
+    // Only apply custom style if it's not a Tailwind class
+    const colorValue = category.color.startsWith('bg-') ? '' : category.color;
+    if (!colorValue) return {};
+    
+    return { backgroundColor: colorValue };
   };
   
   return (
     <Card 
       id={`exercise-${exerciseIndex}`}
       className={getCardClasses()}
-      style={getCardStyle()}
     >
       <div className="p-3 cursor-pointer" onClick={handleCardClick}>
         <div className="flex items-start">
@@ -208,7 +207,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                         e.stopPropagation();
                         handleSetComplete(setIndex, set.completed);
                       }}
-                      style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
+                      style={getCompletedButtonStyle(set.completed)}
                     >
                       {set.completed ? (
                         <Check className="h-3 w-3" />
