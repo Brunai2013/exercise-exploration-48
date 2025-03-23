@@ -74,7 +74,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     >
       <div className="p-3 cursor-pointer" onClick={handleCardClick}>
         <div className="flex items-start">
-          {/* Larger image on the left */}
+          {/* Exercise image */}
           <div 
             className={`${isCompact ? 'h-24 w-24' : 'h-32 w-32'} rounded bg-cover bg-center mr-3 flex-shrink-0`}
             style={{ backgroundImage: `url(${exerciseItem.exercise.imageUrl})` }}
@@ -112,8 +112,8 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               )}
             </div>
             
-            {/* Sets grid */}
-            <div className={`grid grid-cols-12 text-xs font-medium mb-1 gap-1`}>
+            {/* Sets grid - column headers */}
+            <div className="grid grid-cols-12 text-xs font-medium mb-1 gap-1">
               <div className="col-span-1">#</div>
               <div className="col-span-3">Weight</div>
               <div className="col-span-2 text-center">Reps</div>
@@ -121,15 +121,16 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               <div className="col-span-3 text-right">Done</div>
             </div>
             
+            {/* Individual sets */}
             {exerciseSets.map((set, setIndex) => (
-              <div key={set.id} className={`grid grid-cols-12 items-center gap-1 mb-1`}>
+              <div key={set.id} className="grid grid-cols-12 items-center gap-1 mb-1">
                 <div className="col-span-1 font-medium text-xs">{setIndex + 1}</div>
                 
                 <div className="col-span-3">
                   <input
                     type="text"
                     placeholder="lb/kg"
-                    className={`w-full border rounded px-2 py-1 text-xs`}
+                    className="w-full border rounded px-2 py-1 text-xs"
                     value={set.weight || ''}
                     onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
                     onClick={(e) => e.stopPropagation()}
@@ -143,7 +144,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                 <div className="col-span-3">
                   <input
                     type="text"
-                    className={`w-full border rounded px-2 py-1 text-xs`}
+                    className="w-full border rounded px-2 py-1 text-xs"
                     value={set.actualReps || ''}
                     onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
                     onClick={(e) => e.stopPropagation()}
@@ -154,12 +155,11 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                   <Button
                     variant={set.completed ? "default" : "outline"}
                     size="sm"
-                    className={`w-8 h-7 px-0`}
+                    className="w-8 h-7 px-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);
                     }}
-                    style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
                   >
                     {set.completed ? (
                       <Check className="h-3 w-3" />
