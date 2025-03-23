@@ -8,6 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from 'sonner';
 
 interface MetricsTimeFilterProps {
   dateRange: { from: Date; to: Date };
@@ -25,6 +26,37 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
   setTimeFilter,
   handleDateRangeChange
 }) => {
+  // Helper to validate date
+  const isValidDate = (date: any): boolean => {
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  // Handle calendar selection changes
+  const handleCalendarSelect = (range: { from?: Date; to?: Date } | undefined) => {
+    console.log('Calendar selection changed:', range);
+    
+    if (!range) {
+      console.warn('Calendar selection is undefined');
+      return;
+    }
+    
+    // Validate the dates
+    if (range.from && !isValidDate(range.from)) {
+      console.error('Invalid from date:', range.from);
+      toast.error("Invalid start date selected");
+      return;
+    }
+    
+    if (range.to && !isValidDate(range.to)) {
+      console.error('Invalid to date:', range.to);
+      toast.error("Invalid end date selected");
+      return;
+    }
+    
+    // Pass to parent handler
+    handleDateRangeChange(range);
+  };
+
   return (
     <div className="flex flex-wrap justify-between items-center gap-4 mb-6 p-4 bg-white rounded-lg border shadow-sm">
       <div className="flex items-center space-x-2">
@@ -76,7 +108,7 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
               disabled={timeFilter !== 'custom'}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from && dateRange?.to ? (
+              {isValidDate(dateRange?.from) && isValidDate(dateRange?.to) ? (
                 <>
                   {format(dateRange.from, "LLL dd, y")} -{" "}
                   {format(dateRange.to, "LLL dd, y")}
@@ -95,10 +127,7 @@ const MetricsTimeFilter: React.FC<MetricsTimeFilterProps> = ({
                 from: dateRange?.from, 
                 to: dateRange?.to 
               }}
-              onSelect={(range) => {
-                console.log('Calendar selection changed:', range);
-                handleDateRangeChange(range);
-              }}
+              onSelect={handleCalendarSelect}
               numberOfMonths={2}
               className={cn("p-3 pointer-events-auto")}
             />
