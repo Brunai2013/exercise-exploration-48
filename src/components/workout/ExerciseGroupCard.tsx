@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import ExerciseWorkoutCard from './ExerciseWorkoutCard';
+import ExerciseWorkoutCard from './exercise-card';
 import { WorkoutExercise } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Layers, X } from 'lucide-react';

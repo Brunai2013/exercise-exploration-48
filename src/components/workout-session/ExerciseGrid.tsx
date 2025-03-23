@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { WorkoutExercise } from '@/lib/types';
-import ExerciseWorkoutCard from '@/components/workout/ExerciseWorkoutCard';
+import ExerciseWorkoutCard from '@/components/workout/exercise-card';
 import ExerciseGroupCard from '@/components/workout/ExerciseGroupCard';
 
 interface ExerciseGroup {
