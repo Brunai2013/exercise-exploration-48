@@ -38,7 +38,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   onRemoveFromGroup
 }) => {
   const exerciseSets = exerciseItem.sets || [];
-  const completedSets = exerciseSets.filter(set => set.completed).length;
+  const completedSets = exerciseSets.filter(set => set.completed === true).length;
   const exerciseProgress = exerciseSets.length > 0 ? Math.round((completedSets / exerciseSets.length) * 100) : 0;
   
   const getCategory = (categoryId?: string) => {
@@ -152,16 +152,16 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                 
                 <div className="col-span-3 flex justify-end">
                   <Button
-                    variant={set.completed ? "default" : "outline"}
+                    variant={set.completed === true ? "default" : "outline"}
                     size="sm"
                     className={`w-8 h-7 px-0`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);
                     }}
-                    style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
+                    style={set.completed === true && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
                   >
-                    {set.completed ? (
+                    {set.completed === true ? (
                       <Check className="h-3 w-3" />
                     ) : (
                       <span className="text-xs">✓</span>

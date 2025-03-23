@@ -35,7 +35,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
       
       const completedSets = exercisesWithSets.reduce(
         (total, exercise) => 
-          total + exercise.sets.filter(set => set.completed).length, 
+          total + exercise.sets.filter(set => set.completed === true).length, 
         0
       );
       
