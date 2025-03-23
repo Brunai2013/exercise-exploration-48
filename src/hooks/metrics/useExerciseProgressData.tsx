@@ -20,16 +20,66 @@ export function useExerciseProgressData(
   const [exerciseData, setExerciseData] = useState<ExerciseProgressItem[]>([]);
   const { categories } = useCategoryColors();
   
-  // Generate exercise progress data
+  // Process workout data into exercise progress statistics
   useEffect(() => {
-    if (shouldUseDemoData) {
-      generateDemoExerciseData();
-    } else {
-      // In a real implementation, we would process the raw workout data here
-      // For now, we'll use demo data since the real data processing is not implemented
+    if (!shouldUseDemoData && rawWorkoutData.length > 0) {
+      processRealExerciseData(rawWorkoutData);
+    } else if (shouldUseDemoData) {
       generateDemoExerciseData();
     }
   }, [rawWorkoutData, shouldUseDemoData, dateRange, categories]);
+  
+  // Process real workout data
+  const processRealExerciseData = (workoutData: any[]) => {
+    try {
+      console.log('Processing real exercise data from', workoutData.length, 'workouts');
+      const exerciseProgress: ExerciseProgressItem[] = [];
+      
+      workoutData.forEach(workout => {
+        if (!workout.date) {
+          console.warn('Workout missing date:', workout.id);
+          return;
+        }
+        
+        // Process workout exercises
+        if (workout.workout_exercises && Array.isArray(workout.workout_exercises)) {
+          workout.workout_exercises.forEach((exerciseEntry: any) => {
+            // Process sets for this exercise
+            if (exerciseEntry.exercise_sets && Array.isArray(exerciseEntry.exercise_sets)) {
+              exerciseEntry.exercise_sets.forEach((set: any) => {
+                // Make sure we have an exercise and valid data
+                if (exerciseEntry.exercises && set.weight !== undefined && set.reps !== undefined) {
+                  const exercise = exerciseEntry.exercises;
+                  
+                  exerciseProgress.push({
+                    id: `${workout.id}-${exerciseEntry.id}-${set.id || Math.random().toString(36).substr(2, 9)}`,
+                    exercise: exercise.name,
+                    category: exercise.category,
+                    date: workout.date,
+                    weight: parseFloat(set.weight) || 0,
+                    reps: parseInt(set.reps) || 0
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+      
+      console.log(`Processed ${exerciseProgress.length} exercise data points from real workouts`);
+      
+      // Sort by date (oldest first)
+      exerciseProgress.sort((a, b) => {
+        return parseISO(a.date) > parseISO(b.date) ? 1 : -1;
+      });
+      
+      setExerciseData(exerciseProgress);
+    } catch (err) {
+      console.error('Error processing real exercise data:', err);
+      // Fall back to demo data in case of error
+      generateDemoExerciseData();
+    }
+  };
   
   const generateDemoExerciseData = () => {
     // Demo exercise data
