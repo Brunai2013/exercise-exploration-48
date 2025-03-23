@@ -69,7 +69,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
       className={`mb-4 ${inGroup ? 'border' : 'border-2'} ${
         exerciseIndex === currentExerciseIndex && !isSelected ? 'border-primary' : 
         isSelected ? 'border-primary/70 bg-primary/5' : 'border-border'
-      } overflow-hidden`}
+      } overflow-hidden relative`}
       style={cardBorderStyle}
     >
       <div className="p-3 cursor-pointer" onClick={handleCardClick}>
