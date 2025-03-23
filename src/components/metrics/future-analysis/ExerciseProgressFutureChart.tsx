@@ -1,24 +1,18 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
-import { InfoIcon, Dumbbell, Filter, ArrowUpDown } from "lucide-react";
+import { InfoIcon, Dumbbell } from "lucide-react";
 import { 
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  ResponsiveContainer, Tooltip, Cell, LabelList 
+  PieChart, Pie, Cell, ResponsiveContainer, 
+  Tooltip, Legend, Sector
 } from 'recharts';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingState } from "@/components/metrics/exercise-progress/ChartStates";
 
@@ -27,86 +21,76 @@ interface ExerciseProgressFutureChartProps {
   isLoading: boolean;
 }
 
+// Custom tooltip component for the pie chart
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-3 border rounded shadow-md">
+        <p className="font-semibold">{data.name}</p>
+        <p className="text-sm">Count: {data.value}</p>
+        <p className="text-sm">Percentage: {data.percentage}%</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = ({ data, isLoading }) => {
-  console.log("ExerciseProgressFutureChart data:", data, "isLoading:", isLoading);
+  const [activeIndex, setActiveIndex] = useState(0);
   
-  // State for filtering
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'mostScheduled' | 'alphabetical'>('mostScheduled');
-  
-  // Generate mock exercise data from categories for visualization
-  const {
-    uniqueCategories,
-    exerciseData,
-  } = useMemo(() => {
-    console.log("Processing category data for exercise visualization");
+  // Generate pie chart data from categories
+  const pieData = useMemo(() => {
+    console.log("Processing category data for exercise pie chart visualization");
     
     if (!data || data.length === 0) {
-      return {
-        uniqueCategories: ['all'],
-        exerciseData: [],
-      };
+      return [];
     }
     
-    const categories = ['all', ...data.map(item => item.category)];
-    const exercises: Array<{
-      name: string;
-      category: string;
-      count: number;
-      color: string;
-    }> = [];
-    
-    // Generate exercise data from categories
-    data.forEach(category => {
-      // For visualization purposes, create 2-4 exercises per category based on future count
-      const numExercises = Math.max(2, Math.min(Math.floor(category.futureCount / 2) + 1, 4));
-      
-      for (let i = 0; i < numExercises; i++) {
-        const exerciseName = `${category.category} Exercise ${i + 1}`;
-        const count = Math.max(1, Math.floor(category.futureCount / numExercises));
-        
-        exercises.push({
-          name: exerciseName,
-          category: category.category,
-          count: count,
-          color: category.color
-        });
-      }
-    });
-    
-    console.log("Generated exercise data:", exercises.length, "unique categories:", categories.length);
-    
-    return {
-      uniqueCategories: categories,
-      exerciseData: exercises,
-    };
+    return data
+      .filter(item => item.futureCount > 0)
+      .map(item => ({
+        id: item.id,
+        name: item.category,
+        value: item.futureCount,
+        percentage: item.futurePercentage,
+        color: item.color
+      }));
   }, [data]);
   
-  // Filter exercises based on selected category
-  const filteredExercises = useMemo(() => {
-    let result = exerciseData;
-    
-    if (selectedCategory !== 'all') {
-      result = result.filter(ex => ex.category === selectedCategory);
-    }
-    
-    // Apply sorting
-    if (sortBy === 'mostScheduled') {
-      result = [...result].sort((a, b) => b.count - a.count);
-    } else {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    }
-    
-    // For better visualization, limit to top 10
-    return result.slice(0, 10);
-  }, [exerciseData, selectedCategory, sortBy]);
+  // Handler for pie segment hover
+  const onPieEnter = (_: any, index: number) => {
+    setActiveIndex(index);
+  };
   
-  // Format data for bar chart
-  const chartData = filteredExercises.map(item => ({
-    name: item.name,
-    value: item.count,
-    color: item.color
-  }));
+  // Render active shape with highlight effect
+  const renderActiveShape = (props: any) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+    
+    return (
+      <g>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+          opacity={0.8}
+        />
+        <Sector
+          cx={cx}
+          cy={cy}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 10}
+          fill={fill}
+        />
+      </g>
+    );
+  };
   
   // Early return for loading state
   if (isLoading) {
@@ -114,8 +98,8 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
   }
   
   // Check if we have any data to display
-  const hasData = data.length > 0 && chartData.length > 0;
-  console.log("Has data:", hasData, "data length:", data.length, "chart data length:", chartData.length);
+  const hasData = pieData.length > 0;
+  console.log("Has data:", hasData, "pie data length:", pieData.length);
 
   if (!hasData) {
     return (
@@ -151,8 +135,8 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">About This Chart</h4>
                 <p className="text-sm">
-                  This chart shows the most frequently scheduled exercises in your upcoming workouts. 
-                  You can filter by category to focus on specific muscle groups.
+                  This chart shows the distribution of exercises in your upcoming scheduled workouts. 
+                  It helps identify which categories of exercises you'll be focusing on.
                 </p>
               </div>
             </HoverCardContent>
@@ -160,110 +144,90 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {/* Controls and filters */}
-          <div className="flex flex-wrap gap-3 items-center mb-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filters:</span>
-            </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {uniqueCategories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category === 'all' ? 'All Categories' : category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-9 ml-auto flex gap-1 items-center"
-              onClick={() => setSortBy(sortBy === 'mostScheduled' ? 'alphabetical' : 'mostScheduled')}
-            >
-              <ArrowUpDown className="h-3.5 w-3.5" />
-              <span className="text-xs">
-                {sortBy === 'mostScheduled' ? 'Most Scheduled' : 'A-Z'}
-              </span>
-            </Button>
-          </div>
-          
-          {/* Category badges */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {data.slice(0, 5).map(category => (
-              <Badge 
-                key={category.id}
-                variant={selectedCategory === category.category ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setSelectedCategory(
-                  selectedCategory === category.category ? 'all' : category.category
-                )}
-                style={{ 
-                  backgroundColor: selectedCategory === category.category ? category.color : 'transparent',
-                  borderColor: category.color,
-                  color: selectedCategory === category.category ? 'white' : 'inherit'
-                }}
-              >
-                {category.category}
-              </Badge>
-            ))}
-          </div>
-          
-          {/* Bar chart visualization */}
-          <div className="h-[400px] mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Pie Chart Visualization */}
+          <div className="h-[260px] flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{ top: 20, right: 30, left: 120, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis 
-                  type="number" 
-                  label={{ value: 'Number of Sets', position: 'insideBottom', offset: -5 }}
-                />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={120} 
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  formatter={(value: number) => [`${value} sets`, 'Count']}
-                  labelFormatter={(label) => `Exercise: ${label}`}
-                />
-                <Bar 
-                  dataKey="value" 
-                  name="Count"
-                  radius={[0, 4, 4, 0]}
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  labelLine={false}
+                  innerRadius={60}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  onMouseEnter={onPieEnter}
+                  label={({ name, percentage }) => `${name}: ${percentage}%`}
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color} 
-                    />
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
-                  <LabelList dataKey="value" position="right" formatter={(value: number) => `${value}`} />
-                </Bar>
-              </BarChart>
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+              </PieChart>
             </ResponsiveContainer>
           </div>
           
-          {/* Info section */}
-          <div className="mt-6 px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-sm text-blue-800 flex items-center">
-              <InfoIcon className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>
-                <span className="font-semibold">Pro Tip:</span> A balanced exercise plan should include a variety of exercises that target different muscle groups and movement patterns.
-              </span>
-            </p>
+          {/* Exercise Category Stats */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-700">Exercise Categories</h3>
+            <div className="space-y-3">
+              {pieData.slice(0, 5).map((item) => (
+                <div key={item.id} className="flex items-center">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm font-medium truncate mr-2">{item.name}</p>
+                      <p className="text-sm text-gray-500 whitespace-nowrap">
+                        {item.percentage}% ({item.value} exercises)
+                      </p>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                      <div 
+                        className="h-1.5 rounded-full" 
+                        style={{ 
+                          width: `${item.percentage}%`,
+                          backgroundColor: item.color 
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Category Badges */}
+            <div className="flex flex-wrap gap-2 pt-4">
+              {pieData.map(category => (
+                <Badge 
+                  key={category.id}
+                  variant="outline"
+                  className="cursor-pointer"
+                  style={{ 
+                    borderColor: category.color,
+                    color: 'inherit'
+                  }}
+                >
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
+            
+            {/* Pro Tip section */}
+            <div className="mt-4 px-4 py-3 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">Pro Tip:</span> A varied exercise program helps prevent plateaus and keeps workouts interesting.
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>
