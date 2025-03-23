@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays, parseISO, isValid, isAfter, isBefore, subDays } from 'date-fns';
 import { useCategoryColors } from '@/hooks/useCategoryColors';
+import { getWorkoutsForMetrics } from '@/lib/workout/queries';
 
 // Types for different data structures
 export interface MuscleGroupData {
@@ -52,6 +53,7 @@ export function useMetricsData(
   const [upcomingWorkoutData, setUpcomingWorkoutData] = useState<CategoryAnalysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shouldUseDemoData, setShouldUseDemoData] = useState(false);
   
   const { categories } = useCategoryColors();
   
@@ -92,6 +94,7 @@ export function useMetricsData(
         setIsLoading(false);
         setError('Invalid date range provided');
         console.error('Invalid date range, skipping data fetch');
+        setShouldUseDemoData(true);
         return;
       }
       
@@ -99,48 +102,28 @@ export function useMetricsData(
       setError(null);
       
       try {
+        const fromDate = format(dateRange.from, 'yyyy-MM-dd');
+        const toDate = format(dateRange.to, 'yyyy-MM-dd');
+        
         // Log date range for debugging
-        console.log('Fetching data with date range:', {
-          from: format(dateRange.from, 'yyyy-MM-dd'),
-          to: format(dateRange.to, 'yyyy-MM-dd')
-        });
+        console.log('Fetching data with date range:', { from: fromDate, to: toDate });
         
-        // Fetch real workout data from Supabase between the dates
-        // Modified query to fix the column issue
-        const { data: workoutData, error: workoutError } = await supabase
-          .from('workouts')
-          .select(`
-            id,
-            name,
-            date,
-            completed,
-            workout_exercises(
-              id,
-              exercises(id, name, category)
-            )
-          `)
-          .gte('date', format(dateRange.from, 'yyyy-MM-dd'))
-          .lte('date', format(dateRange.to, 'yyyy-MM-dd'))
-          .eq('completed', true)
-          .order('date', { ascending: false });
-        
-        if (workoutError) {
-          throw new Error(`Error fetching workout data: ${workoutError.message}`);
-        }
-        
-        // Log fetched workout data
-        console.log(`Fetched ${workoutData?.length || 0} workouts`);
+        // Use our specialized function to get workouts for metrics
+        const workoutData = await getWorkoutsForMetrics(fromDate, toDate);
         
         if (isMounted) {
           if (workoutData && workoutData.length > 0) {
+            console.log(`Processing ${workoutData.length} workouts for metrics`);
             // Process actual workout data
             processMuscleGroupData(workoutData);
-            processExerciseData(workoutData);
+            // Exercise progress data is handled separately and may be empty
+            // since it depends on sets data which we're not fetching for performance
             processFrequencyData(workoutData, view);
-            generateUpcomingAnalysis();
+            generateUpcomingAnalysis(categories);
+            setShouldUseDemoData(false);
           } else {
-            // Generate demo data if no real data available
-            console.log('No real workout data found, generating demo data');
+            console.log('No real workout data found for metrics, using demo data');
+            setShouldUseDemoData(true);
             generateDemoData();
           }
           
@@ -150,7 +133,7 @@ export function useMetricsData(
         console.error('Error fetching metrics data:', err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : 'Unknown error fetching data');
-          // Still generate demo data even if there was an error
+          setShouldUseDemoData(true);
           generateDemoData();
           setIsLoading(false);
         }
@@ -162,26 +145,37 @@ export function useMetricsData(
     return () => { isMounted = false; };
   }, [dateRange.from, dateRange.to, view, refreshKey, validDateRange, categories]);
   
+  // Use effect to generate demo data if needed
+  useEffect(() => {
+    if (shouldUseDemoData) {
+      generateDemoData();
+    }
+  }, [shouldUseDemoData, dateRange, view, categories]);
+  
   // Process workout data into muscle group statistics
   const processMuscleGroupData = (workoutData: any[]) => {
     try {
       const muscleGroups: Record<string, { count: number; name: string; id: string }> = {};
+      let totalExercises = 0;
       
       // Count exercises by muscle group
       workoutData.forEach(workout => {
-        if (workout.workout_exercises) {
+        if (workout.workout_exercises && Array.isArray(workout.workout_exercises)) {
           workout.workout_exercises.forEach((workoutExercise: any) => {
-            const exercise = workoutExercise.exercises;
-            if (exercise && exercise.category) {
-              if (!muscleGroups[exercise.category]) {
-                const category = categories.find(c => c.id === exercise.category);
-                muscleGroups[exercise.category] = {
-                  count: 0,
-                  name: category?.name || 'Unknown',
-                  id: exercise.category
-                };
+            if (workoutExercise.exercises) {
+              const exercise = workoutExercise.exercises;
+              if (exercise && exercise.category) {
+                if (!muscleGroups[exercise.category]) {
+                  const category = categories.find(c => c.id === exercise.category);
+                  muscleGroups[exercise.category] = {
+                    count: 0,
+                    name: category?.name || 'Unknown',
+                    id: exercise.category
+                  };
+                }
+                muscleGroups[exercise.category].count++;
+                totalExercises++;
               }
-              muscleGroups[exercise.category].count++;
             }
           });
         }
@@ -194,13 +188,17 @@ export function useMetricsData(
         const colorMatch = category?.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
         const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1'; // Default to indigo if no match
         
+        const percentage = totalExercises > 0 
+          ? Math.round((data.count / totalExercises) * 100) 
+          : 0;
+        
         return {
           id,
           name: data.name,
           value: data.count,
           color,
           count: data.count,
-          percentage: data.count / workoutData.length * 100
+          percentage
         };
       }).sort((a, b) => b.value - a.value);
       
@@ -213,42 +211,6 @@ export function useMetricsData(
     }
   };
   
-  // Process workout data into exercise progress
-  const processExerciseData = (workoutData: any[]) => {
-    try {
-      const exerciseProgress: ExerciseProgressItem[] = [];
-      
-      workoutData.forEach(workout => {
-        if (workout.workout_exercises) {
-          workout.workout_exercises.forEach((workoutExercise: any) => {
-            const exercise = workoutExercise.exercises;
-            if (exercise && workoutExercise.exercise_sets) {
-              workoutExercise.exercise_sets.forEach((set: any) => {
-                if (set.weight && set.reps) {
-                  exerciseProgress.push({
-                    id: `${workoutExercise.id}-${exercise.id}-${set.weight}-${set.reps}`,
-                    exercise: exercise.name,
-                    category: exercise.category,
-                    date: workout.date,
-                    weight: set.weight,
-                    reps: set.reps
-                  });
-                }
-              });
-            }
-          });
-        }
-      });
-      
-      console.log('Processed exercise data:', exerciseProgress.length);
-      setExerciseData(exerciseProgress);
-    } catch (err) {
-      console.error('Error processing exercise data:', err);
-      // Fallback to empty array
-      setExerciseData([]);
-    }
-  };
-  
   // Process workout data into frequency statistics
   const processFrequencyData = (workoutData: any[], view: 'weekly' | 'monthly') => {
     try {
@@ -256,6 +218,8 @@ export function useMetricsData(
       const frequencyMap: Record<string, { count: number, date: string }> = {};
       
       workoutData.forEach(workout => {
+        if (!workout.date) return;
+        
         let period: string;
         const workoutDate = parseISO(workout.date);
         
@@ -300,9 +264,37 @@ export function useMetricsData(
     }
   };
 
+  // Generate artificial/demo analysis for upcoming workouts
+  const generateUpcomingAnalysis = (categories: any[]) => {
+    // This would typically use ML or statistical analysis of past workouts
+    const upcomingAnalysis: CategoryAnalysis[] = categories.slice(0, 5).map((category, index) => {
+      // Extract color from Tailwind class for consistent coloring
+      const colorMatch = category.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
+      const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1';
+      
+      const suggestionOptions: ('increase' | 'decrease' | 'maintain')[] = ['increase', 'decrease', 'maintain'];
+      const randomSuggestion = suggestionOptions[Math.floor(Math.random() * suggestionOptions.length)];
+      
+      return {
+        id: `upcoming-${index}`,
+        category: category.id,
+        name: category.name,
+        prediction: `${Math.floor(Math.random() * 30) + 70}%`,
+        pastCount: Math.floor(Math.random() * 50) + 10,
+        futureCount: Math.floor(Math.random() * 50) + 10,
+        pastPercentage: Math.floor(Math.random() * 50) + 10,
+        futurePercentage: Math.floor(Math.random() * 50) + 10,
+        color,
+        suggestion: randomSuggestion
+      };
+    });
+    
+    setUpcomingWorkoutData(upcomingAnalysis);
+  };
+
   // Generate demo data when no real data is available
   const generateDemoData = () => {
-    console.log('Generating demo data...');
+    console.log('Generating demo data for metrics visualizations...');
     
     // Demo muscle group data with proper category IDs and names from categories
     const muscleGroups: MuscleGroupData[] = categories.slice(0, 6).map((category, index) => {
@@ -445,39 +437,10 @@ export function useMetricsData(
       });
     }
     
-    console.log('Generated demo data successfully');
+    console.log('Generated demo data successfully for metrics visualizations');
     setMuscleGroupData(muscleGroups);
     setExerciseData(exerciseProgress);
     setFrequencyData(frequencyData);
-    setUpcomingWorkoutData(upcomingAnalysis);
-  };
-
-  // Generate upcoming workout analysis
-  const generateUpcomingAnalysis = () => {
-    // This would typically use ML or statistical analysis of past workouts
-    // For now, we'll use placeholders
-    const upcomingAnalysis: CategoryAnalysis[] = categories.slice(0, 5).map((category, index) => {
-      // Extract color from Tailwind class for consistent coloring
-      const colorMatch = category.color.match(/bg-\[#([A-Fa-f0-9]+)\]/);
-      const color = colorMatch ? `#${colorMatch[1]}` : '#6366F1';
-      
-      const suggestionOptions: ('increase' | 'decrease' | 'maintain')[] = ['increase', 'decrease', 'maintain'];
-      const randomSuggestion = suggestionOptions[Math.floor(Math.random() * suggestionOptions.length)];
-      
-      return {
-        id: `upcoming-${index}`,
-        category: category.id,
-        name: category.name,
-        prediction: `${Math.floor(Math.random() * 30) + 70}%`,
-        pastCount: Math.floor(Math.random() * 50) + 10,
-        futureCount: Math.floor(Math.random() * 50) + 10,
-        pastPercentage: Math.floor(Math.random() * 50) + 10,
-        futurePercentage: Math.floor(Math.random() * 50) + 10,
-        color,
-        suggestion: randomSuggestion
-      };
-    });
-    
     setUpcomingWorkoutData(upcomingAnalysis);
   };
 

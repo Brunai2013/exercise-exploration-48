@@ -164,3 +164,34 @@ export const getWorkoutById = async (id: string): Promise<Workout | null> => {
   
   return formatWorkoutFromDb(data);
 };
+
+// New function specifically for metrics - gets all completed workouts in date range
+export const getWorkoutsForMetrics = async (from: string, to: string): Promise<any[]> => {
+  console.log(`Fetching metrics data from ${from} to ${to}`);
+  
+  const { data, error } = await supabase
+    .from('workouts')
+    .select(`
+      id, 
+      name, 
+      date, 
+      completed,
+      workout_exercises(
+        id,
+        exercises(id, name, category)
+      )
+    `)
+    .gte('date', from)
+    .lte('date', to)
+    .eq('completed', true)
+    .eq('archived', false)
+    .order('date', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching workouts for metrics:', error);
+    return [];
+  }
+  
+  console.log(`Found ${data?.length || 0} workouts for metrics`);
+  return data || [];
+};

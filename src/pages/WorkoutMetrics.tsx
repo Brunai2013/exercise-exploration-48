@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
-import { isAfter, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subYears, format } from 'date-fns';
+import { isAfter, subDays, format } from 'date-fns';
 import { useMetricsData } from '@/hooks/metrics/useMetricsData';
 import MetricsHeader from '@/components/metrics/page/MetricsHeader';
 import MetricsTimeFilter from '@/components/metrics/page/MetricsTimeFilter';
@@ -61,7 +61,7 @@ const WorkoutMetrics = () => {
       });
     }
     // 'custom' doesn't automatically change the date range, allowing user selection
-  }, [timeFilter, today]);
+  }, [timeFilter]);
   
   const { 
     muscleGroupData, 
@@ -76,6 +76,7 @@ const WorkoutMetrics = () => {
   useEffect(() => {
     if (error) {
       toast.error(`Error loading metrics data: ${error}`);
+      console.error('Metrics data error:', error);
     }
   }, [error]);
 
