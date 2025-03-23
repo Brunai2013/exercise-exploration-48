@@ -53,7 +53,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     ? { borderColor: category.color.startsWith('bg-') ? undefined : category.color } 
     : isSelected 
       ? { borderColor: 'hsl(var(--primary) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.05)' } 
-      : {}; 
+      : {};
   
   const handleCardClick = () => {
     if (onSelect) {
