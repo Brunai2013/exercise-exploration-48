@@ -41,7 +41,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   console.log("ExerciseWorkoutCard rendering:", { 
     exerciseName: exerciseItem.exercise.name,
     exerciseId: exerciseItem.id,
-    sets: exerciseItem.sets,
+    sets: exerciseItem.sets || [],
     index: exerciseIndex,
     isCurrentExercise: exerciseIndex === currentExerciseIndex
   });
@@ -57,30 +57,67 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   
   const category = getCategory(exerciseItem.exercise.category);
   
-  // Properly use the category color for card highlight when it's the current exercise
-  const cardBorderStyle = exerciseIndex === currentExerciseIndex && !isSelected
-    ? { borderColor: category.color.startsWith('bg-') ? undefined : category.color } 
-    : isSelected 
-      ? { borderColor: 'hsl(var(--primary) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.05)' } 
-      : {};
+  // Safe way to set card style without using string interpolation that might trigger CSP
+  const getCardClasses = () => {
+    let baseClasses = `mb-4 ${inGroup ? 'border' : 'border-2'} overflow-hidden relative`;
+    
+    if (exerciseIndex === currentExerciseIndex && !isSelected) {
+      return `${baseClasses} border-primary`;
+    } else if (isSelected) {
+      return `${baseClasses} border-primary/70 bg-primary/5`;
+    } else {
+      return `${baseClasses} border-border`;
+    }
+  };
+  
+  // Handle card style props separately to avoid CSP issues with inline styles
+  const getCardStyle = () => {
+    const style: React.CSSProperties = {};
+    
+    if (exerciseIndex === currentExerciseIndex && !isSelected) {
+      if (category.color && !category.color.startsWith('bg-')) {
+        style.borderColor = category.color;
+      }
+    } else if (isSelected) {
+      style.borderColor = 'hsl(var(--primary) / 0.7)';
+      style.backgroundColor = 'hsl(var(--primary) / 0.05)';
+    }
+    
+    return style;
+  };
   
   const handleCardClick = (e: React.MouseEvent) => {
     console.log("Card clicked:", exerciseItem.exercise.name);
     if (onSelect) {
       onSelect();
-      return;
+    } else {
+      onNavigateToExercise(exerciseIndex);
     }
-    onNavigateToExercise(exerciseIndex);
+  };
+
+  // Handle weight change with direct function
+  const handleWeightChange = (setIndex: number, value: string) => {
+    console.log('Weight changed:', value);
+    onWeightChange(exerciseIndex, setIndex, value);
+  };
+
+  // Handle reps change with direct function
+  const handleRepsChange = (setIndex: number, value: string) => {
+    console.log('Actual reps changed:', value);
+    onActualRepsChange(exerciseIndex, setIndex, value);
+  };
+
+  // Handle set completion with direct function
+  const handleSetComplete = (setIndex: number, completed: boolean) => {
+    console.log('Set completion toggled:', !completed);
+    onSetCompletion(exerciseIndex, setIndex, !completed);
   };
   
   return (
     <Card 
       id={`exercise-${exerciseIndex}`}
-      className={`mb-4 ${inGroup ? 'border' : 'border-2'} ${
-        exerciseIndex === currentExerciseIndex && !isSelected ? 'border-primary' : 
-        isSelected ? 'border-primary/70 bg-primary/5' : 'border-border'
-      } overflow-hidden relative`}
-      style={cardBorderStyle}
+      className={getCardClasses()}
+      style={getCardStyle()}
     >
       <div className="p-3 cursor-pointer" onClick={handleCardClick}>
         <div className="flex items-start">
@@ -142,11 +179,8 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                       type="text"
                       placeholder="lb/kg"
                       className="w-full border rounded px-2 py-1 text-xs"
-                      value={set.weight !== undefined ? set.weight : ''}
-                      onChange={(e) => {
-                        console.log('Weight changed:', e.target.value);
-                        onWeightChange(exerciseIndex, setIndex, e.target.value);
-                      }}
+                      value={set.weight !== undefined ? String(set.weight) : ''}
+                      onChange={(e) => handleWeightChange(setIndex, e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
@@ -159,11 +193,8 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                     <input
                       type="text"
                       className="w-full border rounded px-2 py-1 text-xs"
-                      value={set.actualReps !== undefined ? set.actualReps : ''}
-                      onChange={(e) => {
-                        console.log('Actual reps changed:', e.target.value);
-                        onActualRepsChange(exerciseIndex, setIndex, e.target.value);
-                      }}
+                      value={set.actualReps !== undefined ? String(set.actualReps) : ''}
+                      onChange={(e) => handleRepsChange(setIndex, e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
@@ -175,8 +206,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                       className="w-8 h-7 px-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('Set completion toggled:', !set.completed);
-                        onSetCompletion(exerciseIndex, setIndex, !set.completed);
+                        handleSetComplete(setIndex, set.completed);
                       }}
                       style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}
                     >
