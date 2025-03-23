@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -49,7 +50,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
   // Generate frequency data from the upcoming workouts
   React.useEffect(() => {
     // Check if we have data with future counts
-    const hasValidData = data && data.length > 0 && data.some(item => item.futureCount > 0);
+    const hasValidData = data && data.length > 0 && data.some(item => (item.futureCount || 0) > 0);
     setHasFutureData(hasValidData);
     
     if (!hasValidData) return;

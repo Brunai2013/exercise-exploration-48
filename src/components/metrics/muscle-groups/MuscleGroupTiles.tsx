@@ -24,7 +24,7 @@ const MuscleGroupTiles: React.FC<MuscleGroupTilesProps> = ({ data }) => {
               <span className="text-base font-medium text-gray-800">{item.name}</span>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">
-                  {item.count} exercise{item.count !== 1 ? 's' : ''}
+                  {item.value || item.count} exercise{(item.value || item.count) !== 1 ? 's' : ''}
                 </span>
                 <span className="text-sm font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
                   {item.percentage}%

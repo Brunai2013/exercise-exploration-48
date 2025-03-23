@@ -22,9 +22,10 @@ interface PieChartSectionProps {
 const PieChartSection: React.FC<PieChartSectionProps> = ({ data, chartConfig }) => {
   const { activeIndex, onPieEnter } = usePieActiveState();
   
+  // Update to use value instead of count for the Pie chart
   const formattedData = data.map(item => ({
     ...item,
-    value: item.count
+    value: item.value || item.count // Use value if available, fallback to count
   }));
 
   return (
@@ -42,7 +43,7 @@ const PieChartSection: React.FC<PieChartSectionProps> = ({ data, chartConfig }) 
                 innerRadius={80}
                 outerRadius={130}
                 fill="#8884d8"
-                dataKey="count"
+                dataKey="value"
                 nameKey="name"
                 onMouseEnter={onPieEnter}
                 paddingAngle={2}

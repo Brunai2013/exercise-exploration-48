@@ -104,8 +104,8 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
   }
 
   // Has both past and future workouts?
-  const hasPastWorkouts = data.some(item => item.pastCount > 0);
-  const hasFutureWorkouts = data.some(item => item.futureCount > 0);
+  const hasPastWorkouts = data.some(item => (item.pastCount || 0) > 0);
+  const hasFutureWorkouts = data.some(item => (item.futureCount || 0) > 0);
   
   if (!hasPastWorkouts || !hasFutureWorkouts) {
     return (
@@ -200,14 +200,14 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
                   />
                   <h3 className="font-medium">{item.category}</h3>
                 </div>
-                {getSuggestionIcon(item.suggestion)}
+                {getSuggestionIcon(item.suggestion || 'maintain')}
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Past Training</p>
                   <Progress 
-                    value={item.pastPercentage} 
+                    value={item.pastPercentage || 0} 
                     className="h-2 mb-1"
                     style={{ 
                       backgroundColor: `${item.color}20`,
@@ -215,15 +215,15 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
                     } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-xs">
-                    <span>{item.pastCount} exercises</span>
-                    <span>{item.pastPercentage}%</span>
+                    <span>{item.pastCount || 0} exercises</span>
+                    <span>{item.pastPercentage || 0}%</span>
                   </div>
                 </div>
                 
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Upcoming Plans</p>
                   <Progress 
-                    value={item.futurePercentage}
+                    value={item.futurePercentage || 0}
                     className="h-2 mb-1"
                     style={{ 
                       backgroundColor: `${item.color}20`,
@@ -231,14 +231,14 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
                     } as React.CSSProperties}
                   />
                   <div className="flex justify-between text-xs">
-                    <span>{item.futureCount} exercises</span>
-                    <span>{item.futurePercentage}%</span>
+                    <span>{item.futureCount || 0} exercises</span>
+                    <span>{item.futurePercentage || 0}%</span>
                   </div>
                 </div>
               </div>
               
               <p className="mt-3 text-sm text-muted-foreground">
-                {item.suggestion === 'increase' && 
+                {(item.suggestion === 'increase' || !item.suggestion) && 
                   "Consider adding more of these exercises to your upcoming workouts to maintain balance."}
                 {item.suggestion === 'decrease' && 
                   "Your upcoming workouts may have too much focus on this muscle group compared to your past training."}

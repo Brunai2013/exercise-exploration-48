@@ -58,13 +58,13 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
   // Prepare data for pie chart - do this unconditionally to avoid hook ordering issues
   const pieData = React.useMemo(() => {
     return data
-      .filter(item => item.futureCount > 0)
+      .filter(item => (item.futureCount || 0) > 0)
       .map(item => ({
         id: item.id,
         name: item.category,
-        value: item.futureCount,
-        percentage: item.futurePercentage,
-        color: item.color
+        value: item.futureCount || 0,
+        percentage: item.futurePercentage || 0,
+        color: item.color || '#6366F1'
       }));
   }, [data]);
 

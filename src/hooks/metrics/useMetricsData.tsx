@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays, parseISO, isValid, isAfter, isBefore, subDays } from 'date-fns';
@@ -10,6 +9,8 @@ export interface MuscleGroupData {
   name: string;
   value: number;
   color: string;
+  count: number;
+  percentage: number;
 }
 
 export interface ExerciseProgressItem {
@@ -32,6 +33,12 @@ export interface CategoryAnalysis {
   category: string;
   name: string;
   prediction: string;
+  pastCount: number;
+  futureCount: number;
+  pastPercentage: number;
+  futurePercentage: number;
+  color: string;
+  suggestion: 'increase' | 'decrease' | 'maintain';
 }
 
 export function useMetricsData(
@@ -191,7 +198,9 @@ export function useMetricsData(
           id,
           name: data.name,
           value: data.count,
-          color
+          color,
+          count: data.count,
+          percentage: data.count / workoutData.length * 100
         };
       }).sort((a, b) => b.value - a.value);
       
@@ -305,7 +314,9 @@ export function useMetricsData(
         id: category.id,
         name: category.name,
         value: Math.floor(Math.random() * 50) + 10, // Random value between 10-60
-        color
+        color,
+        count: Math.floor(Math.random() * 50) + 10,
+        percentage: Math.floor(Math.random() * 50) + 10
       };
     });
     
@@ -416,7 +427,13 @@ export function useMetricsData(
         id: `upcoming-${i}`,
         category: availableCategories[randomCategoryIndex].id,
         name: availableCategories[randomCategoryIndex].name,
-        prediction: `${Math.floor(Math.random() * 30) + 70}%`
+        prediction: `${Math.floor(Math.random() * 30) + 70}%`,
+        pastCount: Math.floor(Math.random() * 50) + 10,
+        futureCount: Math.floor(Math.random() * 50) + 10,
+        pastPercentage: Math.floor(Math.random() * 50) + 10,
+        futurePercentage: Math.floor(Math.random() * 50) + 10,
+        color: '#6366F1',
+        suggestion: 'increase'
       });
     }
     
@@ -436,7 +453,13 @@ export function useMetricsData(
         id: `upcoming-${index}`,
         category: category.id,
         name: category.name,
-        prediction: `${Math.floor(Math.random() * 30) + 70}%`
+        prediction: `${Math.floor(Math.random() * 30) + 70}%`,
+        pastCount: Math.floor(Math.random() * 50) + 10,
+        futureCount: Math.floor(Math.random() * 50) + 10,
+        pastPercentage: Math.floor(Math.random() * 50) + 10,
+        futurePercentage: Math.floor(Math.random() * 50) + 10,
+        color: '#6366F1',
+        suggestion: 'increase'
       };
     });
     
