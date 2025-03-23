@@ -63,6 +63,13 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     onNavigateToExercise(exerciseIndex);
   };
   
+  // Log information to help debug
+  console.log(`Rendering exercise card #${exerciseIndex}:`, { 
+    exerciseName: exerciseItem.exercise.name,
+    setCount: exerciseSets.length,
+    completedSets
+  });
+  
   return (
     <Card 
       id={`exercise-${exerciseIndex}`}
@@ -132,7 +139,10 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                     placeholder="lb/kg"
                     className="w-full border rounded px-2 py-1 text-xs"
                     value={set.weight || ''}
-                    onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
+                    onChange={(e) => {
+                      console.log('Weight changed:', e.target.value);
+                      onWeightChange(exerciseIndex, setIndex, e.target.value);
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
@@ -146,7 +156,10 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                     type="text"
                     className="w-full border rounded px-2 py-1 text-xs"
                     value={set.actualReps || ''}
-                    onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
+                    onChange={(e) => {
+                      console.log('Actual reps changed:', e.target.value);
+                      onActualRepsChange(exerciseIndex, setIndex, e.target.value);
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
@@ -158,6 +171,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                     className="w-8 h-7 px-0"
                     onClick={(e) => {
                       e.stopPropagation();
+                      console.log('Set completion toggled:', !set.completed);
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);
                     }}
                     style={set.completed && !category.color.startsWith('bg-') ? { backgroundColor: category.color } : {}}

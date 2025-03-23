@@ -13,6 +13,7 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
     setWorkout(prevWorkout => {
       if (!prevWorkout) return null;
       
+      // Create deep copies to avoid direct state mutation
       const updatedExercises = [...prevWorkout.exercises];
       
       // Safety check to ensure exercise exists
@@ -21,7 +22,8 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
         return prevWorkout;
       }
       
-      const updatedSets = [...updatedExercises[exerciseIndex].sets];
+      const exerciseCopy = { ...updatedExercises[exerciseIndex] };
+      const updatedSets = [...exerciseCopy.sets];
       
       // Safety check to ensure set exists
       if (!updatedSets[setIndex]) {
@@ -35,10 +37,8 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
         completed: completed
       };
       
-      updatedExercises[exerciseIndex] = {
-        ...updatedExercises[exerciseIndex],
-        sets: updatedSets
-      };
+      exerciseCopy.sets = updatedSets;
+      updatedExercises[exerciseIndex] = exerciseCopy;
       
       return {
         ...prevWorkout,
@@ -64,21 +64,29 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
   const handleWeightChange = (exerciseIndex: number, setIndex: number, weight: string) => {
     if (!workout) return;
     
+    console.log(`Updating weight for set ${setIndex} of exercise ${exerciseIndex} to ${weight}`);
+    
     setWorkout(prevWorkout => {
       if (!prevWorkout) return null;
       
       const updatedExercises = [...prevWorkout.exercises];
-      const updatedSets = [...updatedExercises[exerciseIndex].sets];
+      
+      // Safety check
+      if (!updatedExercises[exerciseIndex]) return prevWorkout;
+      
+      const exerciseCopy = { ...updatedExercises[exerciseIndex] };
+      const updatedSets = [...exerciseCopy.sets];
+      
+      // Safety check
+      if (!updatedSets[setIndex]) return prevWorkout;
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        weight: parseInt(weight) || 0
+        weight: weight ? parseFloat(weight) : undefined
       };
       
-      updatedExercises[exerciseIndex] = {
-        ...updatedExercises[exerciseIndex],
-        sets: updatedSets
-      };
+      exerciseCopy.sets = updatedSets;
+      updatedExercises[exerciseIndex] = exerciseCopy;
       
       return {
         ...prevWorkout,
@@ -90,21 +98,29 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
   const handleActualRepsChange = (exerciseIndex: number, setIndex: number, reps: string) => {
     if (!workout) return;
     
+    console.log(`Updating actual reps for set ${setIndex} of exercise ${exerciseIndex} to ${reps}`);
+    
     setWorkout(prevWorkout => {
       if (!prevWorkout) return null;
       
       const updatedExercises = [...prevWorkout.exercises];
-      const updatedSets = [...updatedExercises[exerciseIndex].sets];
+      
+      // Safety check
+      if (!updatedExercises[exerciseIndex]) return prevWorkout;
+      
+      const exerciseCopy = { ...updatedExercises[exerciseIndex] };
+      const updatedSets = [...exerciseCopy.sets];
+      
+      // Safety check
+      if (!updatedSets[setIndex]) return prevWorkout;
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        actualReps: parseInt(reps) || 0
+        actualReps: reps ? parseInt(reps, 10) : undefined
       };
       
-      updatedExercises[exerciseIndex] = {
-        ...updatedExercises[exerciseIndex],
-        sets: updatedSets
-      };
+      exerciseCopy.sets = updatedSets;
+      updatedExercises[exerciseIndex] = exerciseCopy;
       
       return {
         ...prevWorkout,
@@ -114,6 +130,7 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
   };
 
   const handleNavigateToExercise = (index: number) => {
+    console.log(`Navigating to exercise ${index}`);
     setCurrentExerciseIndex(index);
     document.getElementById(`exercise-${index}`)?.scrollIntoView({
       behavior: 'smooth',
