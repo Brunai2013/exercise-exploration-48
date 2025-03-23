@@ -12,7 +12,6 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, 
   Tooltip, Legend, Sector
 } from 'recharts';
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingState } from "@/components/metrics/exercise-progress/ChartStates";
 
@@ -34,6 +33,35 @@ const CustomTooltip = ({ active, payload }: any) => {
     );
   }
   return null;
+};
+
+// Render active shape for hover effects
+const renderActiveShape = (props: any) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+  
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        opacity={0.8}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+      />
+    </g>
+  );
 };
 
 const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = ({ data, isLoading }) => {
@@ -61,35 +89,6 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
   // Handler for pie segment hover
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index);
-  };
-  
-  // Render active shape with highlight effect
-  const renderActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
-    
-    return (
-      <g>
-        <Sector
-          cx={cx}
-          cy={cy}
-          innerRadius={innerRadius}
-          outerRadius={outerRadius}
-          startAngle={startAngle}
-          endAngle={endAngle}
-          fill={fill}
-          opacity={0.8}
-        />
-        <Sector
-          cx={cx}
-          cy={cy}
-          startAngle={startAngle}
-          endAngle={endAngle}
-          innerRadius={outerRadius + 6}
-          outerRadius={outerRadius + 10}
-          fill={fill}
-        />
-      </g>
-    );
   };
   
   // Early return for loading state
