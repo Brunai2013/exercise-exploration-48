@@ -26,7 +26,7 @@ export function useMetricsData(
   const { muscleGroupData } = useMuscleGroupData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { exerciseData } = useExerciseProgressData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { frequencyData } = useFrequencyData(rawWorkoutData, shouldUseDemoData, dateRange, view);
-  const { upcomingWorkoutData } = useUpcomingAnalysis();
+  const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData);
 
   return {
     muscleGroupData,
