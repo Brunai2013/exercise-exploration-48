@@ -8,11 +8,26 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
   const handleSetCompletion = (exerciseIndex: number, setIndex: number, completed: boolean) => {
     if (!workout) return;
     
+    console.log(`Marking set ${setIndex} of exercise ${exerciseIndex} as ${completed ? 'completed' : 'not completed'}`);
+    
     setWorkout(prevWorkout => {
       if (!prevWorkout) return null;
       
       const updatedExercises = [...prevWorkout.exercises];
+      
+      // Safety check to ensure exercise exists
+      if (!updatedExercises[exerciseIndex]) {
+        console.error(`Exercise at index ${exerciseIndex} does not exist`);
+        return prevWorkout;
+      }
+      
       const updatedSets = [...updatedExercises[exerciseIndex].sets];
+      
+      // Safety check to ensure set exists
+      if (!updatedSets[setIndex]) {
+        console.error(`Set at index ${setIndex} does not exist for exercise ${exerciseIndex}`);
+        return prevWorkout;
+      }
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],

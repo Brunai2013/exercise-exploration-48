@@ -37,9 +37,9 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   onSelect,
   onRemoveFromGroup
 }) => {
-  const exerciseSets = exerciseItem.sets;
+  const exerciseSets = exerciseItem.sets || [];
   const completedSets = exerciseSets.filter(set => set.completed).length;
-  const exerciseProgress = Math.round((completedSets / exerciseSets.length) * 100);
+  const exerciseProgress = exerciseSets.length > 0 ? Math.round((completedSets / exerciseSets.length) * 100) : 0;
   
   const getCategory = (categoryId?: string) => {
     if (!categoryId) return { name: 'Uncategorized', color: 'bg-gray-200 text-gray-700' };
@@ -121,7 +121,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               <div className="col-span-3 text-right">Done</div>
             </div>
             
-            {exerciseItem.sets.map((set, setIndex) => (
+            {exerciseSets.map((set, setIndex) => (
               <div key={set.id} className={`grid grid-cols-12 items-center gap-1 mb-1`}>
                 <div className="col-span-1 font-medium text-xs">{setIndex + 1}</div>
                 
@@ -154,7 +154,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
                   <Button
                     variant={set.completed ? "default" : "outline"}
                     size="sm"
-                    className={`w-8 h-7 px-0 ${set.completed && !category.color.startsWith('bg-') ? '' : ''}`}
+                    className={`w-8 h-7 px-0`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSetCompletion(exerciseIndex, setIndex, !set.completed);

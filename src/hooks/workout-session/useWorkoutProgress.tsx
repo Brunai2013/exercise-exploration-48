@@ -44,7 +44,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
         ? Math.round((completedSets / totalSets) * 100) 
         : 0;
       
-      // Check if all sets are completed
+      // Check if all sets are completed - only true if there are actually sets to complete
       const allCompleted = totalSets > 0 && completedSets === totalSets;
       
       console.log('Progress calculation:', {

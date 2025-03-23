@@ -38,7 +38,12 @@ const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
             <ArrowLeft className="h-4 w-4 mr-2" />
             Exit
           </Button>
-          <Button onClick={saveWorkoutProgress} disabled={isSaving}>
+          <Button 
+            onClick={saveWorkoutProgress} 
+            disabled={isSaving}
+            variant={isComplete ? "default" : "outline"}
+            className={isComplete ? "bg-green-600 hover:bg-green-700" : ""}
+          >
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

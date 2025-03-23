@@ -38,7 +38,7 @@ const WorkoutProgressCard: React.FC<WorkoutProgressCardProps> = ({
           <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg">
             <Dumbbell className="h-8 w-8 text-primary mb-2" />
             <span className="text-sm text-muted-foreground">Exercises</span>
-            <span className="text-2xl font-semibold">{workout?.exercises.length}</span>
+            <span className="text-2xl font-semibold">{workout?.exercises.length || 0}</span>
           </div>
           
           <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg">
