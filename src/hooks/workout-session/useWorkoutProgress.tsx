@@ -35,7 +35,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
       
       const completedSets = exercisesWithSets.reduce(
         (total, exercise) => 
-          total + exercise.sets.filter(set => set.completed === true).length, 
+          total + exercise.sets.filter(set => set.completed).length, 
         0
       );
       
@@ -74,7 +74,7 @@ export const useWorkoutProgress = (workout: Workout | null) => {
       setIsSaving(true);
       
       // Force completed flag to true if all sets are completed
-      const isComplete = progress === 100 || allSetsCompleted === true;
+      const isComplete = progress === 100 || allSetsCompleted;
       
       // Create a deep copy of the workout with all its current state
       const updatedWorkout = {

@@ -24,7 +24,7 @@ const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   const navigate = useNavigate();
   
   // If all sets are completed, treat as 100% progress
-  const isComplete = progress === 100 || allSetsCompleted === true;
+  const isComplete = progress === 100 || allSetsCompleted;
   
   console.log('WorkoutHeader rendering with:', { progress, allSetsCompleted, isComplete });
   

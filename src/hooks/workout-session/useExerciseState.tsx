@@ -29,10 +29,10 @@ export const useExerciseState = (workout: Workout | null, setWorkout: React.Disp
         return prevWorkout;
       }
       
-      // Ensure we're setting the completed property to a boolean
+      // Simply use the completed parameter directly without additional comparison
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        completed: completed === true // Force boolean conversion
+        completed: completed
       };
       
       updatedExercises[exerciseIndex] = {
