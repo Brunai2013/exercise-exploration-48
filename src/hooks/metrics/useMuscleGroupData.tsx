@@ -21,24 +21,41 @@ export function useMuscleGroupData(
   
   // Process workout data into muscle group statistics
   useEffect(() => {
+    console.log('Processing muscle group data with:', {
+      workoutCount: rawWorkoutData.length,
+      useDemoData: shouldUseDemoData,
+      dateRange: `${dateRange.from.toISOString()} to ${dateRange.to.toISOString()}`
+    });
+    
     if (!shouldUseDemoData && rawWorkoutData.length > 0) {
       processMuscleGroupData(rawWorkoutData);
     } else if (shouldUseDemoData) {
+      console.log('Using demo data for muscle groups because shouldUseDemoData is true');
       generateDemoMuscleGroupData();
+    } else {
+      console.log('No workout data available and not using demo data');
+      // Return empty data when no workouts and not using demo data
+      setMuscleGroupData([]);
     }
   }, [rawWorkoutData, shouldUseDemoData, categories, dateRange]);
   
   const processMuscleGroupData = (workoutData: any[]) => {
     try {
+      console.log('Raw workout data for muscle group processing:', workoutData);
+      
       const muscleGroups: Record<string, { count: number; name: string; id: string }> = {};
       let totalExercises = 0;
       
       // Count exercises by muscle group
       workoutData.forEach(workout => {
+        console.log(`Processing workout: ${workout.name} (${workout.date})`);
+        
         if (workout.workout_exercises && Array.isArray(workout.workout_exercises)) {
           workout.workout_exercises.forEach((workoutExercise: any) => {
             if (workoutExercise.exercises) {
               const exercise = workoutExercise.exercises;
+              console.log(`Found exercise: ${exercise.name}, category: ${exercise.category}`);
+              
               if (exercise && exercise.category) {
                 if (!muscleGroups[exercise.category]) {
                   const category = categories.find(c => c.id === exercise.category);
@@ -50,9 +67,15 @@ export function useMuscleGroupData(
                 }
                 muscleGroups[exercise.category].count++;
                 totalExercises++;
+              } else {
+                console.warn('Exercise missing category information:', exercise);
               }
+            } else {
+              console.warn('Workout exercise missing exercises property:', workoutExercise);
             }
           });
+        } else {
+          console.warn('Workout missing workout_exercises array:', workout);
         }
       });
       
@@ -77,7 +100,7 @@ export function useMuscleGroupData(
         };
       }).sort((a, b) => b.value - a.value);
       
-      console.log('Processed muscle group data:', processedData.length);
+      console.log('Processed real muscle group data:', processedData);
       setMuscleGroupData(processedData);
     } catch (err) {
       console.error('Error processing muscle group data:', err);
@@ -105,6 +128,7 @@ export function useMuscleGroupData(
       };
     });
     
+    console.log('Generated demo muscle group data:', muscleGroups);
     setMuscleGroupData(muscleGroups);
   };
 
