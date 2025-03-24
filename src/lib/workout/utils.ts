@@ -5,8 +5,8 @@ import { Workout } from '../types';
 // Helper function to format workout data from the database into our app's Workout type
 export const formatWorkoutFromDb = (dbWorkout: any): Workout => {
   const exercises = (dbWorkout.workout_exercises || []).map((we: any) => {
-    // Format the sets for this exercise
-    const sets = (we.exercise_sets || []).map((set: any) => ({
+    // Format the sets for this exercise - ensure we're properly extracting all set data
+    const sets = Array.isArray(we.exercise_sets) ? we.exercise_sets.map((set: any) => ({
       id: set.id,
       exerciseId: we.exercise_id,
       setNumber: set.set_number,
@@ -15,7 +15,7 @@ export const formatWorkoutFromDb = (dbWorkout: any): Workout => {
       weight: set.weight,
       completed: set.completed,
       notes: set.notes
-    }));
+    })) : [];
 
     // Create the exercise object
     return {
