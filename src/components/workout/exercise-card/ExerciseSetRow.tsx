@@ -26,10 +26,10 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
   onRemoveSet,
   isCompact = false
 }) => {
-  // Ensure we have valid values with fallbacks
-  const weight = set.weight !== undefined ? String(set.weight) : '';
+  // Handle empty values with empty strings instead of showing "null"
+  const weight = set.weight ? String(set.weight) : '';
   const targetReps = set.targetReps || 0;
-  const actualReps = set.actualReps !== undefined ? String(set.actualReps) : '';
+  const actualReps = set.actualReps ? String(set.actualReps) : '';
   const completed = Boolean(set.completed);
 
   const inputClasses = `w-full border rounded ${isCompact ? 'px-1 py-0.5 text-xs h-6' : 'px-2 py-1 text-sm h-8'}`;
@@ -56,6 +56,7 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
       <div className="col-span-3">
         <input
           type="text"
+          placeholder={String(targetReps)}
           className={inputClasses}
           value={actualReps}
           onChange={(e) => onActualRepsChange(e.target.value)}
