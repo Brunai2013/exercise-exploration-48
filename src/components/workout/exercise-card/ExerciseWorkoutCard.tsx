@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
@@ -69,20 +68,19 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   
   // Determine card classes based on conditions
   const getCardClasses = () => {
+    if (inGroup) {
+      return 'w-full'; // No border when in group as the parent container handles it
+    }
+    
     const classes = [];
+    classes.push('mb-2', 'overflow-hidden', 'relative');
     
-    // Base classes
-    classes.push(inGroup ? 'mb-2' : 'mb-2');
-    classes.push(inGroup ? 'border' : 'border-2');
-    classes.push('overflow-hidden', 'relative');
-    
-    // Conditional classes
     if (exerciseIndex === currentExerciseIndex && !isSelected) {
-      classes.push('border-primary');
+      classes.push('border-2', 'border-primary');
     } else if (isSelected) {
-      classes.push('border-primary/70', 'bg-primary/5');
+      classes.push('border-2', 'border-primary/70', 'bg-primary/5');
     } else {
-      classes.push('border-border');
+      classes.push('border-2', 'border-border');
     }
     
     return classes.join(' ');
@@ -97,44 +95,52 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     }
   };
 
-  return (
-    <Card 
-      id={`exercise-${exerciseIndex}`}
-      className={getCardClasses()}
-    >
-      <div className={`p-2 cursor-pointer`} onClick={handleCardClick}>
-        <div className="flex items-start">
-          {/* Exercise image - smaller in compact mode */}
-          <div 
-            className={`${isCompact ? 'h-14 w-14' : 'h-24 w-24'} rounded bg-cover bg-center mr-2 flex-shrink-0`}
-            style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
+  // Determine if we should wrap with a Card or just render the content
+  const cardContent = (
+    <div className={`p-2 cursor-pointer`} onClick={handleCardClick}>
+      <div className="flex items-start">
+        {/* Exercise image - smaller in compact mode */}
+        <div 
+          className={`${isCompact ? 'h-12 w-12' : 'h-24 w-24'} rounded bg-cover bg-center mr-2 flex-shrink-0`}
+          style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
+        />
+        
+        <div className="flex-1 min-w-0">
+          <ExerciseCardHeader
+            exerciseName={exerciseItem.exercise.name}
+            category={category}
+            completedSets={completedSets}
+            totalSets={exerciseSets.length}
+            exerciseProgress={exerciseProgress}
+            isCompact={isCompact}
+            onRemoveFromGroup={onRemoveFromGroup}
           />
           
-          <div className="flex-1 min-w-0">
-            <ExerciseCardHeader
-              exerciseName={exerciseItem.exercise.name}
-              category={category}
-              completedSets={completedSets}
-              totalSets={exerciseSets.length}
-              exerciseProgress={exerciseProgress}
-              isCompact={isCompact}
-              onRemoveFromGroup={onRemoveFromGroup}
-            />
-            
-            <ExerciseSetsGrid
-              exerciseSets={exerciseSets}
-              exerciseIndex={exerciseIndex}
-              onWeightChange={onWeightChange}
-              onActualRepsChange={onActualRepsChange}
-              onSetCompletion={onSetCompletion}
-              categoryColor={category.color}
-              isCompact={isCompact}
-              onAddSet={onAddSet}
-              onRemoveSet={onRemoveSet}
-            />
-          </div>
+          <ExerciseSetsGrid
+            exerciseSets={exerciseSets}
+            exerciseIndex={exerciseIndex}
+            onWeightChange={onWeightChange}
+            onActualRepsChange={onActualRepsChange}
+            onSetCompletion={onSetCompletion}
+            categoryColor={category.color}
+            isCompact={isCompact}
+            onAddSet={onAddSet}
+            onRemoveSet={onRemoveSet}
+          />
         </div>
       </div>
+    </div>
+  );
+
+  // If inside a group, don't wrap in Card
+  if (inGroup) {
+    return cardContent;
+  }
+
+  // Otherwise use Card component
+  return (
+    <Card className={getCardClasses()}>
+      {cardContent}
     </Card>
   );
 };
