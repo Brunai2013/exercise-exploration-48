@@ -50,7 +50,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
         <div className="flex items-center">
           <Layers className="h-4 w-4 mr-2" />
           <Badge variant="outline" className="font-semibold">
-            Circuit
+            {groupType === 'superset' ? 'Superset' : 'Circuit'}
           </Badge>
           <span className="ml-2 text-sm text-muted-foreground">
             {progress}% complete
