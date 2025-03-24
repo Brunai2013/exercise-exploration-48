@@ -52,11 +52,12 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   };
   
   const headerFontSize = isCompact ? 'text-xs' : 'text-sm';
+  const gridGap = isCompact ? 'gap-1' : 'gap-2';
   
   return (
     <div className={`exercise-sets-grid ${isCompact ? 'text-xs' : ''}`}>
       {/* Sets grid - column headers */}
-      <div className={`grid grid-cols-12 font-medium mb-1 gap-1 ${headerFontSize}`}>
+      <div className={`grid grid-cols-12 font-medium mb-1 ${gridGap} ${headerFontSize}`}>
         <div className="col-span-1">#</div>
         <div className="col-span-3">Weight</div>
         <div className="col-span-2 text-center">Reps</div>

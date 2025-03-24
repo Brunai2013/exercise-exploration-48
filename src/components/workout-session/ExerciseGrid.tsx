@@ -62,8 +62,23 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
     });
   }, [workout, exerciseGroups, onAddSet, onRemoveSet]);
 
+  // Filter out exercises that are not in a group
+  const individualExercises = workout?.filter(ex => !isExerciseInGroup(ex.id)) || [];
+  
+  // Split the individual exercises into pairs for two-column layout
+  const getExercisePairs = () => {
+    const pairs = [];
+    for (let i = 0; i < individualExercises.length; i += 2) {
+      pairs.push(individualExercises.slice(i, i + 2));
+    }
+    return pairs;
+  };
+  
+  const exercisePairs = getExercisePairs();
+
   return (
-    <div className="grid grid-cols-1 gap-4 mb-8">
+    <div className="mb-8">
+      {/* Display exercise groups (these will remain full width) */}
       {exerciseGroups.map(group => {
         const groupExercises = workout?.filter(ex => 
           group.exerciseIds.includes(ex.id)
@@ -100,34 +115,39 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
         );
       })}
       
-      {workout?.map((exerciseItem, exerciseIndex) => {
-        if (isExerciseInGroup(exerciseItem.id)) return null;
-        
-        console.log("Rendering individual exercise:", {
-          name: exerciseItem.exercise.name,
-          id: exerciseItem.id,
-          setsCount: exerciseItem.sets?.length || 0
-        });
-        
-        return (
-          <ExerciseWorkoutCard
-            key={exerciseItem.id}
-            exerciseItem={exerciseItem}
-            exerciseIndex={exerciseIndex}
-            currentExerciseIndex={currentExerciseIndex}
-            onSetCompletion={onSetCompletion}
-            onWeightChange={onWeightChange}
-            onActualRepsChange={onActualRepsChange}
-            onNavigateToExercise={onNavigateToExercise}
-            exerciseCategories={exerciseCategories}
-            isCompact={false}
-            isSelected={selectedExercises.includes(exerciseItem.id)}
-            onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
-            onAddSet={onAddSet}
-            onRemoveSet={onRemoveSet}
-          />
-        );
-      })}
+      {/* Display individual exercises in pairs (two columns) */}
+      {exercisePairs.map((pair, pairIndex) => (
+        <div key={`pair-${pairIndex}`} className="grid grid-cols-2 gap-4 mb-4">
+          {pair.map((exerciseItem) => {
+            const exerciseIndex = exerciseIndexMap[exerciseItem.id];
+            
+            console.log("Rendering individual exercise:", {
+              name: exerciseItem.exercise.name,
+              id: exerciseItem.id,
+              setsCount: exerciseItem.sets?.length || 0
+            });
+            
+            return (
+              <ExerciseWorkoutCard
+                key={exerciseItem.id}
+                exerciseItem={exerciseItem}
+                exerciseIndex={exerciseIndex}
+                currentExerciseIndex={currentExerciseIndex}
+                onSetCompletion={onSetCompletion}
+                onWeightChange={onWeightChange}
+                onActualRepsChange={onActualRepsChange}
+                onNavigateToExercise={onNavigateToExercise}
+                exerciseCategories={exerciseCategories}
+                isCompact={true}
+                isSelected={selectedExercises.includes(exerciseItem.id)}
+                onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
+                onAddSet={onAddSet}
+                onRemoveSet={onRemoveSet}
+              />
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 };

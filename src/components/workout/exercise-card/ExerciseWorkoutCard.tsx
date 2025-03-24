@@ -72,7 +72,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     const classes = [];
     
     // Base classes
-    classes.push(inGroup ? 'mb-2' : 'mb-4');
+    classes.push(inGroup ? 'mb-2' : 'mb-2');
     classes.push(inGroup ? 'border' : 'border-2');
     classes.push('overflow-hidden', 'relative');
     
@@ -102,15 +102,15 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
       id={`exercise-${exerciseIndex}`}
       className={getCardClasses()}
     >
-      <div className="p-2 cursor-pointer" onClick={handleCardClick}>
+      <div className={`p-2 cursor-pointer`} onClick={handleCardClick}>
         <div className="flex items-start">
-          {/* Exercise image */}
+          {/* Exercise image - smaller in compact mode */}
           <div 
-            className={`${isCompact ? 'h-16 w-16' : 'h-24 w-24'} rounded bg-cover bg-center mr-2 flex-shrink-0`}
+            className={`${isCompact ? 'h-14 w-14' : 'h-24 w-24'} rounded bg-cover bg-center mr-2 flex-shrink-0`}
             style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
           />
           
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <ExerciseCardHeader
               exerciseName={exerciseItem.exercise.name}
               category={category}
