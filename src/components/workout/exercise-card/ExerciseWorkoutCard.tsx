@@ -72,7 +72,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     const classes = [];
     
     // Base classes
-    classes.push('mb-4');
+    classes.push(inGroup ? 'mb-2' : 'mb-4');
     classes.push(inGroup ? 'border' : 'border-2');
     classes.push('overflow-hidden', 'relative');
     
@@ -106,7 +106,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
         <div className="flex items-start">
           {/* Exercise image */}
           <div 
-            className={`${isCompact ? 'h-24 w-24' : 'h-32 w-32'} rounded bg-cover bg-center mr-3 flex-shrink-0`}
+            className={`${isCompact ? 'h-20 w-20' : 'h-28 w-28'} rounded bg-cover bg-center mr-3 flex-shrink-0`}
             style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
           />
           
@@ -128,6 +128,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               onActualRepsChange={onActualRepsChange}
               onSetCompletion={onSetCompletion}
               categoryColor={category.color}
+              isCompact={isCompact}
               onAddSet={onAddSet ? () => {
                 console.log("Add set clicked for", exerciseItem.exercise.name);
                 onAddSet(exerciseIndex);

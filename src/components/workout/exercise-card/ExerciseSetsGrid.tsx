@@ -14,6 +14,7 @@ interface ExerciseSetsGridProps {
   categoryColor: string;
   onAddSet?: (exerciseIndex: number) => void;
   onRemoveSet?: (exerciseIndex: number, setIndex: number) => void;
+  isCompact?: boolean;
 }
 
 const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
@@ -24,7 +25,8 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   onSetCompletion,
   categoryColor,
   onAddSet,
-  onRemoveSet
+  onRemoveSet,
+  isCompact = false
 }) => {
   // Add debugging logs for exerciseSets
   useEffect(() => {
@@ -33,9 +35,10 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
       exerciseIndex,
       sets: exerciseSets,
       hasAddSet: !!onAddSet,
-      hasRemoveSet: !!onRemoveSet
+      hasRemoveSet: !!onRemoveSet,
+      isCompact
     });
-  }, [exerciseSets, exerciseIndex, onAddSet, onRemoveSet]);
+  }, [exerciseSets, exerciseIndex, onAddSet, onRemoveSet, isCompact]);
   
   // Safely extract color from category for set completion buttons
   const getCompletedButtonStyle = (completed: boolean) => {
@@ -49,9 +52,9 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   };
   
   return (
-    <div className="exercise-sets-grid">
+    <div className={`exercise-sets-grid ${isCompact ? 'text-xs' : ''}`}>
       {/* Sets grid - column headers */}
-      <div className="grid grid-cols-12 text-xs font-medium mb-1 gap-1">
+      <div className={`grid grid-cols-12 text-xs font-medium mb-1 gap-1 ${isCompact ? 'text-[10px]' : ''}`}>
         <div className="col-span-1">#</div>
         <div className="col-span-3">Weight</div>
         <div className="col-span-2 text-center">Reps</div>
@@ -72,6 +75,7 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
             onSetCompletion={() => onSetCompletion(exerciseIndex, setIndex, !set.completed)}
             getCompletedButtonStyle={getCompletedButtonStyle}
             onRemoveSet={onRemoveSet ? () => onRemoveSet(exerciseIndex, setIndex) : undefined}
+            isCompact={isCompact}
           />
         ))
       ) : (
@@ -82,17 +86,17 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
 
       {/* Add Set button */}
       {onAddSet && (
-        <div className="mt-3">
+        <div className="mt-2">
           <Button 
             variant="outline" 
             size="sm" 
-            className="w-full border-dashed"
+            className={`w-full border-dashed ${isCompact ? 'text-xs py-1 h-7' : ''}`}
             onClick={() => {
               console.log("Add set button clicked, calling handler with exerciseIndex:", exerciseIndex);
               onAddSet(exerciseIndex);
             }}
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className={`${isCompact ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} />
             Add Set
           </Button>
         </div>

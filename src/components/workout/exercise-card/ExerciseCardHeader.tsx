@@ -26,7 +26,7 @@ const ExerciseCardHeader: React.FC<ExerciseCardHeaderProps> = ({
   return (
     <div className="flex items-start justify-between mb-2">
       <div>
-        <h4 className={`font-medium ${isCompact ? 'text-sm' : ''}`}>{exerciseName}</h4>
+        <h4 className={`${isCompact ? 'text-base' : 'text-lg'} font-medium`}>{exerciseName}</h4>
         <div className="flex items-center mt-1">
           <Badge className={`mr-2 ${category.color}`}>
             {category.name}

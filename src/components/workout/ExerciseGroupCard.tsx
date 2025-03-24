@@ -88,7 +88,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
         )}
       </div>
       
-      <div className="grid grid-cols-2 gap-2 p-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2">
         {exercises.map((exercise) => {
           const exerciseIndex = exerciseIndexMap[exercise.id];
           console.log("Rendering exercise in group:", {
