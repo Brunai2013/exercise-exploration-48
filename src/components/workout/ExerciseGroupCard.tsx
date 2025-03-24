@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import ExerciseWorkoutCard from './exercise-card';
 import { WorkoutExercise } from '@/lib/types';
@@ -44,6 +44,22 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   );
   const progress = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
   
+  // Add debugging logs
+  useEffect(() => {
+    console.log("ExerciseGroupCard rendering with:", {
+      groupType,
+      exercisesCount: exercises.length,
+      exercisesWithSets: exercises.map(ex => ({
+        name: ex.exercise.name,
+        id: ex.id,
+        setsCount: ex.sets?.length || 0,
+        sets: ex.sets
+      })),
+      hasAddSetHandler: !!onAddSet,
+      hasRemoveSetHandler: !!onRemoveSet
+    });
+  }, [exercises, onAddSet, onRemoveSet, groupType]);
+  
   return (
     <Card className="mb-6 overflow-hidden border-2 border-primary/20">
       <div className="bg-primary/10 p-2 flex items-center justify-between">
@@ -75,6 +91,12 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
       <div className="grid grid-cols-2 gap-2 p-2">
         {exercises.map((exercise) => {
           const exerciseIndex = exerciseIndexMap[exercise.id];
+          console.log("Rendering exercise in group:", {
+            name: exercise.exercise.name,
+            id: exercise.id,
+            setsCount: exercise.sets?.length || 0
+          });
+          
           return (
             <ExerciseWorkoutCard
               key={exercise.id}
@@ -89,8 +111,8 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
               isCompact={true}
               inGroup={true}
               onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(exercise.id) : undefined}
-              onAddSet={onAddSet}
-              onRemoveSet={onRemoveSet}
+              onAddSet={onAddSet ? () => onAddSet(exerciseIndex) : undefined}
+              onRemoveSet={onRemoveSet ? (setIndex) => onRemoveSet(exerciseIndex, setIndex) : undefined}
             />
           );
         })}

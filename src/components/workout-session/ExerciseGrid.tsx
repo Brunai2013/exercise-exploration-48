@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { WorkoutExercise } from '@/lib/types';
 import ExerciseWorkoutCard from '@/components/workout/exercise-card';
 import ExerciseGroupCard from '@/components/workout/ExerciseGroupCard';
@@ -47,12 +47,37 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
   onAddSet,
   onRemoveSet
 }) => {
+  // Add debugging logs to trace workout data and handlers
+  useEffect(() => {
+    console.log("ExerciseGrid rendering with:", {
+      workoutExercisesCount: workout?.length || 0,
+      exerciseGroupsCount: exerciseGroups?.length || 0,
+      hasAddSetHandler: !!onAddSet,
+      hasRemoveSetHandler: !!onRemoveSet,
+      exercises: workout?.map(ex => ({
+        name: ex.exercise.name,
+        id: ex.id,
+        setsCount: ex.sets?.length || 0
+      }))
+    });
+  }, [workout, exerciseGroups, onAddSet, onRemoveSet]);
+
   return (
     <div className="grid grid-cols-1 gap-4 mb-8">
       {exerciseGroups.map(group => {
         const groupExercises = workout?.filter(ex => 
           group.exerciseIds.includes(ex.id)
         );
+        
+        console.log("Group exercises:", {
+          groupId: group.id,
+          exerciseCount: groupExercises?.length || 0,
+          exercises: groupExercises?.map(ex => ({
+            name: ex.exercise.name,
+            id: ex.id,
+            setsCount: ex.sets?.length || 0
+          }))
+        });
         
         if (!groupExercises || groupExercises.length < 2) return null;
         
@@ -77,6 +102,12 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
       
       {workout?.map((exerciseItem, exerciseIndex) => {
         if (isExerciseInGroup(exerciseItem.id)) return null;
+        
+        console.log("Rendering individual exercise:", {
+          name: exerciseItem.exercise.name,
+          id: exerciseItem.id,
+          setsCount: exerciseItem.sets?.length || 0
+        });
         
         return (
           <ExerciseWorkoutCard

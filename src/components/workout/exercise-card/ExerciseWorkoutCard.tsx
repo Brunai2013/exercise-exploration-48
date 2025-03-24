@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
 import ExerciseCardHeader from './ExerciseCardHeader';
@@ -41,15 +41,22 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   onRemoveSet
 }) => {
   // Add more explicit logging to debug issues
-  console.log("ExerciseWorkoutCard rendering:", { 
-    exerciseName: exerciseItem.exercise.name,
-    exerciseId: exerciseItem.id,
-    sets: exerciseItem.sets || [],
-    index: exerciseIndex,
-    isCurrentExercise: exerciseIndex === currentExerciseIndex
-  });
+  useEffect(() => {
+    console.log("ExerciseWorkoutCard mounted:", { 
+      exerciseName: exerciseItem.exercise.name,
+      exerciseId: exerciseItem.id,
+      setsArray: exerciseItem.sets,
+      setsLength: exerciseItem.sets?.length || 0,
+      index: exerciseIndex,
+      isCompact,
+      inGroup,
+      hasAddSet: !!onAddSet,
+      hasRemoveSet: !!onRemoveSet
+    });
+  }, [exerciseItem, exerciseIndex, isCompact, inGroup, onAddSet, onRemoveSet]);
   
-  const exerciseSets = exerciseItem.sets || [];
+  // Ensure sets is always an array
+  const exerciseSets = Array.isArray(exerciseItem.sets) ? exerciseItem.sets : [];
   const completedSets = exerciseSets.filter(set => set.completed).length;
   const exerciseProgress = exerciseSets.length > 0 ? Math.round((completedSets / exerciseSets.length) * 100) : 0;
   
@@ -121,8 +128,14 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               onActualRepsChange={onActualRepsChange}
               onSetCompletion={onSetCompletion}
               categoryColor={category.color}
-              onAddSet={onAddSet ? () => onAddSet(exerciseIndex) : undefined}
-              onRemoveSet={onRemoveSet}
+              onAddSet={onAddSet ? () => {
+                console.log("Add set clicked for", exerciseItem.exercise.name);
+                onAddSet(exerciseIndex);
+              } : undefined}
+              onRemoveSet={onRemoveSet ? (setIndex) => {
+                console.log("Remove set clicked for", exerciseItem.exercise.name, "set", setIndex);
+                onRemoveSet(exerciseIndex, setIndex);
+              } : undefined}
             />
           </div>
         </div>

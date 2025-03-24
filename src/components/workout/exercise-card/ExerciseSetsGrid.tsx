@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { ExerciseSet } from '@/lib/types';
@@ -26,6 +26,17 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   onAddSet,
   onRemoveSet
 }) => {
+  // Add debugging logs for exerciseSets
+  useEffect(() => {
+    console.log("ExerciseSetsGrid rendering:", {
+      setCount: exerciseSets?.length || 0,
+      exerciseIndex,
+      sets: exerciseSets,
+      hasAddSet: !!onAddSet,
+      hasRemoveSet: !!onRemoveSet
+    });
+  }, [exerciseSets, exerciseIndex, onAddSet, onRemoveSet]);
+  
   // Safely extract color from category for set completion buttons
   const getCompletedButtonStyle = (completed: boolean) => {
     if (!completed) return {};
@@ -38,7 +49,7 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   };
   
   return (
-    <>
+    <div className="exercise-sets-grid">
       {/* Sets grid - column headers */}
       <div className="grid grid-cols-12 text-xs font-medium mb-1 gap-1">
         <div className="col-span-1">#</div>
@@ -52,7 +63,7 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
       {exerciseSets && exerciseSets.length > 0 ? (
         exerciseSets.map((set, setIndex) => (
           <ExerciseSetRow
-            key={set.id}
+            key={set.id || `set-${setIndex}`}
             set={set}
             setIndex={setIndex}
             exerciseIndex={exerciseIndex}
@@ -76,14 +87,17 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
             variant="outline" 
             size="sm" 
             className="w-full border-dashed"
-            onClick={() => onAddSet(exerciseIndex)}
+            onClick={() => {
+              console.log("Add set button clicked, calling handler with exerciseIndex:", exerciseIndex);
+              onAddSet(exerciseIndex);
+            }}
           >
             <Plus className="h-4 w-4 mr-1" />
             Add Set
           </Button>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

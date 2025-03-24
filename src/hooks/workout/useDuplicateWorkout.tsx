@@ -14,8 +14,20 @@ export const useDuplicateWorkout = () => {
         throw new Error("Cannot duplicate an invalid workout");
       }
       
+      console.log("Original workout before duplication:", {
+        name: workout.name,
+        exerciseCount: workout.exercises.length,
+        exercises: workout.exercises.map(ex => ({
+          name: ex.exercise.name,
+          sets: ex.sets
+        }))
+      });
+      
       // Create duplicated exercise sets with new IDs
       const duplicatedExercises = workout.exercises.map(exercise => {
+        // Ensure sets is always an array
+        const originalSets = Array.isArray(exercise.sets) ? exercise.sets : [];
+        
         // Deep copy the exercise, ensuring all properties are preserved
         const exerciseCopy: WorkoutExercise = {
           ...exercise,
@@ -23,15 +35,28 @@ export const useDuplicateWorkout = () => {
           sets: []
         };
         
-        // Ensure sets are initialized properly and each gets a new ID
-        const duplicatedSets = Array.isArray(exercise.sets) ? exercise.sets.map(set => {
-          // Create a new set with a new ID but same properties
+        // Create new sets with new IDs but same properties
+        const duplicatedSets = originalSets.map(set => {
           const newSet: ExerciseSet = {
             ...set,
             id: `set-${exercise.exerciseId}-${set.setNumber}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            completed: false // Reset completion status in the duplicate
           };
           return newSet;
-        }) : [];
+        });
+        
+        // If no sets existed, create at least one default set
+        if (duplicatedSets.length === 0) {
+          duplicatedSets.push({
+            id: `set-${exercise.exerciseId}-1-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            exerciseId: exercise.exerciseId,
+            setNumber: 1,
+            targetReps: 10,
+            actualReps: 0,
+            weight: 0,
+            completed: false
+          });
+        }
         
         exerciseCopy.sets = duplicatedSets;
         return exerciseCopy;
@@ -52,7 +77,12 @@ export const useDuplicateWorkout = () => {
       console.log('Duplicated workout created:', {
         name: duplicatedWorkout.name,
         exerciseCount: duplicatedWorkout.exercises.length,
-        setCount: duplicatedWorkout.exercises.reduce((total, ex) => total + ex.sets.length, 0)
+        setCount: duplicatedWorkout.exercises.reduce((total, ex) => total + ex.sets.length, 0),
+        exercises: duplicatedWorkout.exercises.map(ex => ({
+          name: ex.exercise.name,
+          setsCount: ex.sets.length,
+          sets: ex.sets
+        }))
       });
       
       // Store the duplicated workout in localStorage for retrieval in the form

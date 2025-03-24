@@ -29,6 +29,7 @@ const WorkoutSession = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Hooks setup
   const { 
     exerciseGroups, 
     selectedExercises, 
@@ -66,6 +67,16 @@ const WorkoutSession = () => {
     handleRemoveSet
   } = useExerciseSets(setWorkout);
 
+  // Log the handlers to verify they exist
+  useEffect(() => {
+    console.log("WorkoutSession handlers:", {
+      handleAddSetExists: !!handleAddSet,
+      handleRemoveSetExists: !!handleRemoveSet,
+      handleAddSet,
+      handleRemoveSet
+    });
+  }, [handleAddSet, handleRemoveSet]);
+
   const fetchWorkout = useCallback(async () => {
     if (!id) return;
     
@@ -87,6 +98,15 @@ const WorkoutSession = () => {
             sets: Array.isArray(exercise.sets) ? exercise.sets : []
           }));
         }
+        
+        console.log('Processed exercises:', 
+          foundWorkout.exercises?.map(ex => ({
+            name: ex.exercise.name,
+            id: ex.id,
+            setsCount: ex.sets?.length || 0,
+            sets: ex.sets
+          }))
+        );
         
         setWorkout(foundWorkout);
       } else {
@@ -134,13 +154,7 @@ const WorkoutSession = () => {
     );
   }
 
-  // Log workout details for debugging
-  console.log('Rendering workout:', {
-    name: workout.name,
-    exerciseCount: workout.exercises?.length || 0,
-    hasExerciseSets: workout.exercises?.some(ex => ex.sets && ex.sets.length > 0)
-  });
-
+  // Create a map of exercise IDs to their indices
   const exerciseIndexMap = createExerciseIndexMap();
 
   return (
