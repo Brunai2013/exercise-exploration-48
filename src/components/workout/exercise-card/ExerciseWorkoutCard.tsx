@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
 import ExerciseCardHeader from './ExerciseCardHeader';
 import ExerciseSetsGrid from './ExerciseSetsGrid';
-import { useExerciseSets } from '@/hooks/workout/useExerciseSets';
 
 interface ExerciseWorkoutCardProps {
   exerciseItem: WorkoutExercise;
@@ -20,6 +19,8 @@ interface ExerciseWorkoutCardProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onRemoveFromGroup?: () => void;
+  onAddSet?: (exerciseIndex: number) => void;
+  onRemoveSet?: (exerciseIndex: number, setIndex: number) => void;
 }
 
 const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
@@ -35,7 +36,9 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   inGroup = false,
   isSelected = false,
   onSelect,
-  onRemoveFromGroup
+  onRemoveFromGroup,
+  onAddSet,
+  onRemoveSet
 }) => {
   // Add more explicit logging to debug issues
   console.log("ExerciseWorkoutCard rendering:", { 
@@ -118,10 +121,8 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               onActualRepsChange={onActualRepsChange}
               onSetCompletion={onSetCompletion}
               categoryColor={category.color}
-              onAddSet={(idx) => {
-                console.log("Add set clicked for", exerciseItem.exercise.name);
-                // Call to add a set - this will be implemented by the parent component
-              }}
+              onAddSet={onAddSet ? () => onAddSet(exerciseIndex) : undefined}
+              onRemoveSet={onRemoveSet}
             />
           </div>
         </div>

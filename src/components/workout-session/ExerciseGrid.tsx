@@ -25,6 +25,8 @@ interface ExerciseGridProps {
   selectedExercises: string[];
   groupingMode: boolean;
   toggleExerciseSelection: (exerciseId: string) => void;
+  onAddSet?: (exerciseIndex: number) => void;
+  onRemoveSet?: (exerciseIndex: number, setIndex: number) => void;
 }
 
 const ExerciseGrid: React.FC<ExerciseGridProps> = ({
@@ -41,7 +43,9 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
   removeFromGroup,
   selectedExercises,
   groupingMode,
-  toggleExerciseSelection
+  toggleExerciseSelection,
+  onAddSet,
+  onRemoveSet
 }) => {
   return (
     <div className="grid grid-cols-1 gap-4 mb-8">
@@ -65,6 +69,8 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
             onActualRepsChange={onActualRepsChange}
             onNavigateToExercise={onNavigateToExercise}
             onRemoveFromGroup={removeFromGroup}
+            onAddSet={onAddSet}
+            onRemoveSet={onRemoveSet}
           />
         );
       })}
@@ -86,6 +92,8 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
             isCompact={false}
             isSelected={selectedExercises.includes(exerciseItem.id)}
             onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
+            onAddSet={onAddSet}
+            onRemoveSet={onRemoveSet}
           />
         );
       })}

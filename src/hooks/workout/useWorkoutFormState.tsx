@@ -52,6 +52,15 @@ export const useWorkoutFormState = () => {
               exerciseCount: existingWorkout.exercises?.length,
               setCount: existingWorkout.exercises?.reduce((count, ex) => count + (ex.sets?.length || 0), 0)
             });
+            
+            // Ensure each exercise has an initialized sets array
+            if (existingWorkout.exercises) {
+              existingWorkout.exercises = existingWorkout.exercises.map(exercise => ({
+                ...exercise,
+                sets: Array.isArray(exercise.sets) ? exercise.sets : []
+              }));
+            }
+            
             setWorkout(existingWorkout);
             setSelectedDate(parse(existingWorkout.date, 'yyyy-MM-dd', new Date()));
           }

@@ -20,6 +20,7 @@ import { useExerciseGroups } from '@/hooks/workout-session/useExerciseGroups';
 import { useWorkoutProgress } from '@/hooks/workout-session/useWorkoutProgress';
 import { useExerciseState } from '@/hooks/workout-session/useExerciseState';
 import { useCategoryData } from '@/hooks/workout-session/useCategoryData';
+import { useExerciseSets } from '@/hooks/workout/useExerciseSets';
 
 const WorkoutSession = () => {
   const { id } = useParams();
@@ -59,6 +60,11 @@ const WorkoutSession = () => {
   } = useExerciseState(workout, setWorkout);
   
   const { exerciseCategories } = useCategoryData(workout);
+  
+  const {
+    handleAddSet,
+    handleRemoveSet
+  } = useExerciseSets(setWorkout);
 
   const fetchWorkout = useCallback(async () => {
     if (!id) return;
@@ -73,6 +79,15 @@ const WorkoutSession = () => {
       if (foundWorkout) {
         console.log('Workout found:', foundWorkout.name);
         console.log('Exercise count:', foundWorkout.exercises?.length || 0);
+        
+        // Ensure each exercise has an initialized sets array
+        if (foundWorkout.exercises) {
+          foundWorkout.exercises = foundWorkout.exercises.map(exercise => ({
+            ...exercise,
+            sets: Array.isArray(exercise.sets) ? exercise.sets : []
+          }));
+        }
+        
         setWorkout(foundWorkout);
       } else {
         console.error('No workout found with ID:', id);
@@ -174,6 +189,8 @@ const WorkoutSession = () => {
         selectedExercises={selectedExercises}
         groupingMode={groupingMode}
         toggleExerciseSelection={toggleExerciseSelection}
+        onAddSet={handleAddSet}
+        onRemoveSet={handleRemoveSet}
       />
 
       <WorkoutCompleteMessage

@@ -2,7 +2,7 @@
 import { ExerciseSet, Workout } from '@/lib/types';
 
 export const useExerciseSets = (
-  setWorkout: React.Dispatch<React.SetStateAction<Partial<Workout>>>
+  setWorkout: React.Dispatch<React.SetStateAction<Partial<Workout> | null>>
 ) => {
   const handleSetChange = (
     exerciseIndex: number,
@@ -11,22 +11,28 @@ export const useExerciseSets = (
     value: any
   ) => {
     setWorkout(prev => {
+      if (!prev || !prev.exercises) return prev;
+      
       // Validation checks
-      if (!prev.exercises || !prev.exercises[exerciseIndex] || !prev.exercises[exerciseIndex].sets) {
-        console.error("Cannot change set: Invalid exercise index or missing sets", { 
+      if (exerciseIndex < 0 || exerciseIndex >= prev.exercises.length) {
+        console.error("Cannot change set: Invalid exercise index", { 
           exerciseIndex, 
           exercisesLength: prev.exercises?.length 
         });
         return prev;
       }
 
-      const updatedExercises = [...(prev.exercises || [])];
-      const updatedSets = [...updatedExercises[exerciseIndex].sets];
-      
-      if (!updatedSets[setIndex]) {
-        console.error("Cannot change set: Invalid set index", { setIndex, setsLength: updatedSets.length });
+      const exercise = prev.exercises[exerciseIndex];
+      if (!exercise.sets || setIndex < 0 || setIndex >= exercise.sets.length) {
+        console.error("Cannot change set: Invalid set index", { 
+          setIndex, 
+          setsLength: exercise.sets?.length || 0 
+        });
         return prev;
       }
+
+      const updatedExercises = [...(prev.exercises)];
+      const updatedSets = [...updatedExercises[exerciseIndex].sets];
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
@@ -44,18 +50,21 @@ export const useExerciseSets = (
   
   const handleAddSet = (exerciseIndex: number) => {
     setWorkout(prev => {
+      if (!prev || !prev.exercises) return prev;
+      
       // Make sure we have exercises
-      if (!prev.exercises || !prev.exercises.length || exerciseIndex >= prev.exercises.length) {
-        console.error("Cannot add set: Invalid exercise index or no exercises", { 
+      if (exerciseIndex < 0 || exerciseIndex >= prev.exercises.length) {
+        console.error("Cannot add set: Invalid exercise index", { 
           exerciseIndex, 
           exercisesLength: prev.exercises?.length 
         });
         return prev; // Return unchanged state if invalid
       }
       
-      const updatedExercises = [...(prev.exercises || [])];
-      const currentSets = updatedExercises[exerciseIndex].sets || [];
-      const exerciseId = updatedExercises[exerciseIndex].exerciseId;
+      const updatedExercises = [...prev.exercises];
+      const exercise = updatedExercises[exerciseIndex];
+      const currentSets = exercise.sets || [];
+      const exerciseId = exercise.exerciseId;
       
       if (!exerciseId) {
         console.error("Cannot add set: Missing exerciseId");
@@ -72,38 +81,43 @@ export const useExerciseSets = (
       };
       
       updatedExercises[exerciseIndex] = {
-        ...updatedExercises[exerciseIndex],
+        ...exercise,
         sets: [...currentSets, newSet]
       };
       
       console.log("Added new set:", {
         exerciseIndex, 
-        exerciseName: updatedExercises[exerciseIndex].exercise?.name,
+        exerciseName: exercise.exercise?.name,
         setsCount: updatedExercises[exerciseIndex].sets.length
       });
       
-      // Fixed: only one return statement
       return { ...prev, exercises: updatedExercises };
     });
   };
   
   const handleRemoveSet = (exerciseIndex: number, setIndex: number) => {
     setWorkout(prev => {
+      if (!prev || !prev.exercises) return prev;
+      
       // Validate inputs
-      if (!prev.exercises || !prev.exercises.length || 
-          exerciseIndex >= prev.exercises.length ||
-          !prev.exercises[exerciseIndex].sets ||
-          setIndex >= prev.exercises[exerciseIndex].sets.length) {
-        console.error("Cannot remove set: Invalid indexes", { 
+      if (exerciseIndex < 0 || exerciseIndex >= prev.exercises.length) {
+        console.error("Cannot remove set: Invalid exercise index", { 
           exerciseIndex, 
-          setIndex,
-          exercisesLength: prev.exercises?.length,
-          setsLength: prev.exercises?.[exerciseIndex]?.sets?.length
+          exercisesLength: prev.exercises?.length
         });
         return prev; // Return unchanged state if invalid
       }
       
-      const updatedExercises = [...(prev.exercises || [])];
+      const exercise = prev.exercises[exerciseIndex];
+      if (!exercise.sets || setIndex < 0 || setIndex >= exercise.sets.length) {
+        console.error("Cannot remove set: Invalid set index", { 
+          setIndex,
+          setsLength: exercise.sets?.length || 0
+        });
+        return prev; // Return unchanged state if invalid
+      }
+      
+      const updatedExercises = [...prev.exercises];
       const updatedSets = [...updatedExercises[exerciseIndex].sets];
       
       updatedSets.splice(setIndex, 1);
