@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import ExerciseWorkoutCard from './exercise-card';
@@ -17,6 +18,8 @@ interface ExerciseGroupCardProps {
   onActualRepsChange: (exerciseIndex: number, setIndex: number, reps: string) => void;
   onNavigateToExercise: (index: number) => void;
   onRemoveFromGroup?: (exerciseId: string) => void;
+  onAddSet?: (exerciseIndex: number) => void;
+  onRemoveSet?: (exerciseIndex: number, setIndex: number) => void;
 }
 
 const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
@@ -29,7 +32,9 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   onWeightChange,
   onActualRepsChange,
   onNavigateToExercise,
-  onRemoveFromGroup
+  onRemoveFromGroup,
+  onAddSet,
+  onRemoveSet
 }) => {
   // Calculate overall group completion
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
@@ -84,6 +89,8 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
               isCompact={true}
               inGroup={true}
               onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(exercise.id) : undefined}
+              onAddSet={onAddSet}
+              onRemoveSet={onRemoveSet}
             />
           );
         })}
