@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { ExerciseSet } from '@/lib/types';
 import ExerciseSetRow from './ExerciseSetRow';
 
@@ -12,6 +12,8 @@ interface ExerciseSetsGridProps {
   onActualRepsChange: (exerciseIndex: number, setIndex: number, reps: string) => void;
   onSetCompletion: (exerciseIndex: number, setIndex: number, completed: boolean) => void;
   categoryColor: string;
+  onAddSet?: (exerciseIndex: number) => void;
+  onRemoveSet?: (exerciseIndex: number, setIndex: number) => void;
 }
 
 const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
@@ -20,7 +22,9 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   onWeightChange,
   onActualRepsChange,
   onSetCompletion,
-  categoryColor
+  categoryColor,
+  onAddSet,
+  onRemoveSet
 }) => {
   // Safely extract color from category for set completion buttons
   const getCompletedButtonStyle = (completed: boolean) => {
@@ -45,7 +49,7 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
       </div>
       
       {/* Individual sets */}
-      {exerciseSets.length > 0 ? (
+      {exerciseSets && exerciseSets.length > 0 ? (
         exerciseSets.map((set, setIndex) => (
           <ExerciseSetRow
             key={set.id}
@@ -56,11 +60,27 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
             onActualRepsChange={(value) => onActualRepsChange(exerciseIndex, setIndex, value)}
             onSetCompletion={() => onSetCompletion(exerciseIndex, setIndex, !set.completed)}
             getCompletedButtonStyle={getCompletedButtonStyle}
+            onRemoveSet={onRemoveSet ? () => onRemoveSet(exerciseIndex, setIndex) : undefined}
           />
         ))
       ) : (
         <div className="text-sm text-muted-foreground py-2">
           No sets defined for this exercise
+        </div>
+      )}
+
+      {/* Add Set button */}
+      {onAddSet && (
+        <div className="mt-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full border-dashed"
+            onClick={() => onAddSet(exerciseIndex)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Set
+          </Button>
         </div>
       )}
     </>

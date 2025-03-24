@@ -30,8 +30,17 @@ export const useExerciseSets = (
   
   const handleAddSet = (exerciseIndex: number) => {
     setWorkout(prev => {
+      // Make sure we have exercises
+      if (!prev.exercises || !prev.exercises.length || exerciseIndex >= prev.exercises.length) {
+        console.error("Cannot add set: Invalid exercise index or no exercises", { 
+          exerciseIndex, 
+          exercisesLength: prev.exercises?.length 
+        });
+        return prev; // Return unchanged state if invalid
+      }
+      
       const updatedExercises = [...(prev.exercises || [])];
-      const currentSets = updatedExercises[exerciseIndex].sets;
+      const currentSets = updatedExercises[exerciseIndex].sets || [];
       const exerciseId = updatedExercises[exerciseIndex].exerciseId;
       
       const newSet: ExerciseSet = {
@@ -39,7 +48,7 @@ export const useExerciseSets = (
         exerciseId,
         setNumber: currentSets.length + 1,
         targetReps: 10,
-        weight: currentSets[currentSets.length - 1]?.weight || 0,
+        weight: currentSets.length > 0 ? (currentSets[currentSets.length - 1]?.weight || 0) : 0,
         completed: false
       };
       
@@ -48,17 +57,38 @@ export const useExerciseSets = (
         sets: [...currentSets, newSet]
       };
       
+      console.log("Added new set:", {
+        exerciseIndex, 
+        exerciseName: updatedExercises[exerciseIndex].exercise.name,
+        setsCount: updatedExercises[exerciseIndex].sets.length
+      });
+      
       return { ...prev, exercises: updatedExercises };
     });
   };
   
   const handleRemoveSet = (exerciseIndex: number, setIndex: number) => {
     setWorkout(prev => {
+      // Validate inputs
+      if (!prev.exercises || !prev.exercises.length || 
+          exerciseIndex >= prev.exercises.length ||
+          !prev.exercises[exerciseIndex].sets ||
+          setIndex >= prev.exercises[exerciseIndex].sets.length) {
+        console.error("Cannot remove set: Invalid indexes", { 
+          exerciseIndex, 
+          setIndex,
+          exercisesLength: prev.exercises?.length,
+          setsLength: prev.exercises?.[exerciseIndex]?.sets?.length
+        });
+        return prev; // Return unchanged state if invalid
+      }
+      
       const updatedExercises = [...(prev.exercises || [])];
       const updatedSets = [...updatedExercises[exerciseIndex].sets];
       
       updatedSets.splice(setIndex, 1);
       
+      // Renumber remaining sets
       updatedSets.forEach((set, idx) => {
         set.setNumber = idx + 1;
       });
@@ -67,6 +97,13 @@ export const useExerciseSets = (
         ...updatedExercises[exerciseIndex],
         sets: updatedSets
       };
+      
+      console.log("Removed set:", {
+        exerciseIndex, 
+        setIndex,
+        exerciseName: updatedExercises[exerciseIndex].exercise.name,
+        remainingSets: updatedSets.length
+      });
       
       return { ...prev, exercises: updatedExercises };
     });

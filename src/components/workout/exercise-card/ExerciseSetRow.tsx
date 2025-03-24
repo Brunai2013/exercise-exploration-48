@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
 import { ExerciseSet } from '@/lib/types';
 
 interface ExerciseSetRowProps {
@@ -12,6 +12,7 @@ interface ExerciseSetRowProps {
   onActualRepsChange: (value: string) => void;
   onSetCompletion: () => void;
   getCompletedButtonStyle: (completed: boolean) => React.CSSProperties;
+  onRemoveSet?: () => void;
 }
 
 const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
@@ -20,7 +21,8 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
   onWeightChange,
   onActualRepsChange,
   onSetCompletion,
-  getCompletedButtonStyle
+  getCompletedButtonStyle,
+  onRemoveSet
 }) => {
   return (
     <div className="grid grid-cols-12 items-center gap-1 mb-1">
@@ -51,7 +53,7 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
         />
       </div>
       
-      <div className="col-span-3 flex justify-end">
+      <div className="col-span-3 flex justify-end space-x-1">
         <Button
           variant={set.completed ? "default" : "outline"}
           size="sm"
@@ -68,6 +70,21 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
             <span className="text-xs">✓</span>
           )}
         </Button>
+        
+        {onRemoveSet && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-8 h-7 px-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveSet();
+            }}
+            title="Remove set"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        )}
       </div>
     </div>
   );

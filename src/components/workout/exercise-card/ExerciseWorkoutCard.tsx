@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
 import ExerciseCardHeader from './ExerciseCardHeader';
 import ExerciseSetsGrid from './ExerciseSetsGrid';
+import { useExerciseSets } from '@/hooks/workout/useExerciseSets';
 
 interface ExerciseWorkoutCardProps {
   exerciseItem: WorkoutExercise;
@@ -117,6 +118,10 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               onActualRepsChange={onActualRepsChange}
               onSetCompletion={onSetCompletion}
               categoryColor={category.color}
+              onAddSet={(idx) => {
+                console.log("Add set clicked for", exerciseItem.exercise.name);
+                // Call to add a set - this will be implemented by the parent component
+              }}
             />
           </div>
         </div>
