@@ -19,7 +19,7 @@ const Index = () => {
         
         <div className="mt-6 flex justify-center">
           <RouterLink to="/workout-metrics">
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 rounded-full animate-pulse">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 rounded-full">
               <ChartBarIcon className="h-4 w-4" />
               View Workout Analytics
             </Button>
