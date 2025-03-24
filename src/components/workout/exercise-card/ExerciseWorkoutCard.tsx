@@ -102,11 +102,11 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
       id={`exercise-${exerciseIndex}`}
       className={getCardClasses()}
     >
-      <div className="p-3 cursor-pointer" onClick={handleCardClick}>
+      <div className="p-2 cursor-pointer" onClick={handleCardClick}>
         <div className="flex items-start">
           {/* Exercise image */}
           <div 
-            className={`${isCompact ? 'h-20 w-20' : 'h-28 w-28'} rounded bg-cover bg-center mr-3 flex-shrink-0`}
+            className={`${isCompact ? 'h-16 w-16' : 'h-24 w-24'} rounded bg-cover bg-center mr-2 flex-shrink-0`}
             style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
           />
           
@@ -129,14 +129,8 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
               onSetCompletion={onSetCompletion}
               categoryColor={category.color}
               isCompact={isCompact}
-              onAddSet={onAddSet ? () => {
-                console.log("Add set clicked for", exerciseItem.exercise.name);
-                onAddSet(exerciseIndex);
-              } : undefined}
-              onRemoveSet={onRemoveSet ? (setIndex) => {
-                console.log("Remove set clicked for", exerciseItem.exercise.name, "set", setIndex);
-                onRemoveSet(exerciseIndex, setIndex);
-              } : undefined}
+              onAddSet={onAddSet}
+              onRemoveSet={onRemoveSet}
             />
           </div>
         </div>

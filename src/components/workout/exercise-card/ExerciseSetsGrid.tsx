@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { ExerciseSet } from '@/lib/types';
 import ExerciseSetRow from './ExerciseSetRow';
 
@@ -51,10 +51,12 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
     return { backgroundColor: colorValue };
   };
   
+  const headerFontSize = isCompact ? 'text-xs' : 'text-sm';
+  
   return (
     <div className={`exercise-sets-grid ${isCompact ? 'text-xs' : ''}`}>
       {/* Sets grid - column headers */}
-      <div className={`grid grid-cols-12 text-xs font-medium mb-1 gap-1 ${isCompact ? 'text-[10px]' : ''}`}>
+      <div className={`grid grid-cols-12 font-medium mb-1 gap-1 ${headerFontSize}`}>
         <div className="col-span-1">#</div>
         <div className="col-span-3">Weight</div>
         <div className="col-span-2 text-center">Reps</div>
@@ -86,11 +88,11 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
 
       {/* Add Set button */}
       {onAddSet && (
-        <div className="mt-2">
+        <div className="mt-1">
           <Button 
             variant="outline" 
             size="sm" 
-            className={`w-full border-dashed ${isCompact ? 'text-xs py-1 h-7' : ''}`}
+            className={`w-full border-dashed ${isCompact ? 'text-xs py-0.5 h-6' : 'text-sm py-1'}`}
             onClick={() => {
               console.log("Add set button clicked, calling handler with exerciseIndex:", exerciseIndex);
               onAddSet(exerciseIndex);

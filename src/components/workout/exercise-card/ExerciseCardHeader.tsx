@@ -24,32 +24,31 @@ const ExerciseCardHeader: React.FC<ExerciseCardHeaderProps> = ({
   onRemoveFromGroup
 }) => {
   return (
-    <div className="flex items-start justify-between mb-2">
+    <div className="flex items-start justify-between mb-1">
       <div>
-        <h4 className={`${isCompact ? 'text-base' : 'text-lg'} font-medium`}>{exerciseName}</h4>
-        <div className="flex items-center mt-1">
-          <Badge className={`mr-2 ${category.color}`}>
+        <h4 className={`${isCompact ? 'text-sm' : 'text-lg'} font-medium`}>{exerciseName}</h4>
+        <div className="flex items-center mt-0.5">
+          <Badge className={`mr-2 text-xs py-0 px-1.5 ${category.color}`}>
             {category.name}
           </Badge>
-          <span className={`text-sm ${exerciseProgress === 100 ? 'text-green-600' : 'text-muted-foreground'}`}>
+          <span className={`${isCompact ? 'text-xs' : 'text-sm'} ${exerciseProgress === 100 ? 'text-green-600' : 'text-muted-foreground'}`}>
             {completedSets}/{totalSets} sets
           </span>
         </div>
       </div>
       
-      {/* Remove from group button if applicable */}
       {onRemoveFromGroup && (
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0"
+          className="h-5 w-5 p-0"
           onClick={(e) => {
             e.stopPropagation();
             onRemoveFromGroup();
           }}
           title="Remove from group"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3 w-3" />
         </Button>
       )}
     </div>

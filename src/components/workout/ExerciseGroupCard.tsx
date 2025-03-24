@@ -61,14 +61,14 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   }, [exercises, onAddSet, onRemoveSet, groupType]);
   
   return (
-    <Card className="mb-6 overflow-hidden border-2 border-primary/20">
+    <Card className="mb-5 overflow-hidden border-2 border-primary/20">
       <div className="bg-primary/10 p-2 flex items-center justify-between">
         <div className="flex items-center">
           <Layers className="h-4 w-4 mr-2" />
-          <Badge variant="outline" className="font-semibold">
+          <Badge variant="outline" className="font-semibold text-xs">
             {groupType === 'superset' ? 'Superset' : 'Circuit'}
           </Badge>
-          <span className="ml-2 text-sm text-muted-foreground">
+          <span className="ml-2 text-xs text-muted-foreground">
             {progress}% complete
           </span>
         </div>
@@ -77,7 +77,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-7 w-7 p-0" 
+            className="h-6 w-6 p-0" 
             title="Ungroup all exercises"
             onClick={() => {
               exercises.forEach(ex => onRemoveFromGroup(ex.id));
