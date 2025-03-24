@@ -11,8 +11,22 @@ export const useExerciseSets = (
     value: any
   ) => {
     setWorkout(prev => {
+      // Validation checks
+      if (!prev.exercises || !prev.exercises[exerciseIndex] || !prev.exercises[exerciseIndex].sets) {
+        console.error("Cannot change set: Invalid exercise index or missing sets", { 
+          exerciseIndex, 
+          exercisesLength: prev.exercises?.length 
+        });
+        return prev;
+      }
+
       const updatedExercises = [...(prev.exercises || [])];
       const updatedSets = [...updatedExercises[exerciseIndex].sets];
+      
+      if (!updatedSets[setIndex]) {
+        console.error("Cannot change set: Invalid set index", { setIndex, setsLength: updatedSets.length });
+        return prev;
+      }
       
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
@@ -43,6 +57,11 @@ export const useExerciseSets = (
       const currentSets = updatedExercises[exerciseIndex].sets || [];
       const exerciseId = updatedExercises[exerciseIndex].exerciseId;
       
+      if (!exerciseId) {
+        console.error("Cannot add set: Missing exerciseId");
+        return prev;
+      }
+      
       const newSet: ExerciseSet = {
         id: `set-${exerciseId}-${currentSets.length+1}-${Date.now()}`,
         exerciseId,
@@ -59,10 +78,11 @@ export const useExerciseSets = (
       
       console.log("Added new set:", {
         exerciseIndex, 
-        exerciseName: updatedExercises[exerciseIndex].exercise.name,
+        exerciseName: updatedExercises[exerciseIndex].exercise?.name,
         setsCount: updatedExercises[exerciseIndex].sets.length
       });
       
+      // Fixed: only one return statement
       return { ...prev, exercises: updatedExercises };
     });
   };
@@ -101,7 +121,7 @@ export const useExerciseSets = (
       console.log("Removed set:", {
         exerciseIndex, 
         setIndex,
-        exerciseName: updatedExercises[exerciseIndex].exercise.name,
+        exerciseName: updatedExercises[exerciseIndex].exercise?.name,
         remainingSets: updatedSets.length
       });
       

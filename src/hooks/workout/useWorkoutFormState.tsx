@@ -46,6 +46,12 @@ export const useWorkoutFormState = () => {
           setIsLoading(true);
           const existingWorkout = await getWorkoutById(id);
           if (existingWorkout) {
+            console.log("Loaded existing workout:", {
+              id: existingWorkout.id,
+              name: existingWorkout.name,
+              exerciseCount: existingWorkout.exercises?.length,
+              setCount: existingWorkout.exercises?.reduce((count, ex) => count + (ex.sets?.length || 0), 0)
+            });
             setWorkout(existingWorkout);
             setSelectedDate(parse(existingWorkout.date, 'yyyy-MM-dd', new Date()));
           }
@@ -65,6 +71,21 @@ export const useWorkoutFormState = () => {
           const duplicatedWorkoutStr = localStorage.getItem('duplicated_workout');
           if (duplicatedWorkoutStr) {
             const duplicatedWorkout = JSON.parse(duplicatedWorkoutStr);
+            console.log("Loaded duplicated workout:", {
+              id: duplicatedWorkout.id,
+              name: duplicatedWorkout.name,
+              exerciseCount: duplicatedWorkout.exercises?.length,
+              setCount: duplicatedWorkout.exercises?.reduce((count, ex) => count + (ex.sets?.length || 0), 0)
+            });
+            
+            // Ensure the workout has valid exercises and sets
+            if (duplicatedWorkout.exercises) {
+              duplicatedWorkout.exercises = duplicatedWorkout.exercises.map(exercise => ({
+                ...exercise,
+                sets: Array.isArray(exercise.sets) ? exercise.sets : []
+              }));
+            }
+            
             setWorkout(duplicatedWorkout);
             // Don't set the date - leave it blank to require user input
             setSelectedDate(undefined);
@@ -73,6 +94,11 @@ export const useWorkoutFormState = () => {
           }
         } catch (error) {
           console.error('Error loading duplicated workout:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load duplicated workout.",
+            variant: "destructive",
+          });
         } finally {
           setIsLoading(false);
         }

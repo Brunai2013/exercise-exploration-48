@@ -24,6 +24,12 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
   getCompletedButtonStyle,
   onRemoveSet
 }) => {
+  // Ensure we have valid values with fallbacks
+  const weight = set.weight !== undefined ? String(set.weight) : '';
+  const targetReps = set.targetReps || 0;
+  const actualReps = set.actualReps !== undefined ? String(set.actualReps) : '';
+  const completed = Boolean(set.completed);
+
   return (
     <div className="grid grid-cols-12 items-center gap-1 mb-1">
       <div className="col-span-1 font-medium text-xs">{setIndex + 1}</div>
@@ -33,21 +39,21 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
           type="text"
           placeholder="lb/kg"
           className="w-full border rounded px-2 py-1 text-xs"
-          value={set.weight !== undefined ? String(set.weight) : ''}
+          value={weight}
           onChange={(e) => onWeightChange(e.target.value)}
           onClick={(e) => e.stopPropagation()}
         />
       </div>
       
       <div className="col-span-2 text-center text-xs">
-        {set.targetReps}
+        {targetReps}
       </div>
       
       <div className="col-span-3">
         <input
           type="text"
           className="w-full border rounded px-2 py-1 text-xs"
-          value={set.actualReps !== undefined ? String(set.actualReps) : ''}
+          value={actualReps}
           onChange={(e) => onActualRepsChange(e.target.value)}
           onClick={(e) => e.stopPropagation()}
         />
@@ -55,16 +61,16 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
       
       <div className="col-span-3 flex justify-end space-x-1">
         <Button
-          variant={set.completed ? "default" : "outline"}
+          variant={completed ? "default" : "outline"}
           size="sm"
           className="w-8 h-7 px-0"
           onClick={(e) => {
             e.stopPropagation();
             onSetCompletion();
           }}
-          style={getCompletedButtonStyle(set.completed)}
+          style={getCompletedButtonStyle(completed)}
         >
-          {set.completed ? (
+          {completed ? (
             <Check className="h-3 w-3" />
           ) : (
             <span className="text-xs">✓</span>
