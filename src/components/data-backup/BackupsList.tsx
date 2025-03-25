@@ -1,19 +1,20 @@
 
 import React, { useState } from 'react';
-import { RefreshCw, Download, Save, Database } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   listExerciseBackups, 
   downloadExerciseBackup, 
   createExerciseBackup,
-  isCompleteBackup,
-  formatBackupDate,
   downloadLocalBackup,
 } from '@/lib/backup';
+
+// Import our new components
+import BackupActions from './backup-list/BackupActions';
+import BackupList from './backup-list/BackupList';
+import BackupEmptyState from './backup-list/BackupEmptyState';
+import BackupLoadingState from './backup-list/BackupLoadingState';
 
 interface BackupsListProps {
   backups: { name: string; path: string; created_at: string }[];
@@ -73,67 +74,22 @@ const BackupsList: React.FC<BackupsListProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-end mb-4">
-          <Button 
-            variant="outline" 
-            className="mr-2"
-            onClick={onBackupCreated}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button 
-            onClick={handleCreateBackup}
-            disabled={isLoading || isCreating}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Create New Backup
-          </Button>
-        </div>
+        <BackupActions 
+          onRefresh={onBackupCreated}
+          onCreateBackup={handleCreateBackup}
+          isLoading={isLoading}
+          isCreating={isCreating}
+        />
         
         {isLoading ? (
-          <div className="py-12 text-center text-muted-foreground">
-            <RefreshCw className="h-8 w-8 mx-auto animate-spin text-primary/70 mb-2" />
-            <p>Loading backups...</p>
-          </div>
+          <BackupLoadingState />
         ) : backups.length === 0 ? (
-          <div className="py-12 text-center text-muted-foreground border rounded-md bg-slate-50">
-            <Database className="h-12 w-12 mx-auto text-slate-300 mb-2" />
-            <p className="text-lg font-medium text-slate-500 mb-1">No backups found</p>
-            <p className="text-sm">Create your first backup using the button above.</p>
-          </div>
+          <BackupEmptyState />
         ) : (
-          <ScrollArea className="h-[400px] rounded-md border">
-            <div className="divide-y">
-              {backups.map((backup) => (
-                <div 
-                  key={backup.path} 
-                  className="flex justify-between items-center p-4 hover:bg-slate-50"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium truncate max-w-[300px]">{backup.name}</p>
-                      {isCompleteBackup(backup.name) && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Complete
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{formatBackupDate(backup.created_at)}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownloadBackup(backup.path)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
+          <BackupList 
+            backups={backups} 
+            onDownload={handleDownloadBackup} 
+          />
         )}
       </CardContent>
     </Card>
