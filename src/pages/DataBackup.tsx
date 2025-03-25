@@ -3,8 +3,18 @@ import React, { useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Database, Save, UploadCloud, Download, RefreshCw, AlertCircle } from 'lucide-react';
-import { createExerciseBackup, listExerciseBackups, downloadExerciseBackup, restoreFromBackup, downloadLocalBackup } from '@/lib/backup';
+import { 
+  Database, Save, UploadCloud, Download, RefreshCw, AlertCircle, 
+  FileJson, Info, Shield, HardDrive 
+} from 'lucide-react';
+import { 
+  createExerciseBackup, 
+  listExerciseBackups, 
+  downloadExerciseBackup, 
+  restoreFromBackup, 
+  downloadLocalBackup,
+  downloadDatabaseSchema 
+} from '@/lib/backup';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -22,6 +32,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 const DataBackup = () => {
   const [backups, setBackups] = useState<{ name: string; path: string; created_at: string }[]>([]);
@@ -53,12 +64,12 @@ const DataBackup = () => {
       if (result) {
         if (result.path) {
           // Supabase storage backup successful
-          toast.success('Backup created and stored in Supabase');
+          toast.success('Complete backup created and stored in Supabase');
           await loadBackups();
         } else if (result.data && result.fileName) {
           // Local backup needed - RLS policy prevented storage
           downloadLocalBackup(result.data, result.fileName);
-          toast.success('Local backup created successfully');
+          toast.success('Complete local backup created successfully');
         }
       }
     } catch (error) {
@@ -75,6 +86,15 @@ const DataBackup = () => {
     } catch (error) {
       console.error('Error downloading backup:', error);
       toast.error('Failed to download backup');
+    }
+  };
+  
+  const handleDownloadSchema = async () => {
+    try {
+      await downloadDatabaseSchema();
+    } catch (error) {
+      console.error('Error downloading schema:', error);
+      toast.error('Failed to download database schema');
     }
   };
   
@@ -132,6 +152,11 @@ const DataBackup = () => {
     }
   };
   
+  // Detect if filename includes "complete" to indicate new comprehensive backup format
+  const isCompleteBackup = (filename: string) => {
+    return filename.toLowerCase().includes('complete');
+  };
+  
   // Load backups when component mounts
   React.useEffect(() => {
     loadBackups();
@@ -147,7 +172,7 @@ const DataBackup = () => {
           Database Backup & Restore
         </h1>
         <p className="text-muted-foreground mt-2">
-          Create backups of your exercise data or restore from a previous backup
+          Create comprehensive backups of all your data or restore from a previous backup
         </p>
       </div>
       
@@ -155,15 +180,23 @@ const DataBackup = () => {
         <AlertCircle className="h-4 w-4 text-amber-600" />
         <AlertTitle>Important Information</AlertTitle>
         <AlertDescription>
-          This backup system creates a copy of your exercise library data (exercises and categories) in Supabase storage.
-          It's recommended to create a backup before making significant changes to your database.
+          <p>The enhanced backup system creates a complete copy of your data including:</p>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li>Exercise library (exercises and categories)</li>
+            <li>Workout history (completed and planned workouts)</li>
+            <li>Exercise sets and performance data</li>
+          </ul>
+          <p className="mt-2">
+            Backups are stored both in Supabase storage and can be downloaded locally as a failsafe.
+          </p>
         </AlertDescription>
       </Alert>
       
       <Tabs defaultValue="backups" className="w-full">
-        <TabsList className="w-full mb-6 grid grid-cols-2">
+        <TabsList className="w-full mb-6 grid grid-cols-3">
           <TabsTrigger value="backups">Manage Backups</TabsTrigger>
           <TabsTrigger value="restore">Restore Data</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced Options</TabsTrigger>
         </TabsList>
         
         <TabsContent value="backups" className="space-y-6">
@@ -217,7 +250,14 @@ const DataBackup = () => {
                         className="flex justify-between items-center p-4 hover:bg-slate-50"
                       >
                         <div>
-                          <p className="font-medium truncate max-w-[300px]">{backup.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate max-w-[300px]">{backup.name}</p>
+                            {isCompleteBackup(backup.name) && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                Complete
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">{formatDate(backup.created_at)}</p>
                         </div>
                         <Button
@@ -253,8 +293,11 @@ const DataBackup = () => {
                 <AlertCircle className="h-4 w-4 text-red-600" />
                 <AlertTitle>Caution</AlertTitle>
                 <AlertDescription>
-                  Restoring from a backup will merge the backup data with your existing exercises and categories.
-                  Any conflicts will be resolved by keeping the backup version. This operation cannot be undone.
+                  <p>Restoring from a backup will merge the backup data with your existing database.</p>
+                  <p className="mt-1">
+                    For complete backups, this will restore your entire exercise library, workout history, and performance data.
+                  </p>
+                  <p className="mt-1">Any conflicts will be resolved by keeping the backup version. This operation cannot be undone.</p>
                 </AlertDescription>
               </Alert>
               
@@ -269,9 +312,15 @@ const DataBackup = () => {
                     disabled={isRestoring}
                   />
                   {uploadedFile && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Selected: {uploadedFile.name}
-                    </p>
+                    <div className="text-sm text-muted-foreground mt-2 flex items-center">
+                      <FileJson className="h-4 w-4 mr-1" />
+                      <span>Selected: {uploadedFile.name}</span>
+                      {uploadedFile.name.toLowerCase().includes('complete') && (
+                        <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
+                          Complete Backup
+                        </Badge>
+                      )}
+                    </div>
                   )}
                 </div>
                 
@@ -288,6 +337,60 @@ const DataBackup = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        <TabsContent value="advanced" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Shield className="mr-2 h-5 w-5 text-primary" />
+                Advanced Backup Options
+              </CardTitle>
+              <CardDescription>
+                Additional tools for advanced database management
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="rounded-md border p-4">
+                  <h3 className="text-md font-medium flex items-center">
+                    <HardDrive className="h-4 w-4 mr-2 text-blue-600" />
+                    Database Schema Backup
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 mb-3">
+                    Download the database schema definition for advanced restoration scenarios.
+                    This includes table structures, relationships, and indexes.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDownloadSchema}
+                  >
+                    <FileJson className="h-4 w-4 mr-2" />
+                    Download Schema Definition
+                  </Button>
+                </div>
+                
+                <Alert variant="default" className="bg-blue-50 border-blue-200">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertTitle>About Database Restoration</AlertTitle>
+                  <AlertDescription>
+                    <p className="mb-2">
+                      Complete backups contain all your app data and can be used to restore your database in case of:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Accidental data deletion</li>
+                      <li>Database schema changes that cause issues</li>
+                      <li>Transferring data to a new database instance</li>
+                    </ul>
+                    <p className="mt-2">
+                      For technical assistance with database restoration, please contact support.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
       
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
@@ -295,8 +398,19 @@ const DataBackup = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Restore Operation</AlertDialogTitle>
             <AlertDialogDescription>
-              This will merge the backup data with your existing exercises and categories.
-              Any conflicts will be resolved by keeping the backup version.
+              {uploadedFile?.name.toLowerCase().includes('complete') ? (
+                <p>
+                  You are about to restore a <strong>complete backup</strong> that contains your entire
+                  exercise library, workout history, and performance data.
+                </p>
+              ) : (
+                <p>
+                  This will merge the backup data with your existing exercises and categories.
+                </p>
+              )}
+              <p className="mt-2">
+                Any conflicts will be resolved by keeping the backup version.
+              </p>
               <Separator className="my-4" />
               <span className="font-medium text-amber-600 block mt-2">This operation cannot be undone.</span>
             </AlertDialogDescription>

@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { createExerciseBackup, listExerciseBackups, downloadExerciseBackup, restoreFromBackup } from '@/lib/backup';
-import { Download, Upload, Save, Trash2, RefreshCw } from 'lucide-react';
+import { createExerciseBackup, listExerciseBackups, downloadExerciseBackup, restoreFromBackup, downloadLocalBackup } from '@/lib/backup';
+import { Download, Upload, Save, RefreshCw, FileJson } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface BackupRestoreDialogProps {
@@ -50,8 +51,18 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
   const handleCreateBackup = async () => {
     setIsLoading(true);
     try {
-      await createExerciseBackup();
-      await loadBackups();
+      const result = await createExerciseBackup();
+      
+      if (result) {
+        if (result.path) {
+          // Supabase storage backup successful
+          toast.success('Complete backup created successfully');
+          await loadBackups();
+        } else if (result.data && result.fileName) {
+          // Local backup needed
+          downloadLocalBackup(result.data, result.fileName);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +118,11 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
     }
   };
   
+  // Detect if filename includes "complete" to indicate enhanced backup
+  const isCompleteBackup = (filename: string) => {
+    return filename.toLowerCase().includes('complete');
+  };
+  
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -114,7 +130,7 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
           <DialogHeader className="pb-4 border-b mb-4">
             <DialogTitle className="text-xl font-bold text-primary">Exercise Library Backup</DialogTitle>
             <DialogDescription className="mt-1 text-sm">
-              Create backups of your exercise library or restore from a previous backup
+              Create comprehensive backups of your fitness data or restore from a previous backup
             </DialogDescription>
           </DialogHeader>
           
@@ -166,7 +182,14 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
                         className="flex justify-between items-center p-3 rounded-md border hover:bg-slate-50"
                       >
                         <div>
-                          <p className="font-medium truncate max-w-[300px]">{backup.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate max-w-[300px]">{backup.name}</p>
+                            {isCompleteBackup(backup.name) && (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                Complete
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">{formatDate(backup.created_at)}</p>
                         </div>
                         <Button
@@ -189,8 +212,8 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
                 <div>
                   <h3 className="text-lg font-medium mb-2">Restore from Backup</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Warning: Restoring from a backup will merge the backup data with your existing exercises and categories.
-                    Any conflicts will be resolved by keeping the backup version.
+                    Warning: Restoring from a backup will merge the backup data with your existing database.
+                    For complete backups, this includes your exercise library, workout history, and performance data.
                   </p>
                 </div>
                 
@@ -204,9 +227,17 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
                       disabled={isRestoring}
                     />
                     {uploadedFile && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Selected: {uploadedFile.name}
-                      </p>
+                      <div className="flex items-center mt-2">
+                        <FileJson className="h-4 w-4 mr-1 text-blue-500" />
+                        <p className="text-sm text-muted-foreground">
+                          Selected: {uploadedFile.name}
+                        </p>
+                        {uploadedFile.name.toLowerCase().includes('complete') && (
+                          <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
+                            Complete
+                          </Badge>
+                        )}
+                      </div>
                     )}
                   </div>
                   
@@ -230,9 +261,20 @@ const BackupRestoreDialog: React.FC<BackupRestoreDialogProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Restore</AlertDialogTitle>
             <AlertDialogDescription>
-              This will merge the backup data with your existing exercises and categories.
-              Any conflicts will be resolved by keeping the backup version.
-              This operation cannot be undone.
+              {uploadedFile?.name.toLowerCase().includes('complete') ? (
+                <p>
+                  You are about to restore a <strong>complete backup</strong> that contains your entire
+                  exercise library, workout history, and performance data.
+                </p>
+              ) : (
+                <p>
+                  This will merge the backup data with your existing exercises and categories.
+                </p>
+              )}
+              <p className="mt-2">
+                Any conflicts will be resolved by keeping the backup version.
+                This operation cannot be undone.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
