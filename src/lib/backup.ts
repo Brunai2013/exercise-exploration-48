@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, Category } from './types';
 import { getAllExercises } from './exercises';
@@ -18,9 +17,9 @@ interface BackupData {
 
 /**
  * Creates a backup of all exercises and categories in the database
- * and stores it in the Supabase storage bucket
+ * and attempts to store it in Supabase. If that fails, returns the data for local download.
  */
-export async function createExerciseBackup(): Promise<string | null> {
+export async function createExerciseBackup(): Promise<{ path?: string, data?: BackupData, fileName?: string } | null> {
   try {
     // Get all exercises and categories
     const exercises = await getAllExercises();
@@ -48,19 +47,39 @@ export async function createExerciseBackup(): Promise<string | null> {
     const blob = new Blob([jsonData], { type: 'application/json' });
     const file = new File([blob], fileName, { type: 'application/json' });
     
-    // Upload to Supabase storage
-    const { data, error } = await supabase.storage
-      .from('exercise_backups')
-      .upload(fileName, file);
+    try {
+      // Try to upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('exercise_backups')
+        .upload(fileName, file);
+        
+      if (error) {
+        console.error('Error uploading backup to Supabase:', error);
+        
+        // If RLS error, provide the data for local download instead
+        if (error.message.includes('violates row-level security policy')) {
+          toast.info('Storage policy prevents server backup - creating local backup instead');
+          return { 
+            data: backupData, 
+            fileName 
+          };
+        } else {
+          toast.error(`Backup failed: ${error.message}`);
+          return null;
+        }
+      }
       
-    if (error) {
-      console.error('Error uploading backup:', error);
-      toast.error(`Backup failed: ${error.message}`);
-      return null;
+      toast.success('Exercise data backup created successfully');
+      return { path: data.path };
+    } catch (error) {
+      console.error('Storage error:', error);
+      // Fallback to local backup
+      toast.info('Creating local backup instead');
+      return { 
+        data: backupData, 
+        fileName 
+      };
     }
-    
-    toast.success('Exercise data backup created successfully');
-    return data.path;
   } catch (error) {
     console.error('Error creating backup:', error);
     toast.error(`Backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -217,5 +236,29 @@ export async function restoreFromBackup(file: File): Promise<boolean> {
     console.error('Error restoring backup:', error);
     toast.error(`Failed to restore backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
+  }
+}
+
+/**
+ * Creates a local backup download when Supabase storage is unavailable
+ */
+export function downloadLocalBackup(data: BackupData, fileName: string): void {
+  try {
+    const jsonData = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Local backup downloaded successfully');
+  } catch (error) {
+    console.error('Error creating local backup:', error);
+    toast.error(`Local backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

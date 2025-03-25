@@ -4,7 +4,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Database, Save, UploadCloud, Download, RefreshCw, AlertCircle } from 'lucide-react';
-import { createExerciseBackup, listExerciseBackups, downloadExerciseBackup, restoreFromBackup } from '@/lib/backup';
+import { createExerciseBackup, listExerciseBackups, downloadExerciseBackup, restoreFromBackup, downloadLocalBackup } from '@/lib/backup';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -48,10 +48,18 @@ const DataBackup = () => {
   const handleCreateBackup = async () => {
     setIsLoading(true);
     try {
-      const backupPath = await createExerciseBackup();
-      if (backupPath) {
-        toast.success('Backup created successfully');
-        await loadBackups();
+      const result = await createExerciseBackup();
+      
+      if (result) {
+        if (result.path) {
+          // Supabase storage backup successful
+          toast.success('Backup created and stored in Supabase');
+          await loadBackups();
+        } else if (result.data && result.fileName) {
+          // Local backup needed - RLS policy prevented storage
+          downloadLocalBackup(result.data, result.fileName);
+          toast.success('Local backup created successfully');
+        }
       }
     } catch (error) {
       console.error('Error creating backup:', error);
