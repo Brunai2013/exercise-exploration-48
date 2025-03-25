@@ -3,7 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { createExerciseBackup, listExerciseBackups, downloadExerciseBackup, restoreFromBackup, downloadLocalBackup } from '@/lib/backup';
+import { 
+  createExerciseBackup, 
+  listExerciseBackups, 
+  downloadExerciseBackup, 
+  restoreFromBackup, 
+  downloadLocalBackup,
+  isCompleteBackup,
+  formatBackupDate
+} from '@/lib/backup';
 import { Download, Upload, Save, RefreshCw, FileJson } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
