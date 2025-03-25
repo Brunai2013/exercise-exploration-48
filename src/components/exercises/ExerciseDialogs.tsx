@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Exercise, Category } from '@/lib/types';
 import AddExerciseDialog from './AddExerciseDialog';
 import EditExerciseDialog from './EditExerciseDialog';
 import DeleteExerciseDialog from './DeleteExerciseDialog';
 import CuratedExercisesDialog from './CuratedExercisesDialog';
-import BackupRestoreDialog from './BackupRestoreDialog';
+import BackupRestoreDialog from '../data-backup/dialogs/BackupRestoreDialog';
 
 interface ExerciseDialogsProps {
   isAddExerciseOpen: boolean;
