@@ -1,45 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { 
-  Database, Save, UploadCloud, Download, RefreshCw, AlertCircle, 
-  FileJson, Info, Shield, HardDrive 
-} from 'lucide-react';
-import { 
-  createExerciseBackup, 
-  listExerciseBackups, 
-  downloadExerciseBackup, 
-  restoreFromBackup, 
-  downloadLocalBackup,
-  downloadDatabaseSchema 
-} from '@/lib/backup';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useExerciseData } from '@/hooks/useExerciseData';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
+import { listExerciseBackups } from '@/lib/backup';
+
+// Import our newly created components
+import BackupHeader from '@/components/data-backup/BackupHeader';
+import BackupsList from '@/components/data-backup/BackupsList';
+import RestoreBackup from '@/components/data-backup/RestoreBackup';
+import AdvancedOptions from '@/components/data-backup/AdvancedOptions';
 
 const DataBackup = () => {
   const [backups, setBackups] = useState<{ name: string; path: string; created_at: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const { refreshAllData } = useExerciseData();
   
   const loadBackups = async () => {
@@ -47,151 +21,28 @@ const DataBackup = () => {
     try {
       const backupsList = await listExerciseBackups();
       setBackups(backupsList);
-      toast.success('Backup list loaded successfully');
     } catch (error) {
       console.error('Error loading backups:', error);
-      toast.error('Failed to load backup list');
     } finally {
       setIsLoading(false);
     }
   };
   
-  const handleCreateBackup = async () => {
-    setIsLoading(true);
-    try {
-      const result = await createExerciseBackup();
-      
-      if (result) {
-        if (result.path) {
-          // Supabase storage backup successful
-          toast.success('Complete backup created and stored in Supabase');
-          await loadBackups();
-        } else if (result.data && result.fileName) {
-          // Local backup needed - RLS policy prevented storage
-          downloadLocalBackup(result.data, result.fileName);
-          toast.success('Complete local backup created successfully');
-        }
-      }
-    } catch (error) {
-      console.error('Error creating backup:', error);
-      toast.error('Failed to create backup');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleDownloadBackup = async (path: string) => {
-    try {
-      await downloadExerciseBackup(path);
-    } catch (error) {
-      console.error('Error downloading backup:', error);
-      toast.error('Failed to download backup');
-    }
-  };
-  
-  const handleDownloadSchema = async () => {
-    try {
-      await downloadDatabaseSchema();
-    } catch (error) {
-      console.error('Error downloading schema:', error);
-      toast.error('Failed to download database schema');
-    }
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      if (file.type !== 'application/json') {
-        toast.error('Please select a JSON file');
-        return;
-      }
-      setUploadedFile(file);
-      toast.info(`File selected: ${file.name}`);
-    }
-  };
-  
-  const handleRestoreBackup = async () => {
-    if (!uploadedFile) {
-      toast.error('Please select a backup file first');
-      return;
-    }
-    
-    setConfirmDialogOpen(true);
-  };
-  
-  const confirmRestore = async () => {
-    setConfirmDialogOpen(false);
-    if (!uploadedFile) return;
-    
-    setIsRestoring(true);
-    try {
-      const success = await restoreFromBackup(uploadedFile);
-      if (success) {
-        toast.success('Backup restored successfully');
-        refreshAllData();
-      }
-    } catch (error) {
-      console.error('Error restoring backup:', error);
-      toast.error('Failed to restore backup');
-    } finally {
-      setIsRestoring(false);
-      setUploadedFile(null);
-      
-      // Reset file input by clearing its value
-      const fileInput = document.getElementById('backup-file') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    }
-  };
-  
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleString();
-    } catch (e) {
-      return dateStr;
-    }
-  };
-  
-  // Detect if filename includes "complete" to indicate new comprehensive backup format
-  const isCompleteBackup = (filename: string) => {
-    return filename.toLowerCase().includes('complete');
+  const handleRestoreComplete = () => {
+    refreshAllData();
   };
   
   // Load backups when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     loadBackups();
   }, []);
   
   return (
     <PageContainer>
-      <div className="mb-8 text-center bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 p-6 rounded-2xl shadow-md border border-blue-100">
-        <div className="inline-flex items-center justify-center p-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md text-white mb-4">
-          <Database className="h-8 w-8" />
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
-          Database Backup & Restore
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Create comprehensive backups of all your data or restore from a previous backup
-        </p>
-      </div>
+      {/* Header Section */}
+      <BackupHeader />
       
-      <Alert className="mb-6 bg-amber-50 border-amber-200">
-        <AlertCircle className="h-4 w-4 text-amber-600" />
-        <AlertTitle>Important Information</AlertTitle>
-        <AlertDescription>
-          <p>The enhanced backup system creates a complete copy of your data including:</p>
-          <ul className="list-disc pl-5 mt-2 space-y-1">
-            <li>Exercise library (exercises and categories)</li>
-            <li>Workout history (completed and planned workouts)</li>
-            <li>Exercise sets and performance data</li>
-          </ul>
-          <p className="mt-2">
-            Backups are stored both in Supabase storage and can be downloaded locally as a failsafe.
-          </p>
-        </AlertDescription>
-      </Alert>
-      
+      {/* Main Tabs */}
       <Tabs defaultValue="backups" className="w-full">
         <TabsList className="w-full mb-6 grid grid-cols-3">
           <TabsTrigger value="backups">Manage Backups</TabsTrigger>
@@ -200,229 +51,21 @@ const DataBackup = () => {
         </TabsList>
         
         <TabsContent value="backups" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Save className="mr-2 h-5 w-5 text-primary" />
-                Available Backups
-              </CardTitle>
-              <CardDescription>
-                View and manage your database backups
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-end mb-4">
-                <Button 
-                  variant="outline" 
-                  className="mr-2"
-                  onClick={loadBackups}
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
-                <Button 
-                  onClick={handleCreateBackup}
-                  disabled={isLoading}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Create New Backup
-                </Button>
-              </div>
-              
-              {isLoading ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  <RefreshCw className="h-8 w-8 mx-auto animate-spin text-primary/70 mb-2" />
-                  <p>Loading backups...</p>
-                </div>
-              ) : backups.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground border rounded-md bg-slate-50">
-                  <Database className="h-12 w-12 mx-auto text-slate-300 mb-2" />
-                  <p className="text-lg font-medium text-slate-500 mb-1">No backups found</p>
-                  <p className="text-sm">Create your first backup using the button above.</p>
-                </div>
-              ) : (
-                <ScrollArea className="h-[400px] rounded-md border">
-                  <div className="divide-y">
-                    {backups.map((backup) => (
-                      <div 
-                        key={backup.path} 
-                        className="flex justify-between items-center p-4 hover:bg-slate-50"
-                      >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium truncate max-w-[300px]">{backup.name}</p>
-                            {isCompleteBackup(backup.name) && (
-                              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                Complete
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{formatDate(backup.created_at)}</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadBackup(backup.path)}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
+          <BackupsList 
+            backups={backups} 
+            isLoading={isLoading} 
+            onBackupCreated={loadBackups} 
+          />
         </TabsContent>
         
         <TabsContent value="restore" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <UploadCloud className="mr-2 h-5 w-5 text-primary" />
-                Restore from Backup
-              </CardTitle>
-              <CardDescription>
-                Import a previously downloaded backup file
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Alert className="mb-6 bg-red-50 border-red-200">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertTitle>Caution</AlertTitle>
-                <AlertDescription>
-                  <p>Restoring from a backup will merge the backup data with your existing database.</p>
-                  <p className="mt-1">
-                    For complete backups, this will restore your entire exercise library, workout history, and performance data.
-                  </p>
-                  <p className="mt-1">Any conflicts will be resolved by keeping the backup version. This operation cannot be undone.</p>
-                </AlertDescription>
-              </Alert>
-              
-              <div className="space-y-4">
-                <div className="border rounded-md p-4">
-                  <p className="text-sm font-medium mb-2">Select backup file</p>
-                  <Input 
-                    id="backup-file"
-                    type="file" 
-                    accept=".json" 
-                    onChange={handleFileChange}
-                    disabled={isRestoring}
-                  />
-                  {uploadedFile && (
-                    <div className="text-sm text-muted-foreground mt-2 flex items-center">
-                      <FileJson className="h-4 w-4 mr-1" />
-                      <span>Selected: {uploadedFile.name}</span>
-                      {uploadedFile.name.toLowerCase().includes('complete') && (
-                        <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
-                          Complete Backup
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <Button
-                  onClick={handleRestoreBackup}
-                  disabled={!uploadedFile || isRestoring}
-                  className="w-full"
-                  variant={!uploadedFile ? "outline" : "default"}
-                >
-                  <UploadCloud className="h-4 w-4 mr-2" />
-                  {isRestoring ? 'Restoring...' : 'Restore Backup'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <RestoreBackup onRestoreComplete={handleRestoreComplete} />
         </TabsContent>
         
         <TabsContent value="advanced" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Shield className="mr-2 h-5 w-5 text-primary" />
-                Advanced Backup Options
-              </CardTitle>
-              <CardDescription>
-                Additional tools for advanced database management
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="rounded-md border p-4">
-                  <h3 className="text-md font-medium flex items-center">
-                    <HardDrive className="h-4 w-4 mr-2 text-blue-600" />
-                    Database Schema Backup
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1 mb-3">
-                    Download the database schema definition for advanced restoration scenarios.
-                    This includes table structures, relationships, and indexes.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleDownloadSchema}
-                  >
-                    <FileJson className="h-4 w-4 mr-2" />
-                    Download Schema Definition
-                  </Button>
-                </div>
-                
-                <Alert variant="default" className="bg-blue-50 border-blue-200">
-                  <Info className="h-4 w-4 text-blue-600" />
-                  <AlertTitle>About Database Restoration</AlertTitle>
-                  <AlertDescription>
-                    <p className="mb-2">
-                      Complete backups contain all your app data and can be used to restore your database in case of:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Accidental data deletion</li>
-                      <li>Database schema changes that cause issues</li>
-                      <li>Transferring data to a new database instance</li>
-                    </ul>
-                    <p className="mt-2">
-                      For technical assistance with database restoration, please contact support.
-                    </p>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
+          <AdvancedOptions />
         </TabsContent>
       </Tabs>
-      
-      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Restore Operation</AlertDialogTitle>
-            <AlertDialogDescription>
-              {uploadedFile?.name.toLowerCase().includes('complete') ? (
-                <p>
-                  You are about to restore a <strong>complete backup</strong> that contains your entire
-                  exercise library, workout history, and performance data.
-                </p>
-              ) : (
-                <p>
-                  This will merge the backup data with your existing exercises and categories.
-                </p>
-              )}
-              <p className="mt-2">
-                Any conflicts will be resolved by keeping the backup version.
-              </p>
-              <Separator className="my-4" />
-              <span className="font-medium text-amber-600 block mt-2">This operation cannot be undone.</span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRestore} className="bg-red-600 hover:bg-red-700">
-              Proceed with Restore
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </PageContainer>
   );
 };
