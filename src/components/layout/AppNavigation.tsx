@@ -6,7 +6,8 @@ import {
   Dumbbell, 
   Calendar as CalendarIcon,
   ChartBarIcon,
-  Sparkles
+  Sparkles,
+  Database
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,8 @@ const AppNavigation: React.FC = () => {
     { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5 mr-2" /> },
     { href: '/exercise-library', label: 'Exercise Library', icon: <Dumbbell className="h-5 w-5 mr-2" /> },
     { href: '/calendar', label: 'Calendar', icon: <CalendarIcon className="h-5 w-5 mr-2" /> },
-    { href: '/workout-metrics', label: 'Analytics', icon: <ChartBarIcon className="h-5 w-5 mr-2" /> }
+    { href: '/workout-metrics', label: 'Analytics', icon: <ChartBarIcon className="h-5 w-5 mr-2" /> },
+    { href: '/backup', label: 'Backup & Restore', icon: <Database className="h-5 w-5 mr-2" /> }
   ];
 
   return (
