@@ -25,7 +25,7 @@ const FutureExerciseChartHeader: React.FC<FutureExerciseChartHeaderProps> = ({
         <div>
           <CardTitle>{title}</CardTitle>
           <CardDescription>
-            {description}
+            {description} (Next 7 Days)
           </CardDescription>
         </div>
         <HoverCard>
@@ -36,7 +36,7 @@ const FutureExerciseChartHeader: React.FC<FutureExerciseChartHeaderProps> = ({
             <div className="space-y-2">
               <h4 className="text-sm font-semibold">About This Chart</h4>
               <p className="text-sm">
-                {tooltipContent}
+                {tooltipContent} Data is limited to the next 7 days of scheduled workouts.
               </p>
             </div>
           </HoverCardContent>

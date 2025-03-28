@@ -19,6 +19,7 @@ interface MetricsTabsProps {
   view: 'weekly' | 'monthly';
   dateRange: { from: Date; to: Date };
   timeFilter: 'week' | 'month' | 'custom';
+  futureDays?: number;
 }
 
 const MetricsTabs: React.FC<MetricsTabsProps> = ({
@@ -29,7 +30,8 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
   isLoading,
   view,
   dateRange,
-  timeFilter
+  timeFilter,
+  futureDays = 7
 }) => {
   return (
     <Tabs defaultValue="exercises" className="w-full mb-8">

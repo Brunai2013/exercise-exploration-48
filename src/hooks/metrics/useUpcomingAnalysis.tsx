@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useCategoryColors } from '@/hooks/useCategoryColors';
-import { parseISO, isAfter, format } from 'date-fns';
+import { parseISO, isAfter, isBefore, format, addDays } from 'date-fns';
 
 export interface CategoryAnalysis {
   id: string;
@@ -17,7 +18,8 @@ export interface CategoryAnalysis {
 
 export function useUpcomingAnalysis(
   rawWorkoutData: any[] = [],
-  shouldUseDemoData: boolean = true // Add shouldUseDemoData parameter with a default
+  shouldUseDemoData: boolean = true,
+  futureDays: number = 7 // New parameter to control future window
 ) {
   const [upcomingWorkoutData, setUpcomingWorkoutData] = useState<CategoryAnalysis[]>([]);
   const { categories } = useCategoryColors();
@@ -25,41 +27,48 @@ export function useUpcomingAnalysis(
   // Process real workout data to find upcoming (future) workouts
   useEffect(() => {
     if (rawWorkoutData.length > 0) {
-      processUpcomingWorkoutData(rawWorkoutData);
+      processUpcomingWorkoutData(rawWorkoutData, futureDays);
     } else if (shouldUseDemoData) {
       // Only generate demo data if shouldUseDemoData is true
-      console.log('Using demo data for upcoming analysis because shouldUseDemoData is true');
+      console.log('Using demo data for upcoming analysis with', futureDays, 'days window');
       generateDemoUpcomingAnalysis();
     } else {
       console.log('No workout data available and not using demo data for upcoming analysis');
       // Return empty array when no workouts and not using demo data
       setUpcomingWorkoutData([]);
     }
-  }, [rawWorkoutData, categories, shouldUseDemoData]); // Add shouldUseDemoData to dependency array
+  }, [rawWorkoutData, categories, shouldUseDemoData, futureDays]); // Add futureDays to dependency array
   
-  const processUpcomingWorkoutData = (workoutsData: any[]) => {
+  const processUpcomingWorkoutData = (workoutsData: any[], days: number) => {
     try {
-      console.log('Processing upcoming workout data from', workoutsData.length, 'workouts');
+      console.log('Processing upcoming workout data from', workoutsData.length, 'workouts with', days, 'day window');
       
       // Get today's date for comparison
       const today = new Date();
+      // Calculate end date of window (today + X days)
+      const futureWindow = addDays(today, days);
       
-      // Filter workouts to only include those with future dates
+      console.log('Future window:', {
+        today: format(today, 'yyyy-MM-dd'),
+        endDate: format(futureWindow, 'yyyy-MM-dd')
+      });
+      
+      // Filter workouts to only include those with dates in the future window
       const futureWorkouts = workoutsData.filter(workout => {
         if (!workout.date) return false;
         const workoutDate = parseISO(workout.date);
-        return isAfter(workoutDate, today);
+        return isAfter(workoutDate, today) && isBefore(workoutDate, futureWindow);
       });
       
-      console.log('Found', futureWorkouts.length, 'future workouts');
+      console.log('Found', futureWorkouts.length, 'future workouts within', days, 'day window');
       
       if (futureWorkouts.length === 0) {
         if (shouldUseDemoData) {
           // Only generate demo data if shouldUseDemoData is true
-          console.log('No future workouts found, using demo data for upcoming analysis');
+          console.log('No future workouts found in window, using demo data for upcoming analysis');
           generateDemoUpcomingAnalysis();
         } else {
-          console.log('No future workouts found and not using demo data');
+          console.log('No future workouts found in window and not using demo data');
           setUpcomingWorkoutData([]);
         }
         return;
@@ -92,7 +101,11 @@ export function useUpcomingAnalysis(
       
       // If we didn't find any exercises with categories, generate demo data
       if (totalExerciseCount === 0) {
-        generateDemoUpcomingAnalysis();
+        if (shouldUseDemoData) {
+          generateDemoUpcomingAnalysis();
+        } else {
+          setUpcomingWorkoutData([]);
+        }
         return;
       }
       
@@ -127,7 +140,7 @@ export function useUpcomingAnalysis(
       // Sort by count (highest first)
       analysisData.sort((a, b) => b.futureCount - a.futureCount);
       
-      console.log('Generated analysis data for', analysisData.length, 'categories');
+      console.log('Generated analysis data for', analysisData.length, 'categories within', days, 'day window');
       setUpcomingWorkoutData(analysisData);
       
     } catch (error) {

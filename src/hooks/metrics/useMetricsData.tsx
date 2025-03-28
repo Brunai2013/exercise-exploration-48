@@ -12,7 +12,8 @@ export function useMetricsData(
   dateRange: { from: Date; to: Date },
   view: 'weekly' | 'monthly',
   refreshKey: number = 0,
-  disableDemoData: boolean = false
+  disableDemoData: boolean = false,
+  futureDays: number = 7 // Add parameter with default value of 7 days
 ) {
   // Get base data (fetches from API)
   const { 
@@ -28,8 +29,8 @@ export function useMetricsData(
   const { exerciseData } = useExerciseProgressData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { frequencyData } = useFrequencyData(rawWorkoutData, shouldUseDemoData, dateRange, view);
   
-  // Pass shouldUseDemoData to useUpcomingAnalysis
-  const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData, shouldUseDemoData);
+  // Pass shouldUseDemoData and futureDays to useUpcomingAnalysis
+  const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData, shouldUseDemoData, futureDays);
 
   return {
     muscleGroupData,

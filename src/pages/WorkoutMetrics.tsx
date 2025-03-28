@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { isAfter, subDays, format } from 'date-fns';
@@ -34,6 +33,9 @@ const WorkoutMetrics = () => {
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('custom');
   const [refreshKey, setRefreshKey] = useState(0);
   const [showDemoData, setShowDemoData] = useState(true);
+  
+  // Define future days window (default 7 days)
+  const futureDays = 7;
   
   // Update date range when time filter changes
   useEffect(() => {
@@ -74,7 +76,7 @@ const WorkoutMetrics = () => {
     upcomingWorkoutData,
     isLoading,
     error
-  } = useMetricsData(dateRange, view, refreshKey, !showDemoData);
+  } = useMetricsData(dateRange, view, refreshKey, !showDemoData, futureDays);
 
   // Show toast if there's an error
   useEffect(() => {
@@ -196,6 +198,7 @@ const WorkoutMetrics = () => {
         view={view}
         dateRange={dateRange}
         timeFilter={timeFilter}
+        futureDays={futureDays}
       />
     </PageContainer>
   );
