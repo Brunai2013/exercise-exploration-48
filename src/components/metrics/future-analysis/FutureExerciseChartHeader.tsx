@@ -25,9 +25,9 @@ const FutureExerciseChartHeader: React.FC<FutureExerciseChartHeaderProps> = ({
     <CardHeader>
       <div className="flex justify-between items-start">
         <div>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle>{title} (Next {futureDays} Days)</CardTitle>
           <CardDescription>
-            {description} (Next {futureDays} Days)
+            {description}
           </CardDescription>
         </div>
         <HoverCard>

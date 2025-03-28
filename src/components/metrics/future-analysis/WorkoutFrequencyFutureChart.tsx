@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
 import { InfoIcon, BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +10,8 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format, addDays, startOfDay, endOfDay } from 'date-fns';
+import { format, addDays, parseISO, isValid } from 'date-fns';
+import FutureExerciseChartHeader from './FutureExerciseChartHeader';
 
 interface WorkoutFrequencyFutureChartProps {
   data: CategoryAnalysis[];
@@ -47,7 +48,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
 }) => {
   // Always initialize hooks at the top level
   const [hasFutureData, setHasFutureData] = useState(false);
-  const [frequencyData, setFrequencyData] = useState<Array<{ name: string; workouts: number; }>>([]);
+  const [frequencyData, setFrequencyData] = useState<Array<{ name: string; workouts: number; date: Date }>>([]);
   
   // Generate frequency data from the upcoming workouts
   useEffect(() => {
@@ -55,7 +56,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     setFrequencyData([]);
     
     // Check if we have data with future counts - fixed to properly check for actual data
-    const hasValidData = data && data.length > 0 && data.some(item => (item.futureCount || 0) > 0);
+    const hasValidData = data && data.length > 0;
     console.log('WorkoutFrequencyFutureChart checking for valid data:', hasValidData, 'from', data?.length || 0, 'items');
     
     setHasFutureData(hasValidData);
@@ -68,33 +69,51 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     
     // Create data for the specified future days
     const today = new Date();
-    let chartData: Array<{ name: string; workouts: number; }> = [];
     
-    if (view === 'weekly') {
-      // Generate data for next X days
-      const nextDays = Array.from({ length: futureDays }, (_, i) => {
-        const day = addDays(today, i);
-        return {
-          name: format(day, 'EEE, MMM d'),
-          workouts: Math.floor(Math.random() * 2) + (i % 2), // Simple placeholder data
-          date: day
-        };
-      });
-      
-      chartData = nextDays.map(day => ({
-        name: day.name,
-        workouts: day.workouts
-      }));
-    } else {
-      // Generate data for the week by day of week
-      const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      chartData = weekDays.map(day => ({
-        name: day,
-        workouts: Math.floor(Math.random() * 2) + (weekDays.indexOf(day) % 2) // Simple placeholder data
-      }));
-    }
+    // Initialize frequencyData with zero workouts for each day
+    const nextDays = Array.from({ length: futureDays }, (_, i) => {
+      const day = addDays(today, i);
+      return {
+        name: format(day, 'EEE, MMM d'),
+        workouts: 0,
+        date: day
+      };
+    });
     
-    setFrequencyData(chartData);
+    // Extract workout dates from the data
+    const futureDates = new Map<string, number>();
+    
+    // Group workouts by date and count them for each date
+    data.forEach(item => {
+      if (item.futureWorkoutDates && Array.isArray(item.futureWorkoutDates)) {
+        item.futureWorkoutDates.forEach(dateStr => {
+          try {
+            // Parse the date string and check if it's valid
+            const date = parseISO(dateStr);
+            if (isValid(date)) {
+              const dayKey = format(date, 'yyyy-MM-dd');
+              futureDates.set(dayKey, (futureDates.get(dayKey) || 0) + 1);
+            }
+          } catch (error) {
+            console.error('Error parsing date:', dateStr, error);
+          }
+        });
+      }
+    });
+    
+    console.log('Future workout dates extracted:', Array.from(futureDates.entries()));
+    
+    // Update frequency data with actual workout counts
+    const updatedFrequencyData = nextDays.map(day => {
+      const dayKey = format(day.date, 'yyyy-MM-dd');
+      const workoutCount = futureDates.has(dayKey) ? 1 : 0; // Count unique days, not workouts
+      return {
+        ...day,
+        workouts: workoutCount
+      };
+    });
+    
+    setFrequencyData(updatedFrequencyData);
   }, [data, view, futureDays]);
 
   if (isLoading) {
@@ -109,29 +128,12 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
   if (!hasFutureData || frequencyData.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>Upcoming Workout Schedule (Next {futureDays} Days)</CardTitle>
-              <CardDescription>
-                See your planned workout frequency
-              </CardDescription>
-            </div>
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
-              </HoverCardTrigger>
-              <HoverCardContent className="w-80">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">About This Chart</h4>
-                  <p className="text-sm">
-                    This shows your upcoming workout schedule for the next {futureDays} days.
-                  </p>
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          </div>
-        </CardHeader>
+        <FutureExerciseChartHeader
+          title="Upcoming Workout Schedule"
+          description="See your planned workout frequency"
+          tooltipContent="This shows your upcoming workout schedule for the next few days."
+          futureDays={futureDays}
+        />
         <CardContent>
           <EmptyState />
         </CardContent>
@@ -141,29 +143,12 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>Upcoming Workout Schedule (Next {futureDays} Days)</CardTitle>
-            <CardDescription>
-              Your planned workout frequency
-            </CardDescription>
-          </div>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <InfoIcon className="h-5 w-5 text-muted-foreground cursor-help" />
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80">
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">About This Chart</h4>
-                <p className="text-sm">
-                  This chart shows how many workouts you have scheduled in the next {futureDays} days.
-                </p>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
-        </div>
-      </CardHeader>
+      <FutureExerciseChartHeader
+        title="Upcoming Workout Schedule"
+        description="Your planned workout frequency"
+        tooltipContent="This chart shows how many workouts you have scheduled for each day in the upcoming period."
+        futureDays={futureDays}
+      />
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -181,7 +166,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
                 }}
               />
               <Tooltip 
-                formatter={(value) => [`${value} workouts`, 'Scheduled']}
+                formatter={(value) => [`${value} ${Number(value) === 1 ? 'workout' : 'workouts'}`, 'Scheduled']}
                 labelFormatter={(label) => `${label}`}
               />
               <Legend />
