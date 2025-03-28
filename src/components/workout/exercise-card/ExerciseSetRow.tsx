@@ -32,11 +32,15 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
   const actualReps = set.actualReps ? String(set.actualReps) : '';
   const completed = Boolean(set.completed);
 
+  // Apply different styling based on compact mode
   const inputClasses = `w-full border rounded ${isCompact ? 'px-1 py-0.5 text-xs h-6' : 'px-2 py-1 text-sm h-8'}`;
+  const fontSizeClass = isCompact ? 'text-xs' : 'text-sm';
+  const buttonSizeClass = isCompact ? 'w-5 h-5 p-0' : 'w-7 h-7 p-0';
+  const iconSizeClass = isCompact ? 'h-2.5 w-2.5' : 'h-3 w-3';
 
   return (
-    <div className="grid grid-cols-12 items-center gap-1 mb-1">
-      <div className={`col-span-1 font-medium ${isCompact ? 'text-xs' : 'text-sm'}`}>{setIndex + 1}</div>
+    <div className={`grid grid-cols-12 items-center gap-1 mb-1`}>
+      <div className={`col-span-1 font-medium ${fontSizeClass}`}>{setIndex + 1}</div>
       
       <div className="col-span-3">
         <input
@@ -49,7 +53,7 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
         />
       </div>
       
-      <div className={`col-span-2 text-center ${isCompact ? 'text-xs' : 'text-sm'}`}>
+      <div className={`col-span-2 text-center ${fontSizeClass}`}>
         {targetReps}
       </div>
       
@@ -64,11 +68,11 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
         />
       </div>
       
-      <div className="col-span-3 flex justify-end space-x-1">
+      <div className="col-span-3 flex justify-end items-center space-x-1">
         <Button
           variant={completed ? "default" : "outline"}
           size="sm"
-          className={`${isCompact ? 'w-5 h-5 px-0' : 'w-7 h-7 px-0'}`}
+          className={buttonSizeClass}
           onClick={(e) => {
             e.stopPropagation();
             onSetCompletion();
@@ -76,7 +80,7 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
           style={getCompletedButtonStyle(completed)}
         >
           {completed ? (
-            <Check className={isCompact ? "h-2.5 w-2.5" : "h-3 w-3"} />
+            <Check className={iconSizeClass} />
           ) : (
             <span className={isCompact ? "text-[8px]" : "text-xs"}>✓</span>
           )}
@@ -86,14 +90,14 @@ const ExerciseSetRow: React.FC<ExerciseSetRowProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className={`${isCompact ? 'w-5 h-5' : 'w-7 h-7'} px-0 text-red-500 hover:text-red-700 hover:bg-red-50`}
+            className={`${buttonSizeClass} text-red-500 hover:text-red-700 hover:bg-red-50`}
             onClick={(e) => {
               e.stopPropagation();
               onRemoveSet();
             }}
             title="Remove set"
           >
-            <Trash2 className={isCompact ? "h-2.5 w-2.5" : "h-3 w-3"} />
+            <Trash2 className={iconSizeClass} />
           </Button>
         )}
       </div>

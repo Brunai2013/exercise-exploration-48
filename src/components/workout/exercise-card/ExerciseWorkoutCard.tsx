@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
@@ -80,7 +81,7 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     } else if (isSelected) {
       classes.push('border-2', 'border-primary/70', 'bg-primary/5');
     } else {
-      classes.push('border-2', 'border-border');
+      classes.push('border', 'border-border');
     }
     
     return classes.join(' ');
@@ -95,27 +96,32 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
     }
   };
 
-  // Determine if we should wrap with a Card or just render the content
-  const cardContent = (
-    <div className={`p-2 cursor-pointer`} onClick={handleCardClick}>
-      <div className="flex items-start">
-        {/* Exercise image - smaller in compact mode */}
-        <div 
-          className={`${isCompact ? 'h-12 w-12' : 'h-24 w-24'} rounded bg-cover bg-center mr-2 flex-shrink-0`}
-          style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
-        />
-        
-        <div className="flex-1 min-w-0">
-          <ExerciseCardHeader
-            exerciseName={exerciseItem.exercise.name}
-            category={category}
-            completedSets={completedSets}
-            totalSets={exerciseSets.length}
-            exerciseProgress={exerciseProgress}
-            isCompact={isCompact}
-            onRemoveFromGroup={onRemoveFromGroup}
-          />
+  // Create a minimized version for when the card is in a group
+  if (inGroup) {
+    return (
+      <div className="p-2 cursor-pointer" onClick={handleCardClick}>
+        <div className="flex flex-col">
+          {/* Minimized header with image, name and category */}
+          <div className="flex items-start mb-1">
+            <div 
+              className="h-12 w-12 rounded bg-cover bg-center mr-2 flex-shrink-0"
+              style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
+            />
+            
+            <div className="flex-1 min-w-0">
+              <ExerciseCardHeader
+                exerciseName={exerciseItem.exercise.name}
+                category={category}
+                completedSets={completedSets}
+                totalSets={exerciseSets.length}
+                exerciseProgress={exerciseProgress}
+                isCompact={true}
+                onRemoveFromGroup={onRemoveFromGroup}
+              />
+            </div>
+          </div>
           
+          {/* Minimized sets grid */}
           <ExerciseSetsGrid
             exerciseSets={exerciseSets}
             exerciseIndex={exerciseIndex}
@@ -123,24 +129,51 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
             onActualRepsChange={onActualRepsChange}
             onSetCompletion={onSetCompletion}
             categoryColor={category.color}
-            isCompact={isCompact}
+            isCompact={true}
             onAddSet={onAddSet}
             onRemoveSet={onRemoveSet}
           />
         </div>
       </div>
-    </div>
-  );
-
-  // If inside a group, don't wrap in Card
-  if (inGroup) {
-    return cardContent;
+    );
   }
 
-  // Otherwise use Card component
+  // Regular card view for non-grouped exercises
   return (
     <Card className={getCardClasses()}>
-      {cardContent}
+      <div className="p-4 cursor-pointer" onClick={handleCardClick}>
+        <div className="flex items-start">
+          {/* Exercise image - regular size for standalone cards */}
+          <div 
+            className="h-20 w-20 rounded bg-cover bg-center mr-3 flex-shrink-0"
+            style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
+          />
+          
+          <div className="flex-1 min-w-0">
+            <ExerciseCardHeader
+              exerciseName={exerciseItem.exercise.name}
+              category={category}
+              completedSets={completedSets}
+              totalSets={exerciseSets.length}
+              exerciseProgress={exerciseProgress}
+              isCompact={false}
+              onRemoveFromGroup={onRemoveFromGroup}
+            />
+            
+            <ExerciseSetsGrid
+              exerciseSets={exerciseSets}
+              exerciseIndex={exerciseIndex}
+              onWeightChange={onWeightChange}
+              onActualRepsChange={onActualRepsChange}
+              onSetCompletion={onSetCompletion}
+              categoryColor={category.color}
+              isCompact={false}
+              onAddSet={onAddSet}
+              onRemoveSet={onRemoveSet}
+            />
+          </div>
+        </div>
+      </div>
     </Card>
   );
 };
