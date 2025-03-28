@@ -4,6 +4,9 @@ import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
 import ExerciseCardHeader from './ExerciseCardHeader';
 import ExerciseSetsGrid from './ExerciseSetsGrid';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface ExerciseWorkoutCardProps {
   exerciseItem: WorkoutExercise;
