@@ -120,6 +120,10 @@ export default {
         'pulse': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' }
+        },
+        'twinkle': {
+          '0%, 100%': { opacity: '0' },
+          '50%': { opacity: '1' }
         }
       },
       animation: {

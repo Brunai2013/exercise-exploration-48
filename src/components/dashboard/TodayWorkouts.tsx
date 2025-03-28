@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getTodayWorkouts } from '@/lib/workouts';
 import { Workout } from '@/lib/types';
@@ -14,10 +13,9 @@ const TodayWorkouts: React.FC = () => {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Format today's date consistently - use local date object
   const today = format(new Date(), 'EEEE, MMMM d');
   
-  console.log('Today component date display:', today); // Debug log
+  console.log('Today component date display:', today);
 
   const refreshWorkouts = async () => {
     try {
@@ -89,7 +87,9 @@ const TodayWorkouts: React.FC = () => {
           <h3 className="text-xl font-bold mb-2 text-gradient">No workouts scheduled for today</h3>
           <p className="text-muted-foreground mb-6">Start your fitness journey by adding a workout for today.</p>
           <Link to="/workout/new">
-            <Button className="animate-pulse bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-full">
+            <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-full relative overflow-hidden group">
+              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              <span className="absolute inset-0 bg-white/30 opacity-0 twinkle-animation"></span>
               <Sparkles className="h-4 w-4 mr-2" />
               Create Your First Workout
             </Button>
