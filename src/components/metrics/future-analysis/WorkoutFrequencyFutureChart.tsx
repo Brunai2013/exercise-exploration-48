@@ -10,12 +10,13 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format, addDays, startOfDay, endOfDay, eachDayOfInterval, isAfter, parseISO } from 'date-fns';
+import { format, addDays, startOfDay, endOfDay } from 'date-fns';
 
 interface WorkoutFrequencyFutureChartProps {
   data: CategoryAnalysis[];
   isLoading: boolean;
   view: 'weekly' | 'monthly';
+  futureDays?: number;
 }
 
 const EmptyState = () => (
@@ -41,7 +42,8 @@ const LoadingState = () => (
 const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = ({ 
   data, 
   isLoading,
-  view
+  view,
+  futureDays = 7
 }) => {
   // Always initialize hooks at the top level
   const [hasFutureData, setHasFutureData] = useState(false);
@@ -64,13 +66,13 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
       return;
     }
     
-    // Create data for next 7 days
+    // Create data for the specified future days
     const today = new Date();
     let chartData: Array<{ name: string; workouts: number; }> = [];
     
     if (view === 'weekly') {
-      // Generate data for next 7 days
-      const nextDays = Array.from({ length: 7 }, (_, i) => {
+      // Generate data for next X days
+      const nextDays = Array.from({ length: futureDays }, (_, i) => {
         const day = addDays(today, i);
         return {
           name: format(day, 'EEE, MMM d'),
@@ -93,7 +95,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     }
     
     setFrequencyData(chartData);
-  }, [data, view]);
+  }, [data, view, futureDays]);
 
   if (isLoading) {
     return (
@@ -110,7 +112,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>Upcoming Workout Schedule (Next 7 Days)</CardTitle>
+              <CardTitle>Upcoming Workout Schedule (Next {futureDays} Days)</CardTitle>
               <CardDescription>
                 See your planned workout frequency
               </CardDescription>
@@ -123,7 +125,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">About This Chart</h4>
                   <p className="text-sm">
-                    This shows your upcoming workout schedule for the next 7 days.
+                    This shows your upcoming workout schedule for the next {futureDays} days.
                   </p>
                 </div>
               </HoverCardContent>
@@ -142,7 +144,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>Upcoming Workout Schedule (Next 7 Days)</CardTitle>
+            <CardTitle>Upcoming Workout Schedule (Next {futureDays} Days)</CardTitle>
             <CardDescription>
               Your planned workout frequency
             </CardDescription>
@@ -155,7 +157,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">About This Chart</h4>
                 <p className="text-sm">
-                  This chart shows how many workouts you have scheduled in the next 7 days.
+                  This chart shows how many workouts you have scheduled in the next {futureDays} days.
                 </p>
               </div>
             </HoverCardContent>

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useCategoryColors } from '@/hooks/useCategoryColors';
-import { parseISO, isAfter, isBefore, format, addDays } from 'date-fns';
+import { parseISO, isAfter, isBefore, format, addDays, startOfDay, endOfDay } from 'date-fns';
 
 export interface CategoryAnalysis {
   id: string;
@@ -19,7 +19,7 @@ export interface CategoryAnalysis {
 export function useUpcomingAnalysis(
   rawWorkoutData: any[] = [],
   shouldUseDemoData: boolean = true,
-  futureDays: number = 7 // New parameter to control future window
+  futureDays: number = 7 // Parameter to control future window
 ) {
   const [upcomingWorkoutData, setUpcomingWorkoutData] = useState<CategoryAnalysis[]>([]);
   const { categories } = useCategoryColors();
@@ -37,30 +37,49 @@ export function useUpcomingAnalysis(
       // Return empty array when no workouts and not using demo data
       setUpcomingWorkoutData([]);
     }
-  }, [rawWorkoutData, categories, shouldUseDemoData, futureDays]); // Add futureDays to dependency array
+  }, [rawWorkoutData, categories, shouldUseDemoData, futureDays]); 
   
   const processUpcomingWorkoutData = (workoutsData: any[], days: number) => {
     try {
       console.log('Processing upcoming workout data from', workoutsData.length, 'workouts with', days, 'day window');
       
-      // Get today's date for comparison
-      const today = new Date();
+      // Get today's date for comparison - use start of day for consistent comparison
+      const today = startOfDay(new Date());
       // Calculate end date of window (today + X days)
-      const futureWindow = addDays(today, days);
+      const futureWindow = endOfDay(addDays(today, days));
       
       console.log('Future window:', {
-        today: format(today, 'yyyy-MM-dd'),
-        endDate: format(futureWindow, 'yyyy-MM-dd')
+        today: format(today, 'yyyy-MM-dd HH:mm:ss'),
+        endDate: format(futureWindow, 'yyyy-MM-dd HH:mm:ss')
+      });
+      
+      // Log all workout dates for debugging
+      workoutsData.forEach(workout => {
+        if (workout.date) {
+          const workoutDate = parseISO(workout.date);
+          console.log('Workout:', workout.name, 'date:', format(workoutDate, 'yyyy-MM-dd'), 
+            'isAfter today:', isAfter(workoutDate, today), 
+            'isBefore window end:', isBefore(workoutDate, futureWindow),
+            'would be included:', isAfter(workoutDate, today) && isBefore(workoutDate, futureWindow)
+          );
+        }
       });
       
       // Filter workouts to only include those with dates in the future window
       const futureWorkouts = workoutsData.filter(workout => {
         if (!workout.date) return false;
-        const workoutDate = parseISO(workout.date);
-        return isAfter(workoutDate, today) && isBefore(workoutDate, futureWindow);
+        
+        // Parse the date and set to beginning of day for consistent comparison
+        const workoutDate = startOfDay(parseISO(workout.date));
+        
+        // Check if workout is after today and before end of future window
+        return isAfter(workoutDate, today) || isBefore(workoutDate, futureWindow);
       });
       
       console.log('Found', futureWorkouts.length, 'future workouts within', days, 'day window');
+      futureWorkouts.forEach(workout => {
+        console.log('Future workout:', workout.name, 'date:', workout.date);
+      });
       
       if (futureWorkouts.length === 0) {
         if (shouldUseDemoData) {
@@ -81,6 +100,9 @@ export function useUpcomingAnalysis(
       
       // Process each future workout
       futureWorkouts.forEach(workout => {
+        console.log('Processing future workout:', workout.name, 'with', 
+          workout.workout_exercises?.length || 0, 'exercises');
+          
         if (workout.workout_exercises && Array.isArray(workout.workout_exercises)) {
           workout.workout_exercises.forEach((exerciseEntry: any) => {
             const exercise = exerciseEntry.exercises;
@@ -94,16 +116,23 @@ export function useUpcomingAnalysis(
               // Count this exercise for the category
               categoryExerciseCounts[exercise.category]++;
               totalExerciseCount++;
+              
+              console.log('Found exercise:', exercise.name, 'category:', 
+                categoryNames[exercise.category], 'count:', categoryExerciseCounts[exercise.category]);
             }
           });
         }
       });
       
+      console.log('Total exercise count across all future workouts:', totalExerciseCount);
+      
       // If we didn't find any exercises with categories, generate demo data
       if (totalExerciseCount === 0) {
         if (shouldUseDemoData) {
+          console.log('No exercises with categories found in future workouts, using demo data');
           generateDemoUpcomingAnalysis();
         } else {
+          console.log('No exercises with categories and not using demo data');
           setUpcomingWorkoutData([]);
         }
         return;

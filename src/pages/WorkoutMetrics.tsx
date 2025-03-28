@@ -34,7 +34,7 @@ const WorkoutMetrics = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showDemoData, setShowDemoData] = useState(true);
   
-  // Define future days window (default 7 days)
+  // Define future days window (7 days)
   const futureDays = 7;
   
   // Update date range when time filter changes

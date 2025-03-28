@@ -61,6 +61,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
         <MuscleGroupsFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
+          futureDays={futureDays}
         />
       </TabsContent>
       
@@ -75,6 +76,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
         <ExerciseProgressFutureChart 
           data={upcomingWorkoutData}
           isLoading={isLoading}
+          futureDays={futureDays}
         />
       </TabsContent>
       
@@ -91,6 +93,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
           data={upcomingWorkoutData}
           isLoading={isLoading}
           view={view}
+          futureDays={futureDays}
         />
       </TabsContent>
     </Tabs>

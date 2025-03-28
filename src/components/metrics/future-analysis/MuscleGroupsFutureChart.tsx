@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -10,13 +11,13 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import FutureExerciseChartHeader from './FutureExerciseChartHeader';
-import MuscleGroupTiles from '../muscle-groups/MuscleGroupTiles';
 import FutureTipSection from './FutureTipSection';
 import { renderCustomizedLabel, renderActiveShape, usePieActiveState } from '../muscle-groups/MuscleGroupChartRenderers';
 
 interface MuscleGroupsFutureChartProps {
   data: CategoryAnalysis[];
   isLoading: boolean;
+  futureDays?: number;
 }
 
 // Component for empty state
@@ -41,7 +42,11 @@ const LoadingState = () => (
   </div>
 );
 
-const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data, isLoading }) => {
+const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ 
+  data, 
+  isLoading, 
+  futureDays = 7 
+}) => {
   const { activeIndex, onPieEnter } = usePieActiveState();
 
   // Always use the same rendering path to avoid hook order issues
@@ -85,9 +90,12 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
 
   return (
     <Card className="overflow-hidden h-full">
-      <FutureExerciseChartHeader title="Upcoming Muscle Group Distribution" 
-                                description="See what muscle groups you'll be focusing on in the future" 
-                                tooltipContent="This chart shows the distribution of muscle groups in your upcoming scheduled workouts. It helps identify which muscle groups you'll be working on and their relative proportions." />
+      <FutureExerciseChartHeader 
+        title="Upcoming Muscle Group Distribution" 
+        description="See what muscle groups you'll be focusing on in the future" 
+        tooltipContent="This chart shows the distribution of muscle groups in your upcoming scheduled workouts. It helps identify which muscle groups you'll be working on and their relative proportions."
+        futureDays={futureDays}
+      />
       <CardContent className="p-0">
         {!hasFutureData ? (
           <EmptyState />

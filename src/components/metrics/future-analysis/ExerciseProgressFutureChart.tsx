@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -10,11 +11,13 @@ import FutureTipSection from "./FutureTipSection";
 interface ExerciseProgressFutureChartProps {
   data: CategoryAnalysis[];
   isLoading: boolean;
+  futureDays?: number;
 }
 
 const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = ({ 
   data, 
-  isLoading
+  isLoading,
+  futureDays = 7
 }) => {
   if (isLoading) {
     return <Card><LoadingState /></Card>;
@@ -58,6 +61,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
           title="Upcoming Exercise Distribution"
           description="See what exercises you'll be doing in your future workouts"
           tooltipContent="This chart shows the exercises you'll be performing in your upcoming workouts, giving you insight into your future training plan."
+          futureDays={futureDays}
         />
         <CardContent>
           <EmptyState />
@@ -72,6 +76,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
         title="Upcoming Exercise Distribution"
         description="See what exercises you'll be doing in your future workouts"
         tooltipContent="This chart shows the exercises you'll be performing in your upcoming workouts, giving you insight into your future training plan."
+        futureDays={futureDays}
       />
       <CardContent>
         <h3 className="font-medium text-gray-700 text-lg mb-4">Exercise Breakdown</h3>
