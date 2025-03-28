@@ -52,12 +52,14 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
   
   // Generate frequency data from the upcoming workouts
   useEffect(() => {
+    console.log('WorkoutFrequencyFutureChart - Processing data...');
+    
     // Reset state first to avoid stale data
     setFrequencyData([]);
     
-    // Check if we have data with future counts - fixed to properly check for actual data
-    const hasValidData = data && data.length > 0;
-    console.log('WorkoutFrequencyFutureChart checking for valid data:', hasValidData, 'from', data?.length || 0, 'items');
+    // Check if we have data with future workout dates
+    const hasValidData = data && data.length > 0 && data.some(item => item.futureWorkoutDates && item.futureWorkoutDates.length > 0);
+    console.log('WorkoutFrequencyFutureChart - Has valid data with dates:', hasValidData, 'from', data?.length || 0, 'items');
     
     setHasFutureData(hasValidData);
     
@@ -80,39 +82,55 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
       };
     });
     
-    // Extract workout dates from the data
-    const futureDates = new Map<string, number>();
+    // Create a map to count workouts for each date
+    const workoutCountByDate = new Map<string, number>();
     
-    // Group workouts by date and count them for each date
-    data.forEach(item => {
-      if (item.futureWorkoutDates && Array.isArray(item.futureWorkoutDates)) {
-        item.futureWorkoutDates.forEach(dateStr => {
-          try {
-            // Parse the date string and check if it's valid
-            const date = parseISO(dateStr);
-            if (isValid(date)) {
-              const dayKey = format(date, 'yyyy-MM-dd');
-              futureDates.set(dayKey, (futureDates.get(dayKey) || 0) + 1);
+    // Loop through all future workout dates from all categories and count them
+    data.forEach(category => {
+      if (category.futureWorkoutDates && Array.isArray(category.futureWorkoutDates)) {
+        // Since all categories will have the same workout dates (as we're passing the same dates to all),
+        // we only need to process the first category with valid dates
+        const firstWithDates = data.find(item => 
+          item.futureWorkoutDates && 
+          Array.isArray(item.futureWorkoutDates) && 
+          item.futureWorkoutDates.length > 0
+        );
+        
+        if (firstWithDates && firstWithDates.futureWorkoutDates) {
+          console.log('WorkoutFrequencyFutureChart - Found dates:', firstWithDates.futureWorkoutDates);
+          
+          // Count each date only once - we're counting workout days, not exercises
+          firstWithDates.futureWorkoutDates.forEach(dateStr => {
+            try {
+              const date = parseISO(dateStr);
+              if (isValid(date)) {
+                const dayKey = format(date, 'yyyy-MM-dd');
+                workoutCountByDate.set(dayKey, 1); // Set to 1 (we want to count days with workouts, not total exercises)
+              }
+            } catch (error) {
+              console.error('Error parsing date:', dateStr, error);
             }
-          } catch (error) {
-            console.error('Error parsing date:', dateStr, error);
-          }
-        });
+          });
+          
+          // Only process the first category to avoid double counting
+          return;
+        }
       }
     });
     
-    console.log('Future workout dates extracted:', Array.from(futureDates.entries()));
+    console.log('WorkoutFrequencyFutureChart - Workout dates mapped:', Array.from(workoutCountByDate.entries()));
     
     // Update frequency data with actual workout counts
     const updatedFrequencyData = nextDays.map(day => {
       const dayKey = format(day.date, 'yyyy-MM-dd');
-      const workoutCount = futureDates.has(dayKey) ? 1 : 0; // Count unique days, not workouts
+      const hasWorkout = workoutCountByDate.has(dayKey);
       return {
         ...day,
-        workouts: workoutCount
+        workouts: hasWorkout ? 1 : 0
       };
     });
     
+    console.log('WorkoutFrequencyFutureChart - Final data:', updatedFrequencyData);
     setFrequencyData(updatedFrequencyData);
   }, [data, view, futureDays]);
 
@@ -164,6 +182,8 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
                   angle: -90, 
                   position: 'insideLeft' 
                 }}
+                domain={[0, 1]}
+                ticks={[0, 1]}
               />
               <Tooltip 
                 formatter={(value) => [`${value} ${Number(value) === 1 ? 'workout' : 'workouts'}`, 'Scheduled']}

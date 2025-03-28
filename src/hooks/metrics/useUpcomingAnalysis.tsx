@@ -59,10 +59,8 @@ export function useUpcomingAnalysis(
         if (workout.date) {
           const workoutDate = parseISO(workout.date);
           console.log('Workout:', workout.name, 'date:', format(workoutDate, 'yyyy-MM-dd'), 
-            'isAfter today:', isAfter(workoutDate, today) || format(workoutDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'), 
-            'isBefore window end:', isBefore(workoutDate, futureWindow) || format(workoutDate, 'yyyy-MM-dd') === format(futureWindow, 'yyyy-MM-dd'),
-            'would be included:', (isAfter(workoutDate, today) || format(workoutDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) 
-              && (isBefore(workoutDate, futureWindow) || format(workoutDate, 'yyyy-MM-dd') === format(futureWindow, 'yyyy-MM-dd'))
+            'isAfter/Equal today:', isAfter(workoutDate, today) || format(workoutDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'), 
+            'isBefore/Equal window end:', isBefore(workoutDate, futureWindow) || format(workoutDate, 'yyyy-MM-dd') === format(futureWindow, 'yyyy-MM-dd')
           );
         }
       });
@@ -104,7 +102,7 @@ export function useUpcomingAnalysis(
       // Count exercises by category
       const categoryExerciseCounts: Record<string, number> = {};
       const categoryNames: Record<string, string> = {};
-      const categoryWorkoutDates: Record<string, Set<string>> = {}; // Track unique workout dates per category
+      const exerciseWorkoutDates: Set<string> = new Set(); // Track all workout dates
       let totalExerciseCount = 0;
       
       // Process each future workout
@@ -113,6 +111,11 @@ export function useUpcomingAnalysis(
           workout.workout_exercises?.length || 0, 'exercises', 'date:', workout.date);
           
         if (workout.workout_exercises && Array.isArray(workout.workout_exercises)) {
+          // Add this workout date to the set of dates
+          if (workout.date) {
+            exerciseWorkoutDates.add(workout.date);
+          }
+          
           workout.workout_exercises.forEach((exerciseEntry: any) => {
             const exercise = exerciseEntry.exercises;
             if (exercise && exercise.category) {
@@ -120,17 +123,11 @@ export function useUpcomingAnalysis(
               if (!categoryExerciseCounts[exercise.category]) {
                 categoryExerciseCounts[exercise.category] = 0;
                 categoryNames[exercise.category] = getCategoryName(exercise.category, categories);
-                categoryWorkoutDates[exercise.category] = new Set();
               }
               
               // Count this exercise for the category
               categoryExerciseCounts[exercise.category]++;
               totalExerciseCount++;
-              
-              // Add workout date to this category's set of dates
-              if (workout.date) {
-                categoryWorkoutDates[exercise.category].add(workout.date);
-              }
               
               console.log('Found exercise:', exercise.name, 'category:', 
                 categoryNames[exercise.category], 'count:', categoryExerciseCounts[exercise.category]);
@@ -153,15 +150,9 @@ export function useUpcomingAnalysis(
         return;
       }
       
-      // Collect all unique workout dates for frequency chart
-      const allWorkoutDates = new Set<string>();
-      futureWorkouts.forEach(workout => {
-        if (workout.date) {
-          allWorkoutDates.add(workout.date);
-        }
-      });
-      
-      console.log('All unique workout dates:', [...allWorkoutDates]);
+      // Convert workout dates set to array for passing to components
+      const allWorkoutDates = Array.from(exerciseWorkoutDates);
+      console.log('All unique workout dates:', allWorkoutDates);
       
       // Create formatted data for analysis
       const analysisData: CategoryAnalysis[] = Object.entries(categoryExerciseCounts).map(
@@ -171,9 +162,6 @@ export function useUpcomingAnalysis(
           
           // Get color from categories if available
           const categoryColor = getCategoryColor(categoryId, categories);
-          
-          // Convert Set to Array for the dates
-          const workoutDates = [...categoryWorkoutDates[categoryId]];
           
           // Determine a suggested action based on past vs future counts
           const pastCount = Math.floor(Math.random() * 10) + 5; // Simple placeholder for past data
@@ -196,7 +184,7 @@ export function useUpcomingAnalysis(
             futurePercentage: percentage,
             color: categoryColor,
             suggestion,
-            futureWorkoutDates: [...allWorkoutDates] // Add all unique workout dates for frequency chart
+            futureWorkoutDates: allWorkoutDates // Add all unique workout dates for frequency chart
           };
         }
       );
@@ -247,6 +235,18 @@ export function useUpcomingAnalysis(
       return;
     }
     
+    // Generate some demo workout dates for the frequency chart
+    const today = new Date();
+    const demoDates: string[] = [];
+    
+    // Create a more realistic pattern - not every day has workouts
+    for (let i = 0; i < futureDays; i++) {
+      if (Math.random() > 0.7) { // 30% chance of having a workout on this day
+        const date = addDays(today, i);
+        demoDates.push(format(date, 'yyyy-MM-dd'));
+      }
+    }
+    
     // This would typically use ML or statistical analysis of past workouts
     const upcomingAnalysis: CategoryAnalysis[] = validCategories.slice(0, Math.min(6, validCategories.length)).map((category, index) => {
       // Extract color from Tailwind class for consistent coloring
@@ -259,16 +259,6 @@ export function useUpcomingAnalysis(
       // Generate random but plausible data
       const futureCount = Math.floor(Math.random() * 5) + 1;
       const futurePercentage = Math.floor(Math.random() * 30) + 10;
-      
-      // Generate some demo workout dates for the frequency chart
-      const today = new Date();
-      const demoDates: string[] = [];
-      for (let i = 0; i < futureDays; i++) {
-        if (Math.random() > 0.7) { // 30% chance of having a workout on this day
-          const date = addDays(today, i);
-          demoDates.push(format(date, 'yyyy-MM-dd'));
-        }
-      }
       
       return {
         id: `upcoming-${index}`,
@@ -285,7 +275,7 @@ export function useUpcomingAnalysis(
       };
     });
     
-    console.log('Generated demo upcoming analysis data:', upcomingAnalysis.length);
+    console.log('Generated demo upcoming analysis data:', upcomingAnalysis.length, 'with dates:', demoDates);
     setUpcomingWorkoutData(upcomingAnalysis);
   };
 

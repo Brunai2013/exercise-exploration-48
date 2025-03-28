@@ -83,12 +83,14 @@ export const getUpcomingWorkouts = async (): Promise<Workout[]> => {
     .gt('date', todayString)
     .eq('archived', false) // Filter out archived workouts
     .order('date', { ascending: true })
-    .limit(3);
+    .limit(10); // Increased limit to get more future workouts
   
   if (error) {
     console.error('Error fetching upcoming workouts:', error);
     return [];
   }
+  
+  console.log(`Found ${data?.length || 0} upcoming workouts after ${todayString}`);
   
   return formatWorkoutsFromDb(data || []);
 };
@@ -180,6 +182,19 @@ export const getWorkoutById = async (id: string): Promise<Workout | null> => {
 export const getWorkoutsForMetrics = async (from: string, to: string): Promise<any[]> => {
   console.log(`Fetching metrics data from ${from} to ${to}`);
   
+  // Get today's date to enable finding future workouts
+  const today = new Date();
+  const todayFormatted = today.toISOString().split('T')[0];
+  
+  // For future workouts, we need to get workouts from today onwards
+  const isFuturePeriod = from >= todayFormatted;
+  
+  // For past workouts, use the completed flag. For future workouts, drop this constraint
+  const completedFilter = isFuturePeriod ? {} : { completed: true };
+  
+  console.log('Using completed filter:', completedFilter, 'for period', from, 'to', to, 
+    'isFuturePeriod:', isFuturePeriod);
+  
   // Use a more optimized query specifically for metrics
   const { data, error } = await supabase
     .from('workouts')
@@ -196,8 +211,8 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
     `)
     .gte('date', from)
     .lte('date', to)
-    .eq('completed', true)
     .eq('archived', false) // Explicitly filter out archived workouts
+    .match(completedFilter)
     .order('date', { ascending: false });
   
   if (error) {
@@ -207,12 +222,16 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
   
   // Log more detailed information about found workouts
   console.log(`Found ${data?.length || 0} workouts for metrics within range ${from} to ${to}`);
-  console.log(`All workouts have archived=false: ${data?.every(w => w.archived === false)}`);
   
-  // Log the first workout found (if any) to help with debugging
-  if (data && data.length > 0) {
-    console.log('Sample workout data:', JSON.stringify(data[0], null, 2));
-  }
+  // Group workouts by date for debugging
+  const workoutsByDate = data?.reduce((acc, workout) => {
+    const date = workout.date;
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(workout.name);
+    return acc;
+  }, {});
+  
+  console.log('Workouts by date:', workoutsByDate);
   
   return data || [];
 };
