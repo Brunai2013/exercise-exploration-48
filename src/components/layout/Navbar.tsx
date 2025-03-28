@@ -25,7 +25,7 @@ const Navbar = () => {
   const primaryNavItems = [
     { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { href: '/calendar', label: 'Calendar', icon: <Calendar className="h-5 w-5" /> },
-    { href: '/exercise-library', label: 'Exercise', icon: <Dumbbell className="h-5 w-5" /> },
+    { href: '/exercise-library', label: 'Library', icon: <Dumbbell className="h-5 w-5" /> },
   ];
 
   // All navigation items including those in the dropdown
