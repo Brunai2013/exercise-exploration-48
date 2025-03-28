@@ -61,23 +61,21 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   }, [exercises, onAddSet, onRemoveSet, groupType]);
   
   return (
-    <Card className="mb-5 overflow-hidden border border-primary/20 bg-primary/5 rounded-xl">
-      <div className="bg-primary/10 p-2 flex items-center justify-between">
-        <div className="flex items-center">
-          <Layers className="h-4 w-4 mr-2" />
-          <Badge variant="outline" className="font-semibold text-xs">
-            {groupType === 'superset' ? 'Superset' : 'Circuit'}
-          </Badge>
-          <span className="ml-2 text-xs text-muted-foreground">
-            {progress}% complete
-          </span>
+    <Card className="mb-4 overflow-hidden rounded-lg shadow-sm border">
+      <div className="bg-slate-100 py-2 px-3 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Layers className="h-4 w-4 text-slate-600" />
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm">{groupType === 'superset' ? 'Superset' : 'Circuit'}</span>
+            <span className="text-xs text-slate-500">{progress}% complete</span>
+          </div>
         </div>
         
         {onRemoveFromGroup && (
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-6 w-6 p-0" 
+            className="h-6 w-6 p-0 text-slate-600 hover:text-red-500" 
             title="Ungroup all exercises"
             onClick={() => {
               exercises.forEach(ex => onRemoveFromGroup(ex.id));
@@ -88,12 +86,12 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
         )}
       </div>
       
-      <div className="grid grid-cols-2 gap-2 p-2">
+      <div className="p-2 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-2">
         {exercises.map((exercise) => {
           const exerciseIndex = exerciseIndexMap[exercise.id];
           
           return (
-            <div key={exercise.id} className="border rounded-lg overflow-hidden bg-white">
+            <div key={exercise.id} className="bg-white border rounded-md overflow-hidden">
               <ExerciseWorkoutCard
                 exerciseItem={exercise}
                 exerciseIndex={exerciseIndex}
