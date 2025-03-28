@@ -2,16 +2,15 @@
 import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { WorkoutExercise } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
-import { Layers, X, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import GroupCardHeader from './group-card/GroupCardHeader';
+import GroupExercisesGrid from './group-card/GroupExercisesGrid';
 
 interface ExerciseGroupCardProps {
   groupType: 'superset' | 'circuit';
   exercises: WorkoutExercise[];
   currentExerciseIndex: number;
-  exerciseIndexMap: Record<string, number>; // Maps exercise IDs to their indices in the full list
+  exerciseIndexMap: Record<string, number>;
   exerciseCategories: Record<string, {name: string, color: string}>;
   onSetCompletion: (exerciseIndex: number, setIndex: number, completed: boolean) => void;
   onWeightChange: (exerciseIndex: number, setIndex: number, weight: string) => void;
@@ -36,8 +35,6 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   onAddSet,
   onRemoveSet
 }) => {
-  const isMobile = useIsMobile();
-  
   // Calculate overall group completion
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
   const completedSets = exercises.reduce(
@@ -62,183 +59,30 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
     });
   }, [exercises, onAddSet, onRemoveSet, groupType]);
 
-  // Create exercise pairs for 2-column layout
-  const getExercisePairs = () => {
-    const pairs = [];
-    for (let i = 0; i < exercises.length; i += 2) {
-      pairs.push(exercises.slice(i, i + 2));
+  const handleUngroupAll = () => {
+    if (onRemoveFromGroup) {
+      exercises.forEach(ex => onRemoveFromGroup(ex.id));
     }
-    return pairs;
   };
-
-  const exercisePairs = getExercisePairs();
   
   return (
     <Card className="overflow-hidden rounded-md border shadow-sm w-full bg-white relative border-green-300">
-      <div className="bg-green-100 py-1.5 px-3 flex items-center justify-between border-b border-green-200">
-        <div className="flex items-center space-x-2">
-          <Layers className="h-4 w-4 text-green-600" />
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm text-green-800">Circuit</span>
-            <span className="text-xs text-green-700">{progress}% complete</span>
-          </div>
-        </div>
-        
-        {onRemoveFromGroup && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-6 w-6 p-0 text-green-600 hover:text-red-500" 
-            title="Ungroup all exercises"
-            onClick={() => {
-              exercises.forEach(ex => onRemoveFromGroup(ex.id));
-            }}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+      <GroupCardHeader 
+        progress={progress} 
+        onUngroupAll={onRemoveFromGroup ? handleUngroupAll : undefined} 
+      />
       
-      <div className="p-3">
-        <div className="space-y-3">
-          {exercisePairs.map((pair, pairIndex) => (
-            <div key={`pair-${pairIndex}`} className="grid grid-cols-2 gap-2">
-              {pair.map((exercise) => {
-                const exerciseIndex = exerciseIndexMap[exercise.id];
-                const category = exerciseCategories[exercise.exercise.category] || { name: 'Uncategorized', color: 'bg-gray-200 text-gray-700' };
-                const completedSets = exercise.sets.filter(s => s.completed).length;
-                
-                return (
-                  <div key={exercise.id} className="border rounded-md overflow-hidden bg-white">
-                    {/* Exercise Header */}
-                    <div className="p-2 pb-0">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <img 
-                            src={exercise.exercise.imageUrl || '/placeholder.svg'} 
-                            alt={exercise.exercise.name}
-                            className="w-10 h-10 object-cover rounded-md flex-shrink-0"
-                          />
-                          <div>
-                            <h3 className="text-xs font-medium line-clamp-1">{exercise.exercise.name}</h3>
-                            <div className="flex items-center space-x-1">
-                              <Badge className={`text-xs px-1.5 py-0 h-4 ${category.color}`}>
-                                {category.name}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {completedSets}/{exercise.sets.length} sets
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {onRemoveFromGroup && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 flex-shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onRemoveFromGroup(exercise.id);
-                            }}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Sets Table */}
-                    <div className="p-2">
-                      {/* Header Row */}
-                      <div className="grid grid-cols-[16px_1fr_30px_30px_30px] gap-1 text-xs font-medium mb-1">
-                        <div className="text-center">#</div>
-                        <div>Weight</div>
-                        <div className="text-center">Reps</div>
-                        <div className="text-center">Act</div>
-                        <div className="text-center">Done</div>
-                      </div>
-                      
-                      {/* Set Rows */}
-                      {exercise.sets.map((set, setIndex) => (
-                        <div 
-                          key={set.id || `set-${setIndex}`} 
-                          className="grid grid-cols-[16px_1fr_30px_30px_30px] gap-1 items-center mb-1 text-xs"
-                        >
-                          <div className="text-center font-medium">{setIndex + 1}</div>
-                          <div>
-                            <input
-                              type="text"
-                              value={set.weight || ''}
-                              placeholder="lb/kg"
-                              className="w-full h-6 px-1 text-xs border rounded"
-                              onChange={(e) => onWeightChange(exerciseIndex, setIndex, e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className="text-center">{set.targetReps}</div>
-                          <div className="text-center">
-                            <input
-                              type="text"
-                              value={set.actualReps || ''}
-                              placeholder={String(set.targetReps)}
-                              className="w-full h-6 px-1 text-xs border rounded"
-                              onChange={(e) => onActualRepsChange(exerciseIndex, setIndex, e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className="flex justify-center items-center">
-                            <Button
-                              variant={set.completed ? "default" : "outline"}
-                              size="sm"
-                              className={`h-5 w-5 p-0 min-w-0 ${set.completed ? 'bg-blue-600 text-white' : ''}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSetCompletion(exerciseIndex, setIndex, !set.completed);
-                              }}
-                            >
-                              {set.completed ? "✓" : ""}
-                            </Button>
-                            
-                            {onRemoveSet && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 w-5 p-0 min-w-0 text-red-500 ml-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onRemoveSet(exerciseIndex, setIndex);
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {/* Add Set Button */}
-                      {onAddSet && (
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          className="w-full text-xs h-6 mt-1 border-dashed"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddSet(exerciseIndex);
-                          }}
-                        >
-                          <Plus className="h-3 w-3 mr-1" /> Add Set
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
+      <GroupExercisesGrid
+        exercises={exercises}
+        exerciseIndexMap={exerciseIndexMap}
+        exerciseCategories={exerciseCategories}
+        onSetCompletion={onSetCompletion}
+        onWeightChange={onWeightChange}
+        onActualRepsChange={onActualRepsChange}
+        onRemoveFromGroup={onRemoveFromGroup}
+        onAddSet={onAddSet}
+        onRemoveSet={onRemoveSet}
+      />
     </Card>
   );
 };
