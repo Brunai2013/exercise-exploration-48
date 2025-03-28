@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
 import { Progress } from "@/components/ui/progress";
@@ -65,11 +64,16 @@ const getSuggestionIcon = (suggestion: 'increase' | 'decrease' | 'maintain') => 
 };
 
 const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) => {
+  console.log('UpcomingAnalysis component rendering with', data?.length || 0, 'items, isLoading:', isLoading);
+  
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }
   
-  if (!data.length) {
+  const hasValidData = data && data.length > 0;
+  console.log('UpcomingAnalysis has valid data:', hasValidData);
+  
+  if (!hasValidData) {
     return (
       <Card>
         <CardHeader>
@@ -103,9 +107,9 @@ const UpcomingAnalysis: React.FC<UpcomingAnalysisProps> = ({ data, isLoading }) 
     );
   }
 
-  // Has both past and future workouts?
   const hasPastWorkouts = data.some(item => (item.pastCount || 0) > 0);
   const hasFutureWorkouts = data.some(item => (item.futureCount || 0) > 0);
+  console.log('UpcomingAnalysis has past workouts:', hasPastWorkouts, 'has future workouts:', hasFutureWorkouts);
   
   if (!hasPastWorkouts || !hasFutureWorkouts) {
     return (

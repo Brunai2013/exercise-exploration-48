@@ -12,7 +12,7 @@ export function useMetricsData(
   dateRange: { from: Date; to: Date },
   view: 'weekly' | 'monthly',
   refreshKey: number = 0,
-  disableDemoData: boolean = false // New parameter
+  disableDemoData: boolean = false // This parameter is properly passed to useBaseMetricsData
 ) {
   // Get base data (fetches from API)
   const { 
@@ -27,7 +27,9 @@ export function useMetricsData(
   const { muscleGroupData } = useMuscleGroupData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { exerciseData } = useExerciseProgressData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { frequencyData } = useFrequencyData(rawWorkoutData, shouldUseDemoData, dateRange, view);
-  const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData);
+  
+  // The issue is here - we need to pass shouldUseDemoData to useUpcomingAnalysis too
+  const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData, shouldUseDemoData);
 
   return {
     muscleGroupData,

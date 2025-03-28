@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useCategoryColors } from '@/hooks/useCategoryColors';
 import { parseISO, isAfter, format } from 'date-fns';
@@ -16,7 +15,10 @@ export interface CategoryAnalysis {
   suggestion: 'increase' | 'decrease' | 'maintain';
 }
 
-export function useUpcomingAnalysis(rawWorkoutData: any[] = []) {
+export function useUpcomingAnalysis(
+  rawWorkoutData: any[] = [],
+  shouldUseDemoData: boolean = true // Add shouldUseDemoData parameter with a default
+) {
   const [upcomingWorkoutData, setUpcomingWorkoutData] = useState<CategoryAnalysis[]>([]);
   const { categories } = useCategoryColors();
   
@@ -24,10 +26,16 @@ export function useUpcomingAnalysis(rawWorkoutData: any[] = []) {
   useEffect(() => {
     if (rawWorkoutData.length > 0) {
       processUpcomingWorkoutData(rawWorkoutData);
-    } else {
+    } else if (shouldUseDemoData) {
+      // Only generate demo data if shouldUseDemoData is true
+      console.log('Using demo data for upcoming analysis because shouldUseDemoData is true');
       generateDemoUpcomingAnalysis();
+    } else {
+      console.log('No workout data available and not using demo data for upcoming analysis');
+      // Return empty array when no workouts and not using demo data
+      setUpcomingWorkoutData([]);
     }
-  }, [rawWorkoutData, categories]);
+  }, [rawWorkoutData, categories, shouldUseDemoData]); // Add shouldUseDemoData to dependency array
   
   const processUpcomingWorkoutData = (workoutsData: any[]) => {
     try {
@@ -46,8 +54,14 @@ export function useUpcomingAnalysis(rawWorkoutData: any[] = []) {
       console.log('Found', futureWorkouts.length, 'future workouts');
       
       if (futureWorkouts.length === 0) {
-        // If no future workouts, generate demo data
-        generateDemoUpcomingAnalysis();
+        if (shouldUseDemoData) {
+          // Only generate demo data if shouldUseDemoData is true
+          console.log('No future workouts found, using demo data for upcoming analysis');
+          generateDemoUpcomingAnalysis();
+        } else {
+          console.log('No future workouts found and not using demo data');
+          setUpcomingWorkoutData([]);
+        }
         return;
       }
       
@@ -118,8 +132,14 @@ export function useUpcomingAnalysis(rawWorkoutData: any[] = []) {
       
     } catch (error) {
       console.error('Error processing upcoming workout data:', error);
-      // Fall back to demo data in case of error
-      generateDemoUpcomingAnalysis();
+      if (shouldUseDemoData) {
+        // Only fall back to demo data if shouldUseDemoData is true
+        console.log('Error processing data, falling back to demo data for upcoming analysis');
+        generateDemoUpcomingAnalysis();
+      } else {
+        console.log('Error processing data and not using demo data');
+        setUpcomingWorkoutData([]);
+      }
     }
   };
   
@@ -177,6 +197,7 @@ export function useUpcomingAnalysis(rawWorkoutData: any[] = []) {
       };
     });
     
+    console.log('Generated demo upcoming analysis data:', upcomingAnalysis.length);
     setUpcomingWorkoutData(upcomingAnalysis);
   };
 

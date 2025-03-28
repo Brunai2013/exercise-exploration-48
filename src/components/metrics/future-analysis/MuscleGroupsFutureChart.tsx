@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -48,7 +47,10 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
   // Always use the same rendering path to avoid hook order issues
   // Prepare data for pie chart - do this unconditionally to avoid hook ordering issues
   const pieData = React.useMemo(() => {
-    return data
+    // More detailed logging to help debug
+    console.log('MuscleGroupsFutureChart processing data:', data?.length || 0, 'items');
+    
+    const processedData = data
       .filter(item => (item.futureCount || 0) > 0)
       .map(item => ({
         id: item.id,
@@ -58,6 +60,9 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
         percentage: item.futurePercentage || 0,
         color: item.color || '#6366F1'
       }));
+      
+    console.log('MuscleGroupsFutureChart processed data into', processedData.length, 'items');
+    return processedData;
   }, [data]);
 
   // Handle loading state
@@ -70,6 +75,7 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({ data,
   }
 
   const hasFutureData = pieData.length > 0;
+  console.log('MuscleGroupsFutureChart has future data:', hasFutureData);
   
   // Generate chart configuration from data
   const chartConfig = pieData.reduce((config, item) => {

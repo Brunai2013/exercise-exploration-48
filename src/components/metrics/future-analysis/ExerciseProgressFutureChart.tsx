@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
@@ -31,7 +30,7 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
     console.log('Processing future exercise data:', data.length, 'items');
     
     // Create exercise data from category analysis data
-    return data
+    const processedData = data
       .map(item => ({
         id: item.id,
         name: item.name,
@@ -42,11 +41,15 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
         displayText: `${item.futurePercentage || 0}% (${item.futureCount || 0} time${item.futureCount !== 1 ? 's' : ''})`
       }))
       .filter(item => item.value > 0)
-      .sort((a, b) => b.value - a.value); // Sort by count, descending
+      .sort((a, b) => b.value - a.value);
+      
+    console.log('Processed future exercise data into', processedData.length, 'valid items');
+    return processedData;
   }, [data]);
   
-  // Check if we have any data to display
+  // Check if we have any data to display - enhanced logging to help debug
   const hasData = exerciseData && exerciseData.length > 0;
+  console.log('ExerciseProgressFutureChart has data:', hasData, 'from', exerciseData?.length || 0, 'items');
 
   if (!hasData) {
     return (

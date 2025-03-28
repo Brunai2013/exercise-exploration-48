@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CategoryAnalysis } from "@/hooks/metrics/useMetricsData";
 import { InfoIcon, BarChart3 } from "lucide-react";
@@ -48,14 +47,20 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
   const [frequencyData, setFrequencyData] = useState<Array<{ name: string; workouts: number; }>>([]);
   
   // Generate frequency data from the upcoming workouts
-  React.useEffect(() => {
-    // Check if we have data with future counts
+  useEffect(() => {
+    // Check if we have data with future counts - fixed to properly check for actual data
     const hasValidData = data && data.length > 0 && data.some(item => (item.futureCount || 0) > 0);
+    console.log('WorkoutFrequencyFutureChart checking for valid data:', hasValidData, 'from', data?.length || 0, 'items');
+    
     setHasFutureData(hasValidData);
     
-    if (!hasValidData) return;
+    // Only proceed if we have actual data
+    if (!hasValidData) {
+      setFrequencyData([]);
+      return;
+    }
     
-    // Create a simple frequency chart for the next 4 weeks/months
+    // Create data from actual future workouts
     const today = new Date();
     let chartData: Array<{ name: string; workouts: number; }> = [];
     
@@ -101,8 +106,8 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     );
   }
   
-  // Render empty state but keep component mounted
-  if (!hasFutureData) {
+  // Always render empty state if no data
+  if (!hasFutureData || frequencyData.length === 0) {
     return (
       <Card>
         <CardHeader>
