@@ -5,7 +5,8 @@ import { getWorkoutsForMetrics } from '@/lib/workout/queries';
 
 export function useBaseMetricsData(
   dateRange: { from: Date; to: Date },
-  refreshKey: number = 0
+  refreshKey: number = 0,
+  disableDemoData: boolean = false // New parameter
 ) {
   const [rawWorkoutData, setRawWorkoutData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +50,7 @@ export function useBaseMetricsData(
         setIsLoading(false);
         setError('Invalid date range provided');
         console.error('Invalid date range, skipping data fetch');
-        setShouldUseDemoData(true);
+        setShouldUseDemoData(!disableDemoData); // Only use demo data if not disabled
         return;
       }
       
@@ -73,7 +74,8 @@ export function useBaseMetricsData(
             setShouldUseDemoData(false);
           } else {
             console.log('No real workout data found for metrics, using demo data');
-            setShouldUseDemoData(true);
+            // Only use demo data if not explicitly disabled
+            setShouldUseDemoData(!disableDemoData);
             setRawWorkoutData([]);
           }
           
@@ -83,7 +85,7 @@ export function useBaseMetricsData(
         console.error('Error fetching metrics data:', err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : 'Unknown error fetching data');
-          setShouldUseDemoData(true);
+          setShouldUseDemoData(!disableDemoData); // Only use demo data if not disabled
           setRawWorkoutData([]);
           setIsLoading(false);
         }
@@ -93,7 +95,7 @@ export function useBaseMetricsData(
     fetchData();
     
     return () => { isMounted = false; };
-  }, [dateRange.from, dateRange.to, refreshKey, validDateRange]);
+  }, [dateRange.from, dateRange.to, refreshKey, validDateRange, disableDemoData]);
 
   return {
     rawWorkoutData,

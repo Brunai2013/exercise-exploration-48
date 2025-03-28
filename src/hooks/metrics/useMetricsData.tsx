@@ -11,7 +11,8 @@ export type { MuscleGroupData, ExerciseProgressItem, FrequencyData, CategoryAnal
 export function useMetricsData(
   dateRange: { from: Date; to: Date },
   view: 'weekly' | 'monthly',
-  refreshKey: number = 0
+  refreshKey: number = 0,
+  disableDemoData: boolean = false // New parameter
 ) {
   // Get base data (fetches from API)
   const { 
@@ -20,7 +21,7 @@ export function useMetricsData(
     error, 
     shouldUseDemoData, 
     validDateRange 
-  } = useBaseMetricsData(dateRange, refreshKey);
+  } = useBaseMetricsData(dateRange, refreshKey, disableDemoData);
   
   // Get specific data types using the specialized hooks
   const { muscleGroupData } = useMuscleGroupData(rawWorkoutData, shouldUseDemoData, dateRange);

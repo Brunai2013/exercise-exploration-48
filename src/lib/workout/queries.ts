@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Workout } from '../types';
 import { formatWorkoutsFromDb, formatWorkoutFromDb } from './utils';
@@ -206,7 +205,9 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
     return [];
   }
   
+  // Log more detailed information about found workouts
   console.log(`Found ${data?.length || 0} workouts for metrics within range ${from} to ${to}`);
+  console.log(`All workouts have archived=false: ${data?.every(w => w.archived === false)}`);
   
   // Log the first workout found (if any) to help with debugging
   if (data && data.length > 0) {

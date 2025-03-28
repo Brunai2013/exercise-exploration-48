@@ -8,7 +8,8 @@ import MetricsTimeFilter from '@/components/metrics/page/MetricsTimeFilter';
 import MetricsTabs from '@/components/metrics/page/MetricsTabs';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Database } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 const WorkoutMetrics = () => {
   // Create default date range - today only for more accurate data display
@@ -32,6 +33,7 @@ const WorkoutMetrics = () => {
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('custom');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showDemoData, setShowDemoData] = useState(true);
   
   // Update date range when time filter changes
   useEffect(() => {
@@ -72,7 +74,7 @@ const WorkoutMetrics = () => {
     upcomingWorkoutData,
     isLoading,
     error
-  } = useMetricsData(dateRange, view, refreshKey);
+  } = useMetricsData(dateRange, view, refreshKey, !showDemoData);
 
   // Show toast if there's an error
   useEffect(() => {
@@ -130,6 +132,15 @@ const WorkoutMetrics = () => {
     toast.success("Refreshing workout metrics data...");
   };
 
+  // Toggle demo data
+  const handleToggleDemoData = () => {
+    setShowDemoData(prev => !prev);
+    toast.info(showDemoData 
+      ? "Demo data disabled. You'll only see real workout data." 
+      : "Demo data enabled. You'll see example data when no workouts exist.");
+    setRefreshKey(prev => prev + 1); // Force refresh data
+  };
+
   return (
     <PageContainer>
       {/* Header Section */}
@@ -147,7 +158,22 @@ const WorkoutMetrics = () => {
           handleDateRangeChange={handleDateRangeChange}
         />
         
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="demo-mode"
+              checked={showDemoData}
+              onCheckedChange={handleToggleDemoData}
+            />
+            <label 
+              htmlFor="demo-mode" 
+              className="text-sm text-muted-foreground cursor-pointer flex items-center gap-1"
+            >
+              <Database className="h-3.5 w-3.5" />
+              Show Demo Data
+            </label>
+          </div>
+          
           <Button 
             variant="outline" 
             size="sm" 
