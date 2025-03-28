@@ -12,7 +12,7 @@ export function useMetricsData(
   dateRange: { from: Date; to: Date },
   view: 'weekly' | 'monthly',
   refreshKey: number = 0,
-  disableDemoData: boolean = false // This parameter is properly passed to useBaseMetricsData
+  disableDemoData: boolean = false
 ) {
   // Get base data (fetches from API)
   const { 
@@ -28,7 +28,7 @@ export function useMetricsData(
   const { exerciseData } = useExerciseProgressData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { frequencyData } = useFrequencyData(rawWorkoutData, shouldUseDemoData, dateRange, view);
   
-  // The issue is here - we need to pass shouldUseDemoData to useUpcomingAnalysis too
+  // Pass shouldUseDemoData to useUpcomingAnalysis
   const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData, shouldUseDemoData);
 
   return {

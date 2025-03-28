@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ExerciseProgressItem } from "@/hooks/metrics/useMetricsData";
@@ -46,11 +45,11 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
   // Process data for exercise breakdown
   const exerciseData = useMemo(() => {
     if (!data || data.length === 0) {
-      console.log('No exercise data available to process');
+      console.log('ExerciseProgressChart: No exercise data available to process');
       return [];
     }
     
-    console.log('Processing exercise data:', data.length, 'items');
+    console.log('ExerciseProgressChart: Processing exercise data:', data.length, 'items');
     
     // Group exercises by name and count occurrences
     const exerciseCounts: Record<string, number> = {};
@@ -93,8 +92,9 @@ const ExerciseProgressChart: React.FC<ExerciseProgressChartProps> = ({
     return <Card><LoadingState /></Card>;
   }
   
-  // Check if we have any data to display
+  // Check if we have any data to display - ensure it's properly checking for empty data
   const hasData = exerciseData && exerciseData.length > 0;
+  console.log('ExerciseProgressChart: Has data to display:', hasData, 'from', exerciseData?.length || 0, 'items');
 
   if (!hasData) {
     return (

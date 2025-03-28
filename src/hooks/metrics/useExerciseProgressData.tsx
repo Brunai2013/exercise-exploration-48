@@ -22,10 +22,17 @@ export function useExerciseProgressData(
   
   // Process workout data into exercise progress statistics
   useEffect(() => {
+    // Important: Clear data first when switching modes
+    setExerciseData([]);
+    
     if (!shouldUseDemoData && rawWorkoutData.length > 0) {
+      console.log('Processing real exercise data with', rawWorkoutData.length, 'workouts');
       processRealExerciseData(rawWorkoutData);
     } else if (shouldUseDemoData) {
+      console.log('Generating demo exercise data');
       generateDemoExerciseData();
+    } else {
+      console.log('No workout data and demo data disabled - showing empty exercise progress');
     }
   }, [rawWorkoutData, shouldUseDemoData, dateRange, categories]);
   
@@ -93,8 +100,8 @@ export function useExerciseProgressData(
       setExerciseData(exerciseProgress);
     } catch (err) {
       console.error('Error processing real exercise data:', err);
-      // Fall back to demo data in case of error
-      generateDemoExerciseData();
+      // Set to empty array instead of falling back to demo data
+      setExerciseData([]);
     }
   };
   

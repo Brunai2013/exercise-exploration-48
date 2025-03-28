@@ -23,11 +23,17 @@ const WorkoutFrequencyChart: React.FC<WorkoutFrequencyChartProps> = ({
   dateRange,
   timeFilter
 }) => {
+  // Add debug logging to track data flow
+  console.log('WorkoutFrequencyChart: Received data items:', data?.length || 0, 
+    'isLoading:', isLoading);
+
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }
   
-  if (!data.length) {
+  // Be extra strict about checking for data - check length explicitly
+  if (!data || data.length === 0) {
+    console.log('WorkoutFrequencyChart: No data available, showing empty state');
     return <EmptyStateCard view={view} timeFilter={timeFilter} dateRange={dateRange} />;
   }
 

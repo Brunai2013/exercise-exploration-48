@@ -18,10 +18,17 @@ export function useFrequencyData(
   
   // Process workout data into frequency statistics
   useEffect(() => {
+    // Important: Clear data first when switching modes
+    setFrequencyData([]);
+    
     if (!shouldUseDemoData && rawWorkoutData.length > 0) {
+      console.log('Processing real frequency data with', rawWorkoutData.length, 'workouts');
       processFrequencyData(rawWorkoutData, view);
     } else if (shouldUseDemoData) {
+      console.log('Generating demo frequency data');
       generateDemoFrequencyData();
+    } else {
+      console.log('No workout data and demo data disabled - showing empty frequency data');
     }
   }, [rawWorkoutData, shouldUseDemoData, view, dateRange]);
   
@@ -72,7 +79,7 @@ export function useFrequencyData(
       setFrequencyData(processedData);
     } catch (err) {
       console.error('Error processing frequency data:', err);
-      // Fallback to empty array
+      // Set to empty array instead of showing demo data
       setFrequencyData([]);
     }
   };
