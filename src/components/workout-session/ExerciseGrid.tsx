@@ -78,28 +78,18 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Display exercise groups (these will remain full width) */}
+      {/* Display exercise groups using the ExerciseGroupCard component */}
       {exerciseGroups.map(group => {
         const groupExercises = workout?.filter(ex => 
           group.exerciseIds.includes(ex.id)
-        );
+        ) || [];
         
-        console.log("Group exercises:", {
-          groupId: group.id,
-          exerciseCount: groupExercises?.length || 0,
-          exercises: groupExercises?.map(ex => ({
-            name: ex.exercise.name,
-            id: ex.id,
-            setsCount: ex.sets?.length || 0
-          }))
-        });
-        
-        if (!groupExercises || groupExercises.length < 2) return null;
+        if (groupExercises.length < 2) return null;
         
         return (
           <ExerciseGroupCard
             key={group.id}
-            groupType={group.type}
+            groupType="circuit"
             exercises={groupExercises}
             currentExerciseIndex={currentExerciseIndex}
             exerciseIndexMap={exerciseIndexMap}
@@ -120,12 +110,6 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
         <div key={`pair-${pairIndex}`} className="grid grid-cols-2 gap-4 mb-4">
           {pair.map((exerciseItem) => {
             const exerciseIndex = exerciseIndexMap[exerciseItem.id];
-            
-            console.log("Rendering individual exercise:", {
-              name: exerciseItem.exercise.name,
-              id: exerciseItem.id,
-              setsCount: exerciseItem.sets?.length || 0
-            });
             
             return (
               <ExerciseWorkoutCard
