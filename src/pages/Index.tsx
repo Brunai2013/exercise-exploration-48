@@ -4,34 +4,16 @@ import PageContainer from '@/components/layout/PageContainer';
 import TodayWorkouts from '@/components/dashboard/TodayWorkouts';
 import UpcomingWorkouts from '@/components/dashboard/UpcomingWorkouts';
 import RecentWorkouts from '@/components/dashboard/RecentWorkouts';
-import { Dumbbell, ChartBarIcon, Database } from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Dumbbell } from 'lucide-react';
 
 const Index = () => {
   return (
     <PageContainer>
-      <div className="mb-8 text-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 rounded-2xl shadow-md border border-indigo-100 animate-fade-in">
-        <div className="inline-flex items-center justify-center p-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-glow text-white mb-4">
-          <Dumbbell className="h-8 w-8" />
+      <div className="mb-6 text-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 rounded-2xl shadow-sm border border-indigo-100 animate-fade-in">
+        <div className="inline-flex items-center justify-center p-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-glow text-white mb-2">
+          <Dumbbell className="h-6 w-6" />
         </div>
-        <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600">Welcome to FitTrack</h1>
-        
-        <div className="mt-6 flex flex-wrap justify-center gap-4">
-          <RouterLink to="/workout-metrics">
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 rounded-full">
-              <ChartBarIcon className="h-4 w-4" />
-              View Workout Analytics
-            </Button>
-          </RouterLink>
-          
-          <RouterLink to="/backup">
-            <Button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 flex items-center gap-2 rounded-full">
-              <Database className="h-4 w-4" />
-              Backup & Restore Data
-            </Button>
-          </RouterLink>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600">Welcome to FitTrack</h1>
       </div>
 
       <div className="space-y-12">
