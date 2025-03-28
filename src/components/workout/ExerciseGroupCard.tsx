@@ -61,8 +61,8 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   }, [exercises, onAddSet, onRemoveSet, groupType]);
   
   return (
-    <Card className="mb-4 overflow-hidden rounded-lg shadow-sm border">
-      <div className="bg-slate-100 py-2 px-3 flex items-center justify-between">
+    <Card className="mb-4 overflow-hidden rounded-md border">
+      <div className="bg-slate-50 py-1.5 px-2 flex items-center justify-between border-b">
         <div className="flex items-center space-x-2">
           <Layers className="h-4 w-4 text-slate-600" />
           <div className="flex items-center gap-2">
@@ -86,30 +86,33 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
         )}
       </div>
       
-      <div className="p-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-2">
-        {exercises.map((exercise) => {
-          const exerciseIndex = exerciseIndexMap[exercise.id];
-          
-          return (
-            <div key={exercise.id} className="bg-white border rounded-md overflow-hidden">
-              <ExerciseWorkoutCard
-                exerciseItem={exercise}
-                exerciseIndex={exerciseIndex}
-                currentExerciseIndex={currentExerciseIndex}
-                onSetCompletion={onSetCompletion}
-                onWeightChange={onWeightChange}
-                onActualRepsChange={onActualRepsChange}
-                onNavigateToExercise={onNavigateToExercise}
-                exerciseCategories={exerciseCategories}
-                isCompact={true}
-                inGroup={true}
-                onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(exercise.id) : undefined}
-                onAddSet={onAddSet}
-                onRemoveSet={onRemoveSet}
-              />
-            </div>
-          );
-        })}
+      <div className="p-2">
+        <div className="grid grid-cols-1 gap-2">
+          {exercises.map((exercise) => {
+            const exerciseIndex = exerciseIndexMap[exercise.id];
+            
+            return (
+              <div key={exercise.id} className="rounded-md border bg-white overflow-hidden">
+                <ExerciseWorkoutCard
+                  exerciseItem={exercise}
+                  exerciseIndex={exerciseIndex}
+                  currentExerciseIndex={currentExerciseIndex}
+                  onSetCompletion={onSetCompletion}
+                  onWeightChange={onWeightChange}
+                  onActualRepsChange={onActualRepsChange}
+                  onNavigateToExercise={onNavigateToExercise}
+                  exerciseCategories={exerciseCategories}
+                  isCompact={true}
+                  inGroup={true}
+                  isInGroupCard={true}
+                  onRemoveFromGroup={onRemoveFromGroup ? () => onRemoveFromGroup(exercise.id) : undefined}
+                  onAddSet={onAddSet}
+                  onRemoveSet={onRemoveSet}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </Card>
   );

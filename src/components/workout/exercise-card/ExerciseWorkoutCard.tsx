@@ -16,6 +16,7 @@ interface ExerciseWorkoutCardProps {
   onNavigateToExercise: (index: number) => void;
   isCompact?: boolean;
   inGroup?: boolean;
+  isInGroupCard?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
   onRemoveFromGroup?: () => void;
@@ -34,13 +35,14 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
   onNavigateToExercise,
   isCompact = false,
   inGroup = false,
+  isInGroupCard = false,
   isSelected = false,
   onSelect,
   onRemoveFromGroup,
   onAddSet,
   onRemoveSet
 }) => {
-  // Add more explicit logging to debug issues
+  // Add explicit logging to debug issues
   useEffect(() => {
     console.log("ExerciseWorkoutCard mounted:", { 
       exerciseName: exerciseItem.exercise.name,
@@ -50,10 +52,11 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
       index: exerciseIndex,
       isCompact,
       inGroup,
+      isInGroupCard,
       hasAddSet: !!onAddSet,
       hasRemoveSet: !!onRemoveSet
     });
-  }, [exerciseItem, exerciseIndex, isCompact, inGroup, onAddSet, onRemoveSet]);
+  }, [exerciseItem, exerciseIndex, isCompact, inGroup, isInGroupCard, onAddSet, onRemoveSet]);
   
   // Ensure sets is always an array
   const exerciseSets = Array.isArray(exerciseItem.sets) ? exerciseItem.sets : [];
@@ -95,6 +98,67 @@ const ExerciseWorkoutCard: React.FC<ExerciseWorkoutCardProps> = ({
       onNavigateToExercise(exerciseIndex);
     }
   };
+
+  // Ultra-compact version for when in a group card
+  if (isInGroupCard) {
+    return (
+      <div className="p-1 cursor-pointer" onClick={handleCardClick}>
+        <div className="flex items-start">
+          {/* Small exercise image */}
+          <div 
+            className="h-10 w-10 rounded bg-cover bg-center mr-1.5 flex-shrink-0"
+            style={{ backgroundImage: exerciseItem.exercise.imageUrl ? `url(${exerciseItem.exercise.imageUrl})` : 'none' }}
+          />
+          
+          <div className="flex-1 min-w-0">
+            {/* Ultra compact header with minimal info */}
+            <div className="flex items-center justify-between mb-0.5">
+              <div>
+                <h4 className="text-xs font-medium line-clamp-1">{exerciseItem.exercise.name}</h4>
+                <div className="flex items-center gap-1">
+                  <Badge className="text-[9px] py-0 px-1 h-3.5 min-h-0 min-w-0 leading-none rounded-sm font-normal mr-1 whitespace-nowrap inline-flex items-center justify-center ${category.color}">
+                    {category.name}
+                  </Badge>
+                  <span className="text-[9px] text-muted-foreground">
+                    {completedSets}/{exerciseSets.length} sets
+                  </span>
+                  
+                  {onRemoveFromGroup && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-3.5 w-3.5 p-0 ml-1 min-h-0 min-w-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFromGroup();
+                      }}
+                      title="Remove from group"
+                    >
+                      <X className="h-2 w-2" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Ultra-compact sets grid */}
+            <ExerciseSetsGrid
+              exerciseSets={exerciseSets}
+              exerciseIndex={exerciseIndex}
+              onWeightChange={onWeightChange}
+              onActualRepsChange={onActualRepsChange}
+              onSetCompletion={onSetCompletion}
+              categoryColor={category.color}
+              isCompact={true}
+              isInGroupCard={true}
+              onAddSet={onAddSet}
+              onRemoveSet={onRemoveSet}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Create a minimized version for when the card is in a group
   if (inGroup) {

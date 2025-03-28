@@ -15,6 +15,7 @@ interface ExerciseSetsGridProps {
   onAddSet?: (exerciseIndex: number) => void;
   onRemoveSet?: (exerciseIndex: number, setIndex: number) => void;
   isCompact?: boolean;
+  isInGroupCard?: boolean;
 }
 
 const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
@@ -26,7 +27,8 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
   categoryColor,
   onAddSet,
   onRemoveSet,
-  isCompact = false
+  isCompact = false,
+  isInGroupCard = false
 }) => {
   // Add debugging logs for exerciseSets
   useEffect(() => {
@@ -36,9 +38,10 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
       sets: exerciseSets,
       hasAddSet: !!onAddSet,
       hasRemoveSet: !!onRemoveSet,
-      isCompact
+      isCompact,
+      isInGroupCard
     });
-  }, [exerciseSets, exerciseIndex, onAddSet, onRemoveSet, isCompact]);
+  }, [exerciseSets, exerciseIndex, onAddSet, onRemoveSet, isCompact, isInGroupCard]);
   
   // Safely extract color from category for set completion buttons
   const getCompletedButtonStyle = (completed: boolean) => {
@@ -51,6 +54,62 @@ const ExerciseSetsGrid: React.FC<ExerciseSetsGridProps> = ({
     return { backgroundColor: colorValue };
   };
   
+  // Special ultra-compact design for grouped cards
+  if (isInGroupCard) {
+    return (
+      <div className="exercise-sets-grid text-xs">
+        {/* Header Row */}
+        <div className="flex items-center gap-1 mb-0.5 font-medium text-xs">
+          <div className="w-4">#</div>
+          <div className="w-14">Weight</div>
+          <div className="w-6 text-center">Reps</div>
+          <div className="w-12">Actual</div>
+          <div>Done</div>
+        </div>
+        
+        {/* Sets */}
+        {exerciseSets && exerciseSets.length > 0 ? (
+          exerciseSets.map((set, setIndex) => (
+            <ExerciseSetRow
+              key={set.id || `set-${setIndex}`}
+              set={set}
+              setIndex={setIndex}
+              exerciseIndex={exerciseIndex}
+              onWeightChange={(value) => onWeightChange(exerciseIndex, setIndex, value)}
+              onActualRepsChange={(value) => onActualRepsChange(exerciseIndex, setIndex, value)}
+              onSetCompletion={() => onSetCompletion(exerciseIndex, setIndex, !set.completed)}
+              getCompletedButtonStyle={getCompletedButtonStyle}
+              onRemoveSet={onRemoveSet ? () => onRemoveSet(exerciseIndex, setIndex) : undefined}
+              isCompact={isCompact}
+              isInGroupCard={true}
+            />
+          ))
+        ) : (
+          <div className="text-xs text-muted-foreground py-1">No sets defined</div>
+        )}
+        
+        {/* Add Set button */}
+        {onAddSet && (
+          <div className="mt-0.5">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full border-dashed text-xs py-0 h-5"
+              onClick={() => {
+                console.log("Add set button clicked, calling handler with exerciseIndex:", exerciseIndex);
+                onAddSet(exerciseIndex);
+              }}
+            >
+              <Plus className="h-2 w-2 mr-1" />
+              Add Set
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  // Regular layout
   const headerFontSize = isCompact ? 'text-xs' : 'text-sm';
   const gridGap = isCompact ? 'gap-1' : 'gap-2';
   
