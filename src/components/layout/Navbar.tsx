@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Navbar = () => {
   const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -50,29 +51,31 @@ const Navbar = () => {
         
         {/* Main Navigation */}
         <div className="flex items-center gap-1 md:gap-2">
-          {/* Primary Nav Items - Always visible */}
+          {/* Primary Nav Items - Fixed size and position */}
           {primaryNavItems.map((item) => (
             <Link 
               key={item.href} 
               to={item.href}
               className={cn(
-                "group flex h-10 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex h-10 w-[110px] items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive(item.href)
                   ? "bg-purple-600 text-white" 
                   : "text-slate-600 hover:bg-slate-100"
               )}
+              style={{ transition: 'background-color 0.2s ease', width: '110px' }}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="text-sm">{item.label}</span>
             </Link>
           ))}
           
-          {/* Side Menu */}
+          {/* Side Menu - Fixed size and position */}
           <Sheet>
             <SheetTrigger asChild>
               <button 
                 className="ml-1 flex h-10 w-10 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
                 aria-label="Menu"
+                style={{ width: '40px', height: '40px' }}
               >
                 <Menu className="h-5 w-5" />
               </button>
