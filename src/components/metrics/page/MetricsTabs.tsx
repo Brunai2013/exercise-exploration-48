@@ -34,7 +34,7 @@ const MetricsTabs: React.FC<MetricsTabsProps> = ({
   futureDays = 7
 }) => {
   return (
-    <Tabs defaultValue="exercises" className="w-full mb-8">
+    <Tabs defaultValue="muscle-groups" className="w-full mb-8">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="muscle-groups" className="flex items-center justify-center">
           <Dumbbell className="w-4 h-4 mr-2" />

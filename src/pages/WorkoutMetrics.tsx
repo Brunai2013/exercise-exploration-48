@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { isAfter, subDays, format } from 'date-fns';
@@ -21,18 +22,21 @@ const WorkoutMetrics = () => {
   
   console.log('Metrics page initialized with today\'s date:', todayFormatted);
   
+  // Get a date 7 days ago for default "week" view
+  const weekAgo = subDays(new Date(), 7);
+  
   const [dateRange, setDateRange] = useState<{
     from: Date;
     to: Date;
   }>({
-    from: today, // Today as default start date
-    to: today,   // Today as default end date
+    from: weekAgo, // Last week as default start date
+    to: today,     // Today as default end date
   });
   
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('custom');
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('week'); // Default to 'week'
   const [refreshKey, setRefreshKey] = useState(0);
-  const [showDemoData, setShowDemoData] = useState(true);
+  const [showDemoData, setShowDemoData] = useState(false); // Default to OFF
   
   // Define future days window (7 days)
   const futureDays = 7;
