@@ -81,86 +81,72 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
     return pairs;
   };
   
-  // Split exercise groups into pairs for desktop side-by-side layout
-  const getGroupPairs = () => {
-    if (isMobile) {
-      return exerciseGroups.map(group => [group]);
-    }
-    
-    const pairs = [];
-    for (let i = 0; i < exerciseGroups.length; i += 2) {
-      pairs.push(exerciseGroups.slice(i, i + 2));
-    }
-    return pairs;
-  };
-  
   const exercisePairs = getExercisePairs();
-  const groupPairs = getGroupPairs();
 
   return (
     <div className="mb-8">
       {/* Display exercise groups using the ExerciseGroupCard component */}
-      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 mb-4`}>
-        {groupPairs.map((groupPair, pairIndex) => (
-          <React.Fragment key={`group-pair-${pairIndex}`}>
-            {groupPair.map(group => {
-              const groupExercises = workout?.filter(ex => 
-                group.exerciseIds.includes(ex.id)
-              ) || [];
-              
-              if (groupExercises.length < 2) return null;
-              
-              return (
-                <ExerciseGroupCard
-                  key={group.id}
-                  groupType="circuit"
-                  exercises={groupExercises}
-                  currentExerciseIndex={currentExerciseIndex}
-                  exerciseIndexMap={exerciseIndexMap}
-                  exerciseCategories={exerciseCategories}
-                  onSetCompletion={onSetCompletion}
-                  onWeightChange={onWeightChange}
-                  onActualRepsChange={onActualRepsChange}
-                  onNavigateToExercise={onNavigateToExercise}
-                  onRemoveFromGroup={removeFromGroup}
-                  onAddSet={onAddSet}
-                  onRemoveSet={onRemoveSet}
-                />
-              );
-            })}
-          </React.Fragment>
-        ))}
-      </div>
+      {exerciseGroups.length > 0 && (
+        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 mb-4`}>
+          {exerciseGroups.map(group => {
+            const groupExercises = workout?.filter(ex => 
+              group.exerciseIds.includes(ex.id)
+            ) || [];
+            
+            if (groupExercises.length < 2) return null;
+            
+            return (
+              <ExerciseGroupCard
+                key={group.id}
+                groupType="circuit"
+                exercises={groupExercises}
+                currentExerciseIndex={currentExerciseIndex}
+                exerciseIndexMap={exerciseIndexMap}
+                exerciseCategories={exerciseCategories}
+                onSetCompletion={onSetCompletion}
+                onWeightChange={onWeightChange}
+                onActualRepsChange={onActualRepsChange}
+                onNavigateToExercise={onNavigateToExercise}
+                onRemoveFromGroup={removeFromGroup}
+                onAddSet={onAddSet}
+                onRemoveSet={onRemoveSet}
+              />
+            );
+          })}
+        </div>
+      )}
       
       {/* Display individual exercises */}
-      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-        {exercisePairs.map((pair, pairIndex) => (
-          <React.Fragment key={`pair-${pairIndex}`}>
-            {pair.map((exerciseItem) => {
-              const exerciseIndex = exerciseIndexMap[exerciseItem.id];
-              
-              return (
-                <ExerciseWorkoutCard
-                  key={exerciseItem.id}
-                  exerciseItem={exerciseItem}
-                  exerciseIndex={exerciseIndex}
-                  currentExerciseIndex={currentExerciseIndex}
-                  onSetCompletion={onSetCompletion}
-                  onWeightChange={onWeightChange}
-                  onActualRepsChange={onActualRepsChange}
-                  onNavigateToExercise={onNavigateToExercise}
-                  exerciseCategories={exerciseCategories}
-                  isCompact={false}
-                  isSelected={selectedExercises.includes(exerciseItem.id)}
-                  onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
-                  onAddSet={onAddSet}
-                  onRemoveSet={onRemoveSet}
-                />
-              );
-            })}
-          </React.Fragment>
-        ))}
-      </div>
+      {individualExercises.length > 0 && (
+        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+          {exercisePairs.map((pair, pairIndex) => (
+            <React.Fragment key={`pair-${pairIndex}`}>
+              {pair.map((exerciseItem) => {
+                const exerciseIndex = exerciseIndexMap[exerciseItem.id];
+                
+                return (
+                  <ExerciseWorkoutCard
+                    key={exerciseItem.id}
+                    exerciseItem={exerciseItem}
+                    exerciseIndex={exerciseIndex}
+                    currentExerciseIndex={currentExerciseIndex}
+                    onSetCompletion={onSetCompletion}
+                    onWeightChange={onWeightChange}
+                    onActualRepsChange={onActualRepsChange}
+                    onNavigateToExercise={onNavigateToExercise}
+                    exerciseCategories={exerciseCategories}
+                    isCompact={false}
+                    isSelected={selectedExercises.includes(exerciseItem.id)}
+                    onSelect={groupingMode ? () => toggleExerciseSelection(exerciseItem.id) : undefined}
+                    onAddSet={onAddSet}
+                    onRemoveSet={onRemoveSet}
+                  />
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
