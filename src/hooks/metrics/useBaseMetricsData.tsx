@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { format, isAfter, isBefore, isValid, parseISO } from 'date-fns';
-import { getWorkoutsForMetrics } from '@/lib/workout/queries';
+import { getWorkoutsForMetrics } from '@/lib/workout/metrics-queries';
 
 export function useBaseMetricsData(
   dateRange: { from: Date; to: Date },
