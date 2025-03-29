@@ -28,7 +28,7 @@ const CircuitActions: React.FC<CircuitActionsProps> = ({
             size="sm"
             onClick={handleCreateCustomGroup}
             disabled={selectedExercises.length < 2}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-glow rounded-full px-5 py-2"
+            className="bg-teal-500 hover:bg-teal-600 text-white shadow-sm rounded-full px-5 py-2"
           >
             <Layers className="h-4 w-4 mr-2" />
             Create Circuit
@@ -48,7 +48,7 @@ const CircuitActions: React.FC<CircuitActionsProps> = ({
         <Button 
           variant="secondary"
           onClick={startGroupingMode}
-          className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md hover:shadow-lg rounded-full animate-pulse duration-3000 border-none"
+          className="bg-teal-500 hover:bg-teal-600 text-white shadow-md hover:shadow-lg rounded-full border-none"
         >
           <Layers className="h-5 w-5 mr-2" />
           Group Exercises

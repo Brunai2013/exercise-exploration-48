@@ -66,7 +66,7 @@ const ExerciseGroupCard: React.FC<ExerciseGroupCardProps> = ({
   };
   
   return (
-    <Card className="overflow-hidden rounded-md border shadow-sm w-full bg-white relative border-green-300">
+    <Card className="overflow-hidden rounded-md border-2 shadow-sm w-full bg-white relative border-teal-300">
       <GroupCardHeader 
         progress={progress} 
         onUngroupAll={onRemoveFromGroup ? handleUngroupAll : undefined} 
