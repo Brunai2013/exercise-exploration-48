@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Save, X } from 'lucide-react';
+import { AlertCircle, Loader2, Save, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FormActionsProps {
@@ -9,13 +9,15 @@ interface FormActionsProps {
   isSubmitting: boolean;
   submitLabel: string;
   error?: string;
+  onSubmit?: () => void; // Added optional onSubmit prop
 }
 
 const FormActions: React.FC<FormActionsProps> = ({
   onCancel,
   isSubmitting,
   submitLabel,
-  error
+  error,
+  onSubmit
 }) => {
   return (
     <div className="space-y-4">
@@ -38,12 +40,16 @@ const FormActions: React.FC<FormActionsProps> = ({
           Cancel
         </Button>
         <Button 
-          type="submit" 
+          type={onSubmit ? "button" : "submit"}
+          onClick={onSubmit}
           disabled={isSubmitting}
           className="px-6 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg"
         >
           {isSubmitting ? (
-            <>Saving...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />

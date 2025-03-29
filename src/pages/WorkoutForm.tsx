@@ -8,6 +8,7 @@ import WorkoutFormLoading from '@/components/workout/WorkoutFormLoading';
 import WorkoutFormContent from '@/components/workout/WorkoutFormContent';
 import { useWorkoutForm } from '@/hooks/workout/useWorkoutForm';
 import { toast } from '@/components/ui/use-toast';
+import FormActions from '@/components/exercises/form-components/FormActions';
 
 const WorkoutForm = () => {
   const {
@@ -107,26 +108,38 @@ const WorkoutForm = () => {
       {isLoading ? (
         <WorkoutFormLoading />
       ) : (
-        <WorkoutFormContent
-          workout={workout}
-          selectedDate={selectedDate}
-          availableExercises={availableExercises}
-          searchTerm={searchTerm}
-          categoryMap={categoryMap}
-          categories={categories}
-          isLoading={isLoading}
-          onNameChange={handleInputChange}
-          onDescriptionChange={handleInputChange}
-          onDateChange={setSelectedDate}
-          onSearchChange={setSearchTerm}
-          onExerciseAdd={handleAddExercise}
-          onRemoveExercise={handleRemoveExercise}
-          onAddSet={handleAddSet}
-          onRemoveSet={handleRemoveSet}
-          onSetChange={handleSetChange}
-          onReorderExercises={handleReorderExercises}
-          onMoveExercise={handleMoveExercise}
-        />
+        <>
+          <WorkoutFormContent
+            workout={workout}
+            selectedDate={selectedDate}
+            availableExercises={availableExercises}
+            searchTerm={searchTerm}
+            categoryMap={categoryMap}
+            categories={categories}
+            isLoading={isLoading}
+            onNameChange={handleInputChange}
+            onDescriptionChange={handleInputChange}
+            onDateChange={setSelectedDate}
+            onSearchChange={setSearchTerm}
+            onExerciseAdd={handleAddExercise}
+            onRemoveExercise={handleRemoveExercise}
+            onAddSet={handleAddSet}
+            onRemoveSet={handleRemoveSet}
+            onSetChange={handleSetChange}
+            onReorderExercises={handleReorderExercises}
+            onMoveExercise={handleMoveExercise}
+          />
+          
+          <div className="mt-8">
+            <FormActions
+              onCancel={() => navigate(-1)}
+              isSubmitting={isSaving}
+              submitLabel="Save Workout"
+              error={undefined}
+              onSubmit={handleSaveWorkout}
+            />
+          </div>
+        </>
       )}
     </PageContainer>
   );
