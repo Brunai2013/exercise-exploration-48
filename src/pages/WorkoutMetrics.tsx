@@ -36,7 +36,7 @@ const WorkoutMetrics = () => {
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('week'); // Default to 'week'
   const [refreshKey, setRefreshKey] = useState(0);
-  const [showDemoData, setShowDemoData] = useState(true); // Default to ON for better UX
+  const [showDemoData, setShowDemoData] = useState(false); // Default to OFF for better control
   
   // Define future days window (7 days)
   const futureDays = 7;
@@ -102,7 +102,8 @@ const WorkoutMetrics = () => {
       frequency: frequencyData?.length || 0,
       upcoming: upcomingWorkoutData?.length || 0,
       loading: isLoading,
-      showDemoData
+      showDemoData,
+      demoDataDisabled: !showDemoData
     });
   }, [dateRange, muscleGroupData, exerciseData, frequencyData, upcomingWorkoutData, isLoading, showDemoData]);
 

@@ -6,7 +6,7 @@ import { getWorkoutsForMetrics } from '@/lib/workout/queries';
 export function useBaseMetricsData(
   dateRange: { from: Date; to: Date },
   refreshKey: number = 0,
-  disableDemoData: boolean = false // New parameter
+  disableDemoData: boolean = false // Parameter to explicitly disable demo data
 ) {
   const [rawWorkoutData, setRawWorkoutData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,8 +61,12 @@ export function useBaseMetricsData(
         const fromDate = format(dateRange.from, 'yyyy-MM-dd');
         const toDate = format(dateRange.to, 'yyyy-MM-dd');
         
-        // Log date range for debugging
-        console.log('Fetching data with date range:', { from: fromDate, to: toDate });
+        // Log date range and demo data status for debugging
+        console.log('Fetching data with date range:', { 
+          from: fromDate, 
+          to: toDate,
+          disableDemoData 
+        });
         
         // Use our specialized function to get workouts for metrics
         const workoutData = await getWorkoutsForMetrics(fromDate, toDate);
@@ -71,9 +75,10 @@ export function useBaseMetricsData(
           if (workoutData && workoutData.length > 0) {
             console.log(`Processing ${workoutData.length} workouts for metrics`);
             setRawWorkoutData(workoutData);
+            // IMPORTANT: Force demo data to be off when we have real data AND disableDemoData is true
             setShouldUseDemoData(false);
           } else {
-            console.log('No real workout data found for metrics, using demo data');
+            console.log('No real workout data found for metrics, checking if demo data is allowed');
             // Only use demo data if not explicitly disabled
             setShouldUseDemoData(!disableDemoData);
             setRawWorkoutData([]);
@@ -85,7 +90,8 @@ export function useBaseMetricsData(
         console.error('Error fetching metrics data:', err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : 'Unknown error fetching data');
-          setShouldUseDemoData(!disableDemoData); // Only use demo data if not disabled
+          // Only use demo data if not explicitly disabled
+          setShouldUseDemoData(!disableDemoData);
           setRawWorkoutData([]);
           setIsLoading(false);
         }

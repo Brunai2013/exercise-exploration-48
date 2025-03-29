@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useCategoryColors } from '@/hooks/useCategoryColors';
-import { parseISO, isAfter, isBefore, format, addDays, startOfDay, endOfDay } from 'date-fns';
+import { parseISO, isAfter, isBefore, format, addDays, startOfDay, endOfDay, isSameDay } from 'date-fns';
 
 export interface CategoryAnalysis {
   id: string;
@@ -19,7 +19,7 @@ export interface CategoryAnalysis {
 
 export function useUpcomingAnalysis(
   rawWorkoutData: any[] = [],
-  shouldUseDemoData: boolean = true,
+  shouldUseDemoData: boolean = false, // Default to false to respect disableDemoData
   futureDays: number = 7 // Parameter to control future window
 ) {
   const [upcomingWorkoutData, setUpcomingWorkoutData] = useState<CategoryAnalysis[]>([]);
@@ -31,7 +31,7 @@ export function useUpcomingAnalysis(
       workoutCount: rawWorkoutData.length,
       shouldUseDemoData,
       futureDays,
-      workoutDates: rawWorkoutData.map(w => w.date).join(', ')
+      workoutDates: rawWorkoutData.length > 0 ? rawWorkoutData.map(w => w.date).join(', ') : 'none'
     });
     
     if (rawWorkoutData.length > 0) {
@@ -68,36 +68,37 @@ export function useUpcomingAnalysis(
       });
       
       // Log all workouts to see what we're working with
+      console.log('All workouts before filtering:');
       workoutsData.forEach(workout => {
         console.log(`Analyzing workout: ${workout.name}, date: ${workout.date}, completed: ${workout.completed}`);
       });
       
       // Filter workouts to only include those with dates in the future window
+      // IMPROVED: Use simpler string comparison for YYYY-MM-DD formatted dates
       const futureWorkouts = workoutsData.filter(workout => {
         if (!workout.date) {
           console.log(`Workout ${workout.name} has no date, excluding`);
           return false;
         }
         
-        try {
-          // Use simple string comparison for dates in YYYY-MM-DD format
-          const workoutDate = workout.date;
-          
-          // Check if workout is on or after today AND on or before end of future window
-          const isOnOrAfterToday = workoutDate >= todayFormatted;
-          const isOnOrBeforeWindow = workoutDate <= windowFormatted;
-          
-          console.log('Checking workout:', workout.name, 'date:', workoutDate, 
-            'today:', todayFormatted, 'windowEnd:', windowFormatted, 
-            'isOnOrAfterToday:', isOnOrAfterToday, 
-            'isOnOrBeforeWindow:', isOnOrBeforeWindow,
-            'include:', isOnOrAfterToday && isOnOrBeforeWindow);
-          
-          return isOnOrAfterToday && isOnOrBeforeWindow;
-        } catch (error) {
-          console.error('Error comparing dates for workout:', workout.name, error);
-          return false;
-        }
+        // Use direct string comparison since dates are in YYYY-MM-DD format
+        // A date is in the future window if:
+        // 1. It's on or after today AND
+        // 2. It's on or before the end of the window
+        const isOnOrAfterToday = workout.date >= todayFormatted;
+        const isOnOrBeforeWindow = workout.date <= windowFormatted;
+        
+        // Log details for each workout being considered
+        console.log(`Checking workout: ${workout.name} (${workout.date})`, {
+          date: workout.date,
+          today: todayFormatted,
+          windowEnd: windowFormatted,
+          isOnOrAfterToday,
+          isOnOrBeforeWindow,
+          include: isOnOrAfterToday && isOnOrBeforeWindow
+        });
+        
+        return isOnOrAfterToday && isOnOrBeforeWindow;
       });
       
       console.log('Found', futureWorkouts.length, 'future workouts within', days, 'day window');

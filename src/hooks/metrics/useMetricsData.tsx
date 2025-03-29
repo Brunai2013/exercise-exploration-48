@@ -12,7 +12,7 @@ export function useMetricsData(
   dateRange: { from: Date; to: Date },
   view: 'weekly' | 'monthly',
   refreshKey: number = 0,
-  disableDemoData: boolean = false,
+  disableDemoData: boolean = false, // Parameter with default value of false
   futureDays: number = 7 // Parameter with default value of 7 days
 ) {
   // Get base data (fetches from API)
@@ -29,6 +29,7 @@ export function useMetricsData(
     shouldUseDemoData,
     isLoading,
     error: error ? 'Error present' : 'No error',
+    disableDemoData, // Log whether demo data is explicitly disabled
     futureDays, // Log the future days value
     dateRange: {
       from: dateRange.from.toISOString(),
@@ -41,8 +42,7 @@ export function useMetricsData(
   const { exerciseData } = useExerciseProgressData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { frequencyData } = useFrequencyData(rawWorkoutData, shouldUseDemoData, dateRange, view);
   
-  // Pass shouldUseDemoData and futureDays to useUpcomingAnalysis
-  // IMPORTANT: Ensure we're passing shouldUseDemoData correctly
+  // Pass shouldUseDemoData correctly - ensure we respect the disableDemoData flag
   const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData, shouldUseDemoData, futureDays);
   
   console.log('useMetricsData - Data processed:', {
@@ -51,6 +51,7 @@ export function useMetricsData(
     frequencyCount: frequencyData?.length || 0,
     upcomingCount: upcomingWorkoutData?.length || 0,
     shouldUseDemoData,
+    disableDemoData, // Log whether demo data is explicitly disabled
     futureDays, // Log the future days value
     dateRange: {
       from: dateRange.from.toISOString(),
