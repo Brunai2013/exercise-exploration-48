@@ -196,10 +196,12 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
     requestedFrom: from,
     requestedTo: to,
     isFuturePeriod,
-    hasFutureDates
+    hasFutureDates,
+    compareFrom: from >= todayFormatted ? 'future from' : 'past from',
+    compareTo: to >= todayFormatted ? 'future to' : 'past to'
   });
   
-  // Important: For metrics, we should not filter by completion status for future dates
+  // IMPORTANT: For metrics, we should not filter by completion status for future dates
   // If we're looking at any future dates, don't filter by completion status
   const completedFilter = hasFutureDates ? {} : { completed: true };
   
@@ -237,7 +239,7 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
   // Log the details of each workout for debugging
   if (data) {
     data.forEach(workout => {
-      console.log(`Workout: ${workout.name}, date: ${workout.date}, completed: ${workout.completed}, exercises: ${workout.workout_exercises?.length || 0}`);
+      console.log(`Workout: ${workout.name}, date: ${workout.date}, completed: ${workout.completed}, exercises: ${workout.workout_exercises?.length || 0}, isOnOrAfterToday: ${workout.date >= todayFormatted}`);
     });
   }
   

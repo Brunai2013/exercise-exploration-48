@@ -30,7 +30,8 @@ export function useUpcomingAnalysis(
     console.log('useUpcomingAnalysis effect running with:', {
       workoutCount: rawWorkoutData.length,
       shouldUseDemoData,
-      futureDays
+      futureDays,
+      workoutDates: rawWorkoutData.map(w => w.date).join(', ')
     });
     
     if (rawWorkoutData.length > 0) {
@@ -53,40 +54,44 @@ export function useUpcomingAnalysis(
       // Get today's date for comparison - use start of day for consistent comparison
       const today = startOfDay(new Date());
       // Calculate end date of window (today + X days)
-      const futureWindow = endOfDay(addDays(today, days)); // Note: using full days value to include future days properly
+      const futureWindow = endOfDay(addDays(today, days)); // Use full days value
+      
+      // Format dates for string comparison
+      const todayFormatted = format(today, 'yyyy-MM-dd');
+      const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
       
       console.log('Future window:', {
         today: format(today, 'yyyy-MM-dd HH:mm:ss'),
         endDate: format(futureWindow, 'yyyy-MM-dd HH:mm:ss'),
-        todayFormatted: format(today, 'yyyy-MM-dd'),
-        endDateFormatted: format(futureWindow, 'yyyy-MM-dd')
+        todayFormatted,
+        endDateFormatted: windowFormatted
+      });
+      
+      // Log all workouts to see what we're working with
+      workoutsData.forEach(workout => {
+        console.log(`Analyzing workout: ${workout.name}, date: ${workout.date}, completed: ${workout.completed}`);
       });
       
       // Filter workouts to only include those with dates in the future window
       const futureWorkouts = workoutsData.filter(workout => {
-        if (!workout.date) return false;
+        if (!workout.date) {
+          console.log(`Workout ${workout.name} has no date, excluding`);
+          return false;
+        }
         
         try {
-          // Parse the date and set to beginning of day for consistent comparison
-          const workoutDate = startOfDay(parseISO(workout.date));
-          const workoutFormatted = format(workoutDate, 'yyyy-MM-dd');
-          const todayFormatted = format(today, 'yyyy-MM-dd');
-          const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
-          
-          console.log('Checking workout:', workout.name, 'date:', workoutFormatted, 
-            'today:', todayFormatted, 'windowEnd:', windowFormatted);
+          // Use simple string comparison for dates in YYYY-MM-DD format
+          const workoutDate = workout.date;
           
           // Check if workout is on or after today AND on or before end of future window
-          const isOnOrAfterToday = workoutFormatted >= todayFormatted;
-          const isOnOrBeforeWindow = workoutFormatted <= windowFormatted;
+          const isOnOrAfterToday = workoutDate >= todayFormatted;
+          const isOnOrBeforeWindow = workoutDate <= windowFormatted;
           
-          console.log('Workout eligibility:', {
-            name: workout.name,
-            date: workoutFormatted,
-            isOnOrAfterToday,
-            isOnOrBeforeWindow,
-            include: isOnOrAfterToday && isOnOrBeforeWindow
-          });
+          console.log('Checking workout:', workout.name, 'date:', workoutDate, 
+            'today:', todayFormatted, 'windowEnd:', windowFormatted, 
+            'isOnOrAfterToday:', isOnOrAfterToday, 
+            'isOnOrBeforeWindow:', isOnOrBeforeWindow,
+            'include:', isOnOrAfterToday && isOnOrBeforeWindow);
           
           return isOnOrAfterToday && isOnOrBeforeWindow;
         } catch (error) {
@@ -141,8 +146,12 @@ export function useUpcomingAnalysis(
               
               console.log('Found exercise:', exercise.name, 'category:', 
                 categoryNames[exercise.category], 'count:', categoryExerciseCounts[exercise.category]);
+            } else {
+              console.log('Exercise missing category:', exercise);
             }
           });
+        } else {
+          console.log('Workout missing exercises array:', workout);
         }
       });
       

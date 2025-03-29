@@ -68,6 +68,10 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     console.log('WorkoutFrequencyFutureChart - Has valid data:', hasValidData, 
       'has dates:', hasDataWithDates, 
       'from', data?.length || 0, 'items');
+      
+    if (hasValidData && data[0]?.futureWorkoutDates) {
+      console.log('Future workout dates in first item:', data[0].futureWorkoutDates);
+    }
     
     setHasFutureData(hasDataWithDates);
     
@@ -86,6 +90,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
           // Check that the date is not circular reference (an issue observed in logs)
           if (typeof date === 'string') {
             allWorkoutDates.add(date);
+            console.log('Adding future workout date:', date);
           }
         });
       }
@@ -115,7 +120,8 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
       // Check if this day has a workout in our dates array
       const hasWorkout = workoutDatesArray.includes(dayKey);
       
-      console.log('Checking day:', dayKey, 'has workout:', hasWorkout);
+      console.log('Checking day:', dayKey, 'has workout:', hasWorkout, 
+        'matches any of:', workoutDatesArray.join(', '));
       
       return {
         ...day,

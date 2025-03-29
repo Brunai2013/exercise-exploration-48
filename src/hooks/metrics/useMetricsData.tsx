@@ -29,7 +29,11 @@ export function useMetricsData(
     shouldUseDemoData,
     isLoading,
     error: error ? 'Error present' : 'No error',
-    futureDays // Log the future days value
+    futureDays, // Log the future days value
+    dateRange: {
+      from: dateRange.from.toISOString(),
+      to: dateRange.to.toISOString()
+    }
   });
   
   // Get specific data types using the specialized hooks
@@ -47,7 +51,11 @@ export function useMetricsData(
     frequencyCount: frequencyData?.length || 0,
     upcomingCount: upcomingWorkoutData?.length || 0,
     shouldUseDemoData,
-    futureDays // Log the future days value
+    futureDays, // Log the future days value
+    dateRange: {
+      from: dateRange.from.toISOString(),
+      to: dateRange.to.toISOString()
+    }
   });
 
   return {
