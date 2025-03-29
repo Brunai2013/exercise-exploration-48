@@ -88,7 +88,11 @@ const WorkoutForm = () => {
               <ChevronLeft className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={handleSaveWorkout} disabled={isSaving || isLoading}>
+            <Button 
+              onClick={handleSaveWorkout} 
+              disabled={isSaving || isLoading}
+              className="px-6 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg"
+            >
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
