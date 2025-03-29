@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Workout } from '../types';
 import { formatWorkoutsFromDb, formatWorkoutFromDb } from './utils';
@@ -189,7 +188,7 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
   
   // For future workouts, we need to get workouts from today onwards
   const isFuturePeriod = from >= todayFormatted;
-  const hasFutureDates = to > todayFormatted;
+  const hasFutureDates = to >= todayFormatted;
   
   console.log('Metrics query details:', {
     todayFormatted,

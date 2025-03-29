@@ -36,7 +36,7 @@ const WorkoutMetrics = () => {
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'custom'>('week'); // Default to 'week'
   const [refreshKey, setRefreshKey] = useState(0);
-  const [showDemoData, setShowDemoData] = useState(false); // Default to OFF
+  const [showDemoData, setShowDemoData] = useState(true); // Default to ON for better UX
   
   // Define future days window (7 days)
   const futureDays = 7;

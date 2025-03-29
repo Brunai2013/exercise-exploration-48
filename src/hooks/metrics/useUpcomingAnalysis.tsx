@@ -57,26 +57,9 @@ export function useUpcomingAnalysis(
       
       console.log('Future window:', {
         today: format(today, 'yyyy-MM-dd HH:mm:ss'),
-        endDate: format(futureWindow, 'yyyy-MM-dd HH:mm:ss')
-      });
-      
-      // Log all workout dates for debugging
-      workoutsData.forEach(workout => {
-        if (workout.date) {
-          try {
-            const workoutDate = parseISO(workout.date);
-            const workoutFormatted = format(workoutDate, 'yyyy-MM-dd');
-            const todayFormatted = format(today, 'yyyy-MM-dd');
-            const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
-            
-            console.log('Workout:', workout.name, 'date:', workoutFormatted, 
-              'isOnOrAfterToday:', workoutFormatted >= todayFormatted, 
-              'isOnOrBeforeWindow:', workoutFormatted <= windowFormatted
-            );
-          } catch (error) {
-            console.error('Error parsing date:', workout.date, error);
-          }
-        }
+        endDate: format(futureWindow, 'yyyy-MM-dd HH:mm:ss'),
+        todayFormatted: format(today, 'yyyy-MM-dd'),
+        endDateFormatted: format(futureWindow, 'yyyy-MM-dd')
       });
       
       // Filter workouts to only include those with dates in the future window
@@ -86,13 +69,24 @@ export function useUpcomingAnalysis(
         try {
           // Parse the date and set to beginning of day for consistent comparison
           const workoutDate = startOfDay(parseISO(workout.date));
-          const todayFormatted = format(today, 'yyyy-MM-dd');
           const workoutFormatted = format(workoutDate, 'yyyy-MM-dd');
+          const todayFormatted = format(today, 'yyyy-MM-dd');
           const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
+          
+          console.log('Checking workout:', workout.name, 'date:', workoutFormatted, 
+            'today:', todayFormatted, 'windowEnd:', windowFormatted);
           
           // Check if workout is after today (or today) and before end of future window (or on end date)
           const isOnOrAfterToday = workoutFormatted >= todayFormatted;
           const isOnOrBeforeWindow = workoutFormatted <= windowFormatted;
+          
+          console.log('Workout eligibility:', {
+            name: workout.name,
+            date: workoutFormatted,
+            isOnOrAfterToday,
+            isOnOrBeforeWindow,
+            include: isOnOrAfterToday && isOnOrBeforeWindow
+          });
           
           return isOnOrAfterToday && isOnOrBeforeWindow;
         } catch (error) {
@@ -209,6 +203,8 @@ export function useUpcomingAnalysis(
       analysisData.sort((a, b) => b.futureCount - a.futureCount);
       
       console.log('Generated analysis data for', analysisData.length, 'categories within', days, 'day window');
+      console.log('Final upcoming workout data:', analysisData);
+      
       setUpcomingWorkoutData(analysisData);
       
     } catch (error) {
@@ -270,6 +266,8 @@ export function useUpcomingAnalysis(
       const tomorrow = addDays(today, 1);
       demoDates.push(format(tomorrow, 'yyyy-MM-dd'));
     }
+    
+    console.log('Generated demo dates:', demoDates);
     
     // This would typically use ML or statistical analysis of past workouts
     const upcomingAnalysis: CategoryAnalysis[] = validCategories.slice(0, Math.min(6, validCategories.length)).map((category, index) => {

@@ -52,26 +52,42 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
   
   // Generate frequency data from the upcoming workouts
   useEffect(() => {
-    console.log('WorkoutFrequencyFutureChart - Processing data...', data);
+    console.log('WorkoutFrequencyFutureChart - Processing data...', 
+      data?.length ? `${data.length} items` : 'no data', 
+      'first item has dates:', data?.[0]?.futureWorkoutDates?.length || 0);
     
     // Reset state first to avoid stale data
     setFrequencyData([]);
     
     // Check if we have data with future workout dates
     const hasValidData = data && data.length > 0;
-    console.log('WorkoutFrequencyFutureChart - Has valid data:', hasValidData, 'from', data?.length || 0, 'items');
+    const hasDataWithDates = hasValidData && data.some(item => 
+      item.futureWorkoutDates && item.futureWorkoutDates.length > 0
+    );
     
-    // For future workout dates, we just need to check the first item since all items share the same dates
-    const firstItem = data && data.length > 0 ? data[0] : null;
-    const hasDates = firstItem && firstItem.futureWorkoutDates && firstItem.futureWorkoutDates.length > 0;
+    console.log('WorkoutFrequencyFutureChart - Has valid data:', hasValidData, 
+      'has dates:', hasDataWithDates, 
+      'from', data?.length || 0, 'items');
     
-    setHasFutureData(hasValidData && hasDates);
+    setHasFutureData(hasDataWithDates);
     
-    // Only proceed if we have actual data
-    if (!hasValidData || !hasDates) {
+    // Only proceed if we have actual data with dates
+    if (!hasDataWithDates) {
+      console.log('No valid data with dates found, not generating frequency data');
       setFrequencyData([]);
       return;
     }
+    
+    // Get all unique workout dates from all items (they might have different dates)
+    const allWorkoutDates = new Set<string>();
+    data.forEach(item => {
+      if (item.futureWorkoutDates && item.futureWorkoutDates.length > 0) {
+        item.futureWorkoutDates.forEach(date => allWorkoutDates.add(date));
+      }
+    });
+    
+    const workoutDatesArray = Array.from(allWorkoutDates);
+    console.log('WorkoutFrequencyFutureChart - All unique workout dates:', workoutDatesArray);
     
     // Create data for the specified future days
     const today = new Date();
@@ -88,33 +104,13 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     
     console.log('WorkoutFrequencyFutureChart - Initialized days:', nextDays.map(d => d.name));
     
-    // Create a map to count workouts for each date
-    const workoutCountByDate = new Map<string, number>();
-    
-    // Use the dates from the first item (all items have the same dates)
-    if (firstItem && firstItem.futureWorkoutDates) {
-      console.log('WorkoutFrequencyFutureChart - Dates from data:', firstItem.futureWorkoutDates);
-      
-      // Count each date - we're counting workout days
-      firstItem.futureWorkoutDates.forEach(dateStr => {
-        try {
-          const date = parseISO(dateStr);
-          if (isValid(date)) {
-            const dayKey = format(date, 'yyyy-MM-dd');
-            workoutCountByDate.set(dayKey, 1); // Set to 1 (we count days with workouts)
-          }
-        } catch (error) {
-          console.error('Error parsing date:', dateStr, error);
-        }
-      });
-    }
-    
-    console.log('WorkoutFrequencyFutureChart - Workout dates mapped:', Array.from(workoutCountByDate.entries()));
-    
     // Update frequency data with actual workout counts
     const updatedFrequencyData = nextDays.map(day => {
       const dayKey = format(day.date, 'yyyy-MM-dd');
-      const hasWorkout = workoutCountByDate.has(dayKey);
+      const hasWorkout = workoutDatesArray.includes(dayKey);
+      
+      console.log('Checking day:', dayKey, 'has workout:', hasWorkout);
+      
       return {
         ...day,
         workouts: hasWorkout ? 1 : 0

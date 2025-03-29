@@ -24,13 +24,29 @@ export function useMetricsData(
     validDateRange 
   } = useBaseMetricsData(dateRange, refreshKey, disableDemoData);
   
+  console.log('useMetricsData - Base data loaded:', {
+    workoutCount: rawWorkoutData?.length || 0,
+    shouldUseDemoData,
+    isLoading,
+    error: error ? 'Error present' : 'No error'
+  });
+  
   // Get specific data types using the specialized hooks
   const { muscleGroupData } = useMuscleGroupData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { exerciseData } = useExerciseProgressData(rawWorkoutData, shouldUseDemoData, dateRange);
   const { frequencyData } = useFrequencyData(rawWorkoutData, shouldUseDemoData, dateRange, view);
   
   // Pass shouldUseDemoData and futureDays to useUpcomingAnalysis
+  // IMPORTANT: Ensure we're passing shouldUseDemoData correctly
   const { upcomingWorkoutData } = useUpcomingAnalysis(rawWorkoutData, shouldUseDemoData, futureDays);
+  
+  console.log('useMetricsData - Data processed:', {
+    muscleGroupCount: muscleGroupData?.length || 0,
+    exerciseCount: exerciseData?.length || 0,
+    frequencyCount: frequencyData?.length || 0,
+    upcomingCount: upcomingWorkoutData?.length || 0,
+    shouldUseDemoData
+  });
 
   return {
     muscleGroupData,
