@@ -53,7 +53,7 @@ export function useUpcomingAnalysis(
       // Get today's date for comparison - use start of day for consistent comparison
       const today = startOfDay(new Date());
       // Calculate end date of window (today + X days)
-      const futureWindow = endOfDay(addDays(today, days - 1)); // Subtract 1 to include today in the count
+      const futureWindow = endOfDay(addDays(today, days)); // Note: using full days value to include future days properly
       
       console.log('Future window:', {
         today: format(today, 'yyyy-MM-dd HH:mm:ss'),
@@ -76,7 +76,7 @@ export function useUpcomingAnalysis(
           console.log('Checking workout:', workout.name, 'date:', workoutFormatted, 
             'today:', todayFormatted, 'windowEnd:', windowFormatted);
           
-          // Check if workout is after today (or today) and before end of future window (or on end date)
+          // Check if workout is on or after today AND on or before end of future window
           const isOnOrAfterToday = workoutFormatted >= todayFormatted;
           const isOnOrBeforeWindow = workoutFormatted <= windowFormatted;
           
@@ -255,7 +255,7 @@ export function useUpcomingAnalysis(
     
     // Create a more realistic pattern - not every day has workouts
     for (let i = 0; i < futureDays; i++) {
-      if (Math.random() > 0.7) { // 30% chance of having a workout on this day
+      if (Math.random() > 0.6) { // 40% chance of having a workout on this day
         const date = addDays(today, i);
         demoDates.push(format(date, 'yyyy-MM-dd'));
       }

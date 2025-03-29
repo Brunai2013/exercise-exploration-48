@@ -82,7 +82,12 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     const allWorkoutDates = new Set<string>();
     data.forEach(item => {
       if (item.futureWorkoutDates && item.futureWorkoutDates.length > 0) {
-        item.futureWorkoutDates.forEach(date => allWorkoutDates.add(date));
+        item.futureWorkoutDates.forEach(date => {
+          // Check that the date is not circular reference (an issue observed in logs)
+          if (typeof date === 'string') {
+            allWorkoutDates.add(date);
+          }
+        });
       }
     });
     
@@ -107,6 +112,7 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     // Update frequency data with actual workout counts
     const updatedFrequencyData = nextDays.map(day => {
       const dayKey = format(day.date, 'yyyy-MM-dd');
+      // Check if this day has a workout in our dates array
       const hasWorkout = workoutDatesArray.includes(dayKey);
       
       console.log('Checking day:', dayKey, 'has workout:', hasWorkout);

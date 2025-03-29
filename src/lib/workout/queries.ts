@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Workout } from '../types';
 import { formatWorkoutsFromDb, formatWorkoutFromDb } from './utils';
@@ -198,13 +199,14 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
     hasFutureDates
   });
   
-  // For past workouts, use the completed flag. For future workouts, drop this constraint
+  // Important: For metrics, we should not filter by completion status for future dates
   // If we're looking at any future dates, don't filter by completion status
   const completedFilter = hasFutureDates ? {} : { completed: true };
   
   console.log('Using completed filter:', completedFilter, 'for period', from, 'to', to);
   
   // Use a more optimized query specifically for metrics
+  // For future workouts, we want all future workouts in the range, not just those from the current day
   const { data, error } = await supabase
     .from('workouts')
     .select(`

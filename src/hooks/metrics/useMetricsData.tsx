@@ -13,7 +13,7 @@ export function useMetricsData(
   view: 'weekly' | 'monthly',
   refreshKey: number = 0,
   disableDemoData: boolean = false,
-  futureDays: number = 7 // Add parameter with default value of 7 days
+  futureDays: number = 7 // Parameter with default value of 7 days
 ) {
   // Get base data (fetches from API)
   const { 
@@ -28,7 +28,8 @@ export function useMetricsData(
     workoutCount: rawWorkoutData?.length || 0,
     shouldUseDemoData,
     isLoading,
-    error: error ? 'Error present' : 'No error'
+    error: error ? 'Error present' : 'No error',
+    futureDays // Log the future days value
   });
   
   // Get specific data types using the specialized hooks
@@ -45,7 +46,8 @@ export function useMetricsData(
     exerciseCount: exerciseData?.length || 0,
     frequencyCount: frequencyData?.length || 0,
     upcomingCount: upcomingWorkoutData?.length || 0,
-    shouldUseDemoData
+    shouldUseDemoData,
+    futureDays // Log the future days value
   });
 
   return {
