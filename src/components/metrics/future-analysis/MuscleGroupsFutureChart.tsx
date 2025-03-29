@@ -47,13 +47,19 @@ const MuscleGroupsFutureChart: React.FC<MuscleGroupsFutureChartProps> = ({
   isLoading, 
   futureDays = 7 
 }) => {
+  console.log('MuscleGroupsFutureChart rendering with data:', data?.length, 'items, isLoading:', isLoading);
+  
   const { activeIndex, onPieEnter } = usePieActiveState();
 
   // Always use the same rendering path to avoid hook order issues
   // Prepare data for pie chart - do this unconditionally to avoid hook ordering issues
   const pieData = React.useMemo(() => {
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
     // More detailed logging to help debug
-    console.log('MuscleGroupsFutureChart processing data:', data?.length || 0, 'items');
+    console.log('MuscleGroupsFutureChart processing data:', data.length, 'items');
     
     const processedData = data
       .filter(item => (item.futureCount || 0) > 0)

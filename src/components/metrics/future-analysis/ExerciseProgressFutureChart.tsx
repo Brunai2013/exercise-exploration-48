@@ -19,6 +19,8 @@ const ExerciseProgressFutureChart: React.FC<ExerciseProgressFutureChartProps> = 
   isLoading,
   futureDays = 7
 }) => {
+  console.log('ExerciseProgressFutureChart rendering with data:', data?.length, 'items, isLoading:', isLoading);
+  
   if (isLoading) {
     return <Card><LoadingState /></Card>;
   }

@@ -101,9 +101,10 @@ const WorkoutMetrics = () => {
       exercises: exerciseData?.length || 0,
       frequency: frequencyData?.length || 0,
       upcoming: upcomingWorkoutData?.length || 0,
-      loading: isLoading
+      loading: isLoading,
+      showDemoData
     });
-  }, [dateRange, muscleGroupData, exerciseData, frequencyData, upcomingWorkoutData, isLoading]);
+  }, [dateRange, muscleGroupData, exerciseData, frequencyData, upcomingWorkoutData, isLoading, showDemoData]);
 
   // Ensure from date is before to date
   const handleDateRangeChange = (range: { from?: Date; to?: Date } | undefined) => {

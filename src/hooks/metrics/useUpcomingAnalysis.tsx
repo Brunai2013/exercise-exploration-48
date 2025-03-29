@@ -27,6 +27,12 @@ export function useUpcomingAnalysis(
   
   // Process real workout data to find upcoming (future) workouts
   useEffect(() => {
+    console.log('useUpcomingAnalysis effect running with:', {
+      workoutCount: rawWorkoutData.length,
+      shouldUseDemoData,
+      futureDays
+    });
+    
     if (rawWorkoutData.length > 0) {
       processUpcomingWorkoutData(rawWorkoutData, futureDays);
     } else if (shouldUseDemoData) {
@@ -57,11 +63,19 @@ export function useUpcomingAnalysis(
       // Log all workout dates for debugging
       workoutsData.forEach(workout => {
         if (workout.date) {
-          const workoutDate = parseISO(workout.date);
-          console.log('Workout:', workout.name, 'date:', format(workoutDate, 'yyyy-MM-dd'), 
-            'isAfter/Equal today:', isAfter(workoutDate, today) || format(workoutDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'), 
-            'isBefore/Equal window end:', isBefore(workoutDate, futureWindow) || format(workoutDate, 'yyyy-MM-dd') === format(futureWindow, 'yyyy-MM-dd')
-          );
+          try {
+            const workoutDate = parseISO(workout.date);
+            const workoutFormatted = format(workoutDate, 'yyyy-MM-dd');
+            const todayFormatted = format(today, 'yyyy-MM-dd');
+            const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
+            
+            console.log('Workout:', workout.name, 'date:', workoutFormatted, 
+              'isOnOrAfterToday:', workoutFormatted >= todayFormatted, 
+              'isOnOrBeforeWindow:', workoutFormatted <= windowFormatted
+            );
+          } catch (error) {
+            console.error('Error parsing date:', workout.date, error);
+          }
         }
       });
       
@@ -69,23 +83,25 @@ export function useUpcomingAnalysis(
       const futureWorkouts = workoutsData.filter(workout => {
         if (!workout.date) return false;
         
-        // Parse the date and set to beginning of day for consistent comparison
-        const workoutDate = startOfDay(parseISO(workout.date));
-        const todayFormatted = format(today, 'yyyy-MM-dd');
-        const workoutFormatted = format(workoutDate, 'yyyy-MM-dd');
-        const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
-        
-        // Check if workout is after today (or today) and before end of future window (or on end date)
-        const isOnOrAfterToday = workoutFormatted >= todayFormatted;
-        const isOnOrBeforeWindow = workoutFormatted <= windowFormatted;
-        
-        return isOnOrAfterToday && isOnOrBeforeWindow;
+        try {
+          // Parse the date and set to beginning of day for consistent comparison
+          const workoutDate = startOfDay(parseISO(workout.date));
+          const todayFormatted = format(today, 'yyyy-MM-dd');
+          const workoutFormatted = format(workoutDate, 'yyyy-MM-dd');
+          const windowFormatted = format(futureWindow, 'yyyy-MM-dd');
+          
+          // Check if workout is after today (or today) and before end of future window (or on end date)
+          const isOnOrAfterToday = workoutFormatted >= todayFormatted;
+          const isOnOrBeforeWindow = workoutFormatted <= windowFormatted;
+          
+          return isOnOrAfterToday && isOnOrBeforeWindow;
+        } catch (error) {
+          console.error('Error comparing dates for workout:', workout.name, error);
+          return false;
+        }
       });
       
       console.log('Found', futureWorkouts.length, 'future workouts within', days, 'day window');
-      futureWorkouts.forEach(workout => {
-        console.log('Future workout:', workout.name, 'date:', workout.date);
-      });
       
       if (futureWorkouts.length === 0) {
         if (shouldUseDemoData) {
@@ -226,6 +242,8 @@ export function useUpcomingAnalysis(
   
   // Generate artificial/demo analysis for upcoming workouts
   const generateDemoUpcomingAnalysis = () => {
+    console.log('Generating demo upcoming analysis data');
+    
     // Filter out empty or invalid categories
     const validCategories = categories.filter(category => category && category.id);
     
@@ -245,6 +263,12 @@ export function useUpcomingAnalysis(
         const date = addDays(today, i);
         demoDates.push(format(date, 'yyyy-MM-dd'));
       }
+    }
+    
+    // If we didn't generate any dates randomly, add at least one
+    if (demoDates.length === 0) {
+      const tomorrow = addDays(today, 1);
+      demoDates.push(format(tomorrow, 'yyyy-MM-dd'));
     }
     
     // This would typically use ML or statistical analysis of past workouts
@@ -275,7 +299,7 @@ export function useUpcomingAnalysis(
       };
     });
     
-    console.log('Generated demo upcoming analysis data:', upcomingAnalysis.length, 'with dates:', demoDates);
+    console.log('Generated demo upcoming analysis data:', upcomingAnalysis.length, 'items with dates:', demoDates);
     setUpcomingWorkoutData(upcomingAnalysis);
   };
 

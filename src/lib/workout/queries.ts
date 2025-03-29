@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Workout } from '../types';
 import { formatWorkoutsFromDb, formatWorkoutFromDb } from './utils';
@@ -188,12 +189,21 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
   
   // For future workouts, we need to get workouts from today onwards
   const isFuturePeriod = from >= todayFormatted;
+  const hasFutureDates = to > todayFormatted;
+  
+  console.log('Metrics query details:', {
+    todayFormatted,
+    requestedFrom: from,
+    requestedTo: to,
+    isFuturePeriod,
+    hasFutureDates
+  });
   
   // For past workouts, use the completed flag. For future workouts, drop this constraint
-  const completedFilter = isFuturePeriod ? {} : { completed: true };
+  // If we're looking at any future dates, don't filter by completion status
+  const completedFilter = hasFutureDates ? {} : { completed: true };
   
-  console.log('Using completed filter:', completedFilter, 'for period', from, 'to', to, 
-    'isFuturePeriod:', isFuturePeriod);
+  console.log('Using completed filter:', completedFilter, 'for period', from, 'to', to);
   
   // Use a more optimized query specifically for metrics
   const { data, error } = await supabase
@@ -223,15 +233,12 @@ export const getWorkoutsForMetrics = async (from: string, to: string): Promise<a
   // Log more detailed information about found workouts
   console.log(`Found ${data?.length || 0} workouts for metrics within range ${from} to ${to}`);
   
-  // Group workouts by date for debugging
-  const workoutsByDate = data?.reduce((acc, workout) => {
-    const date = workout.date;
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(workout.name);
-    return acc;
-  }, {});
-  
-  console.log('Workouts by date:', workoutsByDate);
+  // Log the details of each workout for debugging
+  if (data) {
+    data.forEach(workout => {
+      console.log(`Workout: ${workout.name}, date: ${workout.date}, completed: ${workout.completed}, exercises: ${workout.workout_exercises?.length || 0}`);
+    });
+  }
   
   return data || [];
 };

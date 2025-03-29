@@ -52,19 +52,23 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
   
   // Generate frequency data from the upcoming workouts
   useEffect(() => {
-    console.log('WorkoutFrequencyFutureChart - Processing data...');
+    console.log('WorkoutFrequencyFutureChart - Processing data...', data);
     
     // Reset state first to avoid stale data
     setFrequencyData([]);
     
     // Check if we have data with future workout dates
-    const hasValidData = data && data.length > 0 && data.some(item => item.futureWorkoutDates && item.futureWorkoutDates.length > 0);
-    console.log('WorkoutFrequencyFutureChart - Has valid data with dates:', hasValidData, 'from', data?.length || 0, 'items');
+    const hasValidData = data && data.length > 0;
+    console.log('WorkoutFrequencyFutureChart - Has valid data:', hasValidData, 'from', data?.length || 0, 'items');
     
-    setHasFutureData(hasValidData);
+    // For future workout dates, we just need to check the first item since all items share the same dates
+    const firstItem = data && data.length > 0 ? data[0] : null;
+    const hasDates = firstItem && firstItem.futureWorkoutDates && firstItem.futureWorkoutDates.length > 0;
+    
+    setHasFutureData(hasValidData && hasDates);
     
     // Only proceed if we have actual data
-    if (!hasValidData) {
+    if (!hasValidData || !hasDates) {
       setFrequencyData([]);
       return;
     }
@@ -82,41 +86,28 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
       };
     });
     
+    console.log('WorkoutFrequencyFutureChart - Initialized days:', nextDays.map(d => d.name));
+    
     // Create a map to count workouts for each date
     const workoutCountByDate = new Map<string, number>();
     
-    // Loop through all future workout dates from all categories and count them
-    data.forEach(category => {
-      if (category.futureWorkoutDates && Array.isArray(category.futureWorkoutDates)) {
-        // Since all categories will have the same workout dates (as we're passing the same dates to all),
-        // we only need to process the first category with valid dates
-        const firstWithDates = data.find(item => 
-          item.futureWorkoutDates && 
-          Array.isArray(item.futureWorkoutDates) && 
-          item.futureWorkoutDates.length > 0
-        );
-        
-        if (firstWithDates && firstWithDates.futureWorkoutDates) {
-          console.log('WorkoutFrequencyFutureChart - Found dates:', firstWithDates.futureWorkoutDates);
-          
-          // Count each date only once - we're counting workout days, not exercises
-          firstWithDates.futureWorkoutDates.forEach(dateStr => {
-            try {
-              const date = parseISO(dateStr);
-              if (isValid(date)) {
-                const dayKey = format(date, 'yyyy-MM-dd');
-                workoutCountByDate.set(dayKey, 1); // Set to 1 (we want to count days with workouts, not total exercises)
-              }
-            } catch (error) {
-              console.error('Error parsing date:', dateStr, error);
-            }
-          });
-          
-          // Only process the first category to avoid double counting
-          return;
+    // Use the dates from the first item (all items have the same dates)
+    if (firstItem && firstItem.futureWorkoutDates) {
+      console.log('WorkoutFrequencyFutureChart - Dates from data:', firstItem.futureWorkoutDates);
+      
+      // Count each date - we're counting workout days
+      firstItem.futureWorkoutDates.forEach(dateStr => {
+        try {
+          const date = parseISO(dateStr);
+          if (isValid(date)) {
+            const dayKey = format(date, 'yyyy-MM-dd');
+            workoutCountByDate.set(dayKey, 1); // Set to 1 (we count days with workouts)
+          }
+        } catch (error) {
+          console.error('Error parsing date:', dateStr, error);
         }
-      }
-    });
+      });
+    }
     
     console.log('WorkoutFrequencyFutureChart - Workout dates mapped:', Array.from(workoutCountByDate.entries()));
     
@@ -142,7 +133,9 @@ const WorkoutFrequencyFutureChart: React.FC<WorkoutFrequencyFutureChartProps> = 
     );
   }
   
-  // Always render empty state if no data
+  console.log('WorkoutFrequencyFutureChart rendering with hasFutureData:', hasFutureData, 'frequencyData length:', frequencyData.length);
+  
+  // Check for valid data to display
   if (!hasFutureData || frequencyData.length === 0) {
     return (
       <Card>
