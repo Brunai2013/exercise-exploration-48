@@ -1,21 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import * as localDB from './db';
 
 // EXERCISE FUNCTIONS
 export const getAllExercises = async (): Promise<Exercise[]> => {
   try {
+    // Try to fetch from Supabase first
     const { data, error } = await supabase
       .from('exercises')
       .select('*')
       .order('name');
     
     if (error) {
-      console.error('Error fetching exercises:', error);
+      console.error('Error fetching exercises from Supabase:', error);
       throw new Error(error.message);
     }
     
+    // Successfully got data from Supabase
+    console.log('Successfully loaded exercises from Supabase:', data.length);
     return data.map(item => ({
       id: item.id,
       name: item.name,
@@ -24,13 +28,30 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
       imageUrl: item.image_url || ''
     }));
   } catch (error) {
-    console.error('Error in getAllExercises:', error);
-    throw error;
+    console.error('Failed to fetch from Supabase, falling back to local DB:', error);
+    
+    try {
+      // Fallback to IndexedDB
+      const localExercises = await localDB.getAllExercises();
+      
+      if (localExercises && localExercises.length > 0) {
+        toast.info(`Loaded ${localExercises.length} exercises from local storage`);
+        console.log('Successfully loaded exercises from local DB:', localExercises.length);
+        return localExercises;
+      } else {
+        console.warn('No exercises found in local storage either');
+        return [];
+      }
+    } catch (localError) {
+      console.error('Failed to fetch from local DB too:', localError);
+      return [];
+    }
   }
 };
 
 export const getExerciseById = async (id: string): Promise<Exercise | null> => {
   try {
+    // Try to fetch from Supabase first
     const { data, error } = await supabase
       .from('exercises')
       .select('*')
@@ -38,7 +59,7 @@ export const getExerciseById = async (id: string): Promise<Exercise | null> => {
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching exercise:', error);
+      console.error('Error fetching exercise from Supabase:', error);
       throw new Error(error.message);
     }
     
@@ -52,8 +73,16 @@ export const getExerciseById = async (id: string): Promise<Exercise | null> => {
       imageUrl: data.image_url || ''
     };
   } catch (error) {
-    console.error('Error in getExerciseById:', error);
-    throw error;
+    console.error('Failed to fetch from Supabase, falling back to local DB:', error);
+    
+    try {
+      // Fallback to IndexedDB
+      const localExercise = await localDB.getExerciseById(id);
+      return localExercise || null;
+    } catch (localError) {
+      console.error('Failed to fetch from local DB too:', localError);
+      return null;
+    }
   }
 };
 
