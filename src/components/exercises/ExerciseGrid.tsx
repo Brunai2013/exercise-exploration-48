@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Exercise, Category } from '@/lib/types';
 import ExerciseCard from './ExerciseCard';

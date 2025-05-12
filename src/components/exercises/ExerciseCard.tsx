@@ -33,6 +33,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   // Check if the image URL is valid on component mount
   useEffect(() => {
     if (exercise.imageUrl) {
+      console.log('Trying to load image for exercise:', exercise.name, exercise.imageUrl);
+      
       // Create a new Image object to check if the URL is valid
       const img = new Image();
       img.onload = () => {
@@ -40,7 +42,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
         setImageError(false);
       };
       img.onerror = () => {
-        console.log('Image failed to load:', exercise.imageUrl);
+        console.warn('Image failed to load:', exercise.imageUrl);
         setImageError(true);
         setImageUrl(null);
       };
@@ -49,7 +51,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
       setImageError(true);
       setImageUrl(null);
     }
-  }, [exercise.imageUrl]);
+  }, [exercise.imageUrl, exercise.name]);
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,6 +64,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   };
 
   const handleImageError = () => {
+    console.warn('Image error occurred for:', exercise.name);
     setImageError(true);
     setImageUrl(null);
   };

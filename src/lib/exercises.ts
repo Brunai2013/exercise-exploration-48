@@ -24,29 +24,41 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
     if (data && data.length > 0) {
       console.log('Successfully loaded exercises from Supabase:', data.length);
       
+      // Process image URLs before saving to local DB
+      const processedExercises = data.map(item => {
+        // Check if image_url is a Storage path or a full URL
+        let imageUrl = item.image_url || '';
+        
+        // If it's from Supabase Storage but doesn't have the full URL
+        if (imageUrl && imageUrl.startsWith('exercises/') && !imageUrl.startsWith('http')) {
+          // Get the public URL
+          const { data: urlData } = supabase.storage
+            .from('exercise-images')
+            .getPublicUrl(imageUrl);
+          imageUrl = urlData.publicUrl;
+          console.log('Processed storage URL:', imageUrl);
+        }
+        
+        return {
+          id: item.id,
+          name: item.name,
+          description: item.description || '',
+          category: item.category,
+          imageUrl: imageUrl
+        };
+      });
+      
       // Also save to local DB for offline use
       try {
-        for (const exercise of data) {
-          await localDB.saveExercise({
-            id: exercise.id,
-            name: exercise.name,
-            description: exercise.description || '',
-            category: exercise.category,
-            imageUrl: exercise.image_url || ''
-          });
+        for (const exercise of processedExercises) {
+          await localDB.saveExercise(exercise);
         }
         console.log('Exercises saved to local DB for offline use');
       } catch (saveError) {
         console.error('Error saving exercises to local DB:', saveError);
       }
       
-      return data.map(item => ({
-        id: item.id,
-        name: item.name,
-        description: item.description || '',
-        category: item.category,
-        imageUrl: item.image_url || ''
-      }));
+      return processedExercises;
     } else {
       console.warn('No exercises found in Supabase');
       throw new Error('No exercises found in Supabase');
