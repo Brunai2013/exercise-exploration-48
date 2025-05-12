@@ -25,10 +25,32 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   const { getCategory } = useCategoryColors();
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   
   // Get category from the centralized hook
   const category = exercise.category ? getCategory(exercise.category) : null;
   
+  // Check if the image URL is valid on component mount
+  useEffect(() => {
+    if (exercise.imageUrl) {
+      // Create a new Image object to check if the URL is valid
+      const img = new Image();
+      img.onload = () => {
+        setImageUrl(exercise.imageUrl);
+        setImageError(false);
+      };
+      img.onerror = () => {
+        console.log('Image failed to load:', exercise.imageUrl);
+        setImageError(true);
+        setImageUrl(null);
+      };
+      img.src = exercise.imageUrl;
+    } else {
+      setImageError(true);
+      setImageUrl(null);
+    }
+  }, [exercise.imageUrl]);
+
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onEdit) onEdit();
@@ -41,6 +63,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
   const handleImageError = () => {
     setImageError(true);
+    setImageUrl(null);
   };
   
   return (
@@ -53,9 +76,9 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
           onMouseLeave={() => setIsHovered(false)}
         >
           <AspectRatio ratio={4/3} className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-stone-100">
-            {!imageError && exercise.imageUrl ? (
+            {!imageError && imageUrl ? (
               <img 
-                src={exercise.imageUrl} 
+                src={imageUrl} 
                 alt={exercise.name}
                 className="object-cover w-full h-full transition-all duration-300 group-hover:scale-105"
                 onError={handleImageError}

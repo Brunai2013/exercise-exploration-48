@@ -1,7 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import * as localDB from './db';
+import { defaultCategories } from './defaultData';
 
 // Clear cache on each function call to ensure we don't use stale data
 const categoryCache: Record<string, Category> = {};
@@ -12,30 +13,73 @@ export const getAllCategories = async (): Promise<Category[]> => {
     // Clear cache to ensure we get fresh data
     Object.keys(categoryCache).forEach(key => delete categoryCache[key]);
     
+    console.log('Attempting to fetch categories from Supabase...');
     const { data, error } = await supabase
       .from('categories')
       .select('*')
       .order('name');
     
     if (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching categories from Supabase:', error);
       throw new Error(error.message);
     }
     
-    // Ensure all categories have the new color format and store in cache
-    return data.map(cat => {
-      const category = {
-        ...cat,
-        color: cat.color || 'bg-[#8B5CF6] text-white'
-      };
+    if (data && data.length > 0) {
+      console.log('Successfully loaded categories from Supabase:', data.length);
       
-      // Update cache with this fresh data
-      categoryCache[cat.id] = category;
-      return category;
-    });
+      // Save to local DB for offline use
+      try {
+        for (const category of data) {
+          await localDB.saveCategory({
+            id: category.id,
+            name: category.name,
+            color: category.color || 'bg-[#8B5CF6] text-white'
+          });
+        }
+      } catch (saveError) {
+        console.error('Error saving categories to local DB:', saveError);
+      }
+      
+      // Ensure all categories have the new color format and store in cache
+      return data.map(cat => {
+        const category = {
+          ...cat,
+          color: cat.color || 'bg-[#8B5CF6] text-white'
+        };
+        
+        // Update cache with this fresh data
+        categoryCache[cat.id] = category;
+        return category;
+      });
+    } else {
+      console.warn('No categories found in Supabase');
+      throw new Error('No categories found in Supabase');
+    }
   } catch (error) {
-    console.error('Error in getAllCategories:', error);
-    throw error;
+    console.error('Error in getAllCategories from Supabase, falling back to local DB:', error);
+    
+    try {
+      // Fallback to IndexedDB
+      console.log('Attempting to fetch categories from local DB...');
+      const localCategories = await localDB.getAllCategories();
+      
+      if (localCategories && localCategories.length > 0) {
+        console.log('Successfully loaded categories from local DB:', localCategories.length);
+        return localCategories;
+      } else {
+        console.warn('No categories found in local storage either, using default data');
+        
+        // Use default categories as last resort
+        for (const category of defaultCategories) {
+          await localDB.saveCategory(category);
+        }
+        
+        return defaultCategories;
+      }
+    } catch (localError) {
+      console.error('Failed to fetch from local DB too:', localError);
+      return defaultCategories;
+    }
   }
 };
 

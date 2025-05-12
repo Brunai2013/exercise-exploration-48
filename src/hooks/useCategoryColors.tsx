@@ -3,41 +3,82 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/lib/types';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import * as localDB from '@/lib/db';
+import { defaultCategories } from '@/lib/defaultData';
 
 /**
- * Hook for accessing category colors with real-time updates
+ * Hook for accessing category colors with real-time updates and offline fallback
  */
 export function useCategoryColors() {
   const queryClient = useQueryClient();
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
   
   // Fetch categories with forced refetch to ensure fresh data
   const { 
-    data: categories = [], 
+    data: onlineCategories = [], 
     isLoading,
     error,
     refetch
   } = useQuery({
     queryKey: ['category-colors'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
+      try {
+        console.log('Attempting to fetch categories from Supabase...');
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('name');
+          
+        if (error) {
+          console.error('Error fetching categories from Supabase:', error);
+          throw new Error(`Failed to fetch category colors: ${error.message}`);
+        }
         
-      if (error) {
-        throw new Error(`Failed to fetch category colors: ${error.message}`);
+        console.log('Successfully loaded categories from Supabase:', data?.length || 0);
+        return data.map(cat => ({
+          ...cat,
+          color: cat.color || 'bg-gray-200 text-gray-700' // Ensure default color
+        })) as Category[];
+      } catch (error) {
+        console.error('Failed to fetch categories from Supabase, falling back to local DB:', error);
+        throw error;
       }
-      
-      return data.map(cat => ({
-        ...cat,
-        color: cat.color || 'bg-gray-200 text-gray-700' // Ensure default color
-      })) as Category[];
     },
     staleTime: 0, // Always consider data stale to force refetch
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    retry: 1,
   });
+  
+  // Load local categories on mount and when supabase fetch fails
+  useEffect(() => {
+    const loadLocalCategories = async () => {
+      try {
+        const categories = await localDB.getAllCategories();
+        console.log('Loaded categories from local DB:', categories?.length || 0);
+        if (categories && categories.length > 0) {
+          setLocalCategories(categories);
+        } else {
+          // If no local categories, use default ones
+          console.log('No local categories found, using defaults');
+          setLocalCategories(defaultCategories);
+          // Also save default categories to local DB
+          for (const category of defaultCategories) {
+            await localDB.saveCategory(category);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading local categories:', err);
+        setLocalCategories(defaultCategories);
+      }
+    };
+    
+    // Only load local categories if online fetch failed
+    if (error) {
+      loadLocalCategories();
+    }
+  }, [error]);
   
   // Force refresh on mount to ensure we have the latest data
   useEffect(() => {
@@ -62,6 +103,9 @@ export function useCategoryColors() {
       subscription.unsubscribe();
     };
   }, [queryClient, refetch]);
+  
+  // Use online categories if available, otherwise fallback to local
+  const categories = error ? localCategories : onlineCategories;
   
   // Get category color by ID with fresh data
   const getCategoryColor = (categoryId: string): string => {
