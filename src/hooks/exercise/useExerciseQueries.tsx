@@ -85,8 +85,14 @@ export function useExerciseQueries() {
   const refreshAllData = useCallback(() => {
     toast.info('Refreshing data...', { id: 'refresh-data' });
     Promise.all([refetchExercises(), refetchCategories()])
-      .then(() => toast.success('Data refreshed successfully', { id: 'refresh-data' }))
-      .catch((error) => toast.error(`Refresh failed: ${error.message}`, { id: 'refresh-data' }));
+      .then(() => {
+        console.log('Data refreshed successfully');
+        toast.success('Data refreshed successfully', { id: 'refresh-data' });
+      })
+      .catch((error) => {
+        console.error('Refresh failed:', error);
+        toast.error(`Refresh failed: ${error.message}`, { id: 'refresh-data' });
+      });
   }, [refetchExercises, refetchCategories]);
 
   return {

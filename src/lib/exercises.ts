@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import * as localDB from './db';
 import { defaultExercises } from './defaultData';
+import { ensureFullImageUrl } from './storage';
 
 // EXERCISE FUNCTIONS
 export const getAllExercises = async (): Promise<Exercise[]> => {
@@ -39,12 +40,14 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
           console.log('Processed storage URL:', imageUrl);
         }
         
+        // Also store the original path for future reference
         return {
           id: item.id,
           name: item.name,
           description: item.description || '',
           category: item.category,
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
+          imagePath: item.image_url || ''
         };
       });
       
@@ -178,13 +181,21 @@ export const addMultipleExercises = async (exercises: Exercise[]): Promise<void>
 
 export const updateExercise = async (exercise: Exercise): Promise<void> => {
   try {
+    // If the image is a path to Supabase Storage (not a full URL), we need to preserve it as is
+    let imageUrlToSave = exercise.imageUrl;
+    
+    // If we have both the URL and the original path, use the path for DB storage
+    if (exercise.imagePath && exercise.imagePath.startsWith('exercises/')) {
+      imageUrlToSave = exercise.imagePath;
+    }
+    
     const { error } = await supabase
       .from('exercises')
       .update({
         name: exercise.name,
         description: exercise.description,
         category: exercise.category,
-        image_url: exercise.imageUrl,
+        image_url: imageUrlToSave,
         updated_at: new Date().toISOString()
       })
       .eq('id', exercise.id);

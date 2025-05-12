@@ -35,18 +35,42 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     if (exercise.imageUrl) {
       console.log('Trying to load image for exercise:', exercise.name, exercise.imageUrl);
       
-      // Create a new Image object to check if the URL is valid
-      const img = new Image();
-      img.onload = () => {
-        setImageUrl(exercise.imageUrl);
-        setImageError(false);
-      };
-      img.onerror = () => {
-        console.warn('Image failed to load:', exercise.imageUrl);
-        setImageError(true);
-        setImageUrl(null);
-      };
-      img.src = exercise.imageUrl;
+      // If it's from Supabase Storage but doesn't have the full URL
+      if (exercise.imageUrl.startsWith('exercises/') && !exercise.imageUrl.startsWith('http')) {
+        console.log('Converting storage path to URL:', exercise.imageUrl);
+        // We need to convert it to a full URL - this should have been done in the API layer
+        // but we'll handle it here as a fallback
+        import('@/integrations/supabase/client').then(({ supabase }) => {
+          const { data } = supabase.storage
+            .from('exercise-images')
+            .getPublicUrl(exercise.imageUrl);
+          
+          const fullUrl = data?.publicUrl;
+          console.log('Converted to full URL:', fullUrl);
+          
+          if (fullUrl) {
+            setImageUrl(fullUrl);
+            setImageError(false);
+          } else {
+            console.warn('Failed to get public URL for:', exercise.imageUrl);
+            setImageError(true);
+          }
+        });
+      } else {
+        // Regular URL or already full Supabase URL
+        // Create a new Image object to check if the URL is valid
+        const img = new Image();
+        img.onload = () => {
+          setImageUrl(exercise.imageUrl);
+          setImageError(false);
+        };
+        img.onerror = () => {
+          console.warn('Image failed to load:', exercise.imageUrl);
+          setImageError(true);
+          setImageUrl(null);
+        };
+        img.src = exercise.imageUrl;
+      }
     } else {
       setImageError(true);
       setImageUrl(null);

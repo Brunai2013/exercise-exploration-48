@@ -12,6 +12,8 @@ export const uploadExerciseImage = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${folderName}/${fileName}`;
     
+    console.log('Uploading image to Supabase Storage:', filePath);
+    
     // Upload the file to Supabase Storage
     const { error: uploadError, data } = await supabase.storage
       .from('exercise-images')
@@ -26,6 +28,8 @@ export const uploadExerciseImage = async (
     const { data: urlData } = supabase.storage
       .from('exercise-images')
       .getPublicUrl(filePath);
+    
+    console.log('Image uploaded successfully. Path:', filePath, 'URL:', urlData.publicUrl);
     
     return {
       path: filePath,
@@ -43,6 +47,8 @@ export const deleteExerciseImage = async (filePath: string): Promise<void> => {
     const pathParts = filePath.split('/');
     const actualPath = pathParts.length > 1 ? pathParts.slice(pathParts.length - 2).join('/') : filePath;
     
+    console.log('Deleting image from Supabase Storage:', actualPath);
+    
     // Remove the file from Supabase Storage
     const { error } = await supabase.storage
       .from('exercise-images')
@@ -52,8 +58,45 @@ export const deleteExerciseImage = async (filePath: string): Promise<void> => {
       console.error('Error deleting image:', error);
       throw error;
     }
+    
+    console.log('Image deleted successfully');
   } catch (error) {
     console.error('Error deleting image:', error);
     throw error;
   }
+};
+
+// Utility function to ensure we always have a full URL for storage paths
+export const ensureFullImageUrl = (imagePath: string): string => {
+  if (!imagePath) return '';
+  
+  // If it's already a full URL, return it as is
+  if (imagePath.startsWith('http')) return imagePath;
+  
+  // If it's a storage path, convert it to a full URL
+  if (imagePath.startsWith('exercises/')) {
+    const { data } = supabase.storage
+      .from('exercise-images')
+      .getPublicUrl(imagePath);
+    
+    return data?.publicUrl || '';
+  }
+  
+  // Return the original path if it doesn't match any patterns
+  return imagePath;
+};
+
+// Function to check if a URL is valid or not
+export const isImageUrlValid = async (url: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (!url) {
+      resolve(false);
+      return;
+    }
+    
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
 };

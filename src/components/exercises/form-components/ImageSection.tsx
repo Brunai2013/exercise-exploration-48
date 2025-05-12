@@ -6,6 +6,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
 import { Exercise } from '@/lib/types';
+import { ensureFullImageUrl } from '@/lib/storage';
 
 interface ImageSectionProps {
   form: UseFormReturn<Partial<Exercise>>;
@@ -27,6 +28,24 @@ const ImageSection: React.FC<ImageSectionProps> = ({
       onImageChange(null, null);
     }
   };
+
+  // Process the imageUrl from the form to ensure it's always a full URL for preview
+  React.useEffect(() => {
+    const currentImageUrl = form.getValues('imageUrl');
+    if (currentImageUrl && currentImageUrl.startsWith('exercises/') && !currentImageUrl.startsWith('http')) {
+      // Convert storage path to full URL for preview
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        const { data } = supabase.storage
+          .from('exercise-images')
+          .getPublicUrl(currentImageUrl);
+        
+        if (data?.publicUrl && !imagePreview) {
+          // Only set for preview, don't change the actual form value
+          onImageChange(null, data.publicUrl);
+        }
+      });
+    }
+  }, [form, imagePreview, onImageChange]);
 
   return (
     <div className="space-y-5">
