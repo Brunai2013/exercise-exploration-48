@@ -41,13 +41,15 @@ export function useExerciseQueries() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     enabled: initialized, // Only fetch once local DB is initialized
-    onError: (error) => {
-      console.error('Failed to load exercises:', error);
-      if (exercises.length === 0) {
-        toast.error('Failed to load exercises. Please check your connection.', {
-          id: 'exercises-error',
-          duration: 5000,
-        });
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('Failed to load exercises:', error);
+        if (!data || data.length === 0) {
+          toast.error('Failed to load exercises. Please check your connection.', {
+            id: 'exercises-error',
+            duration: 5000,
+          });
+        }
       }
     }
   });
@@ -66,13 +68,15 @@ export function useExerciseQueries() {
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: true,
     enabled: initialized, // Only fetch once local DB is initialized
-    onError: (error) => {
-      console.error('Failed to load categories:', error);
-      if (categories.length === 0) {
-        toast.error('Failed to load categories. Please check your connection.', {
-          id: 'categories-error',
-          duration: 5000,
-        });
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('Failed to load categories:', error);
+        if (!data || data.length === 0) {
+          toast.error('Failed to load categories. Please check your connection.', {
+            id: 'categories-error',
+            duration: 5000,
+          });
+        }
       }
     }
   });
