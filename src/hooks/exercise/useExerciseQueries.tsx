@@ -41,18 +41,27 @@ export function useExerciseQueries() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     enabled: initialized, // Only fetch once local DB is initialized
-    onSettled: (data, error) => {
-      if (error) {
+    meta: {
+      onError: (error: Error) => {
         console.error('Failed to load exercises:', error);
-        if (!data || data.length === 0) {
-          toast.error('Failed to load exercises. Please check your connection.', {
-            id: 'exercises-error',
-            duration: 5000,
-          });
-        }
+        toast.error('Failed to load exercises. Please check your connection.', {
+          id: 'exercises-error',
+          duration: 5000,
+        });
       }
     }
   });
+
+  // Handle exercise error display separately to avoid type issues
+  useEffect(() => {
+    if (exercisesError && (!exercises || exercises.length === 0)) {
+      console.error('Failed to load exercises:', exercisesError);
+      toast.error('Failed to load exercises. Please check your connection.', {
+        id: 'exercises-error',
+        duration: 5000,
+      });
+    }
+  }, [exercisesError, exercises]);
 
   // Fetch categories using React Query
   const { 
@@ -68,18 +77,27 @@ export function useExerciseQueries() {
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: true,
     enabled: initialized, // Only fetch once local DB is initialized
-    onSettled: (data, error) => {
-      if (error) {
+    meta: {
+      onError: (error: Error) => {
         console.error('Failed to load categories:', error);
-        if (!data || data.length === 0) {
-          toast.error('Failed to load categories. Please check your connection.', {
-            id: 'categories-error',
-            duration: 5000,
-          });
-        }
+        toast.error('Failed to load categories. Please check your connection.', {
+          id: 'categories-error',
+          duration: 5000,
+        });
       }
     }
   });
+
+  // Handle category error display separately to avoid type issues
+  useEffect(() => {
+    if (categoriesError && (!categories || categories.length === 0)) {
+      console.error('Failed to load categories:', categoriesError);
+      toast.error('Failed to load categories. Please check your connection.', {
+        id: 'categories-error',
+        duration: 5000,
+      });
+    }
+  }, [categoriesError, categories]);
 
   // Function to reload all data
   const refreshAllData = useCallback(() => {
