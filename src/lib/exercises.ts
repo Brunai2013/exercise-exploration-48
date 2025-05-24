@@ -63,7 +63,7 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
       return processedExercises;
     } else {
       console.warn('No exercises found in Supabase');
-      throw new Error('No exercises found in Supabase');
+      return []; // Return empty array instead of throwing error
     }
   } catch (error) {
     console.error('Failed to fetch from Supabase, falling back to local DB:', error);
@@ -77,18 +77,12 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
         console.log('Successfully loaded exercises from local DB:', localExercises.length);
         return localExercises;
       } else {
-        console.warn('No exercises found in local storage either, using default data');
-        
-        // Use default exercises as last resort
-        for (const exercise of defaultExercises) {
-          await localDB.saveExercise(exercise);
-        }
-        
-        return defaultExercises;
+        console.warn('No exercises found in local storage either');
+        return []; // Return empty array instead of default exercises
       }
     } catch (localError) {
       console.error('Failed to fetch from local DB too:', localError);
-      return defaultExercises;
+      return []; // Return empty array instead of default exercises
     }
   }
 };
@@ -258,7 +252,31 @@ export const deleteExercise = async (id: string): Promise<void> => {
   }
 };
 
-// New function to bulk update all exercises with corrected URLs
+// New function to clear all exercises
+export const clearAllExercises = async (): Promise<void> => {
+  try {
+    console.log('🗑️ CLEAR ALL - Starting to clear all exercises...');
+    
+    const { error } = await supabase
+      .from('exercises')
+      .delete()
+      .neq('id', ''); // This will delete all rows
+    
+    if (error) {
+      console.error('Error clearing all exercises:', error);
+      throw new Error(error.message);
+    }
+    
+    console.log('✅ CLEAR ALL SUCCESS - All exercises cleared from database');
+    toast.success('All exercises have been cleared from the database');
+  } catch (error) {
+    console.error('Error in clearAllExercises:', error);
+    toast.error('Failed to clear exercises');
+    throw error;
+  }
+};
+
+// Function to bulk update all exercises with corrected URLs
 export const bulkUpdateExerciseUrls = async (): Promise<void> => {
   try {
     console.log('🔄 BULK URL UPDATE - Starting bulk URL correction...');

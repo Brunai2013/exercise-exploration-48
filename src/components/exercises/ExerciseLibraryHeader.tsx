@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Sparkles, Database, Settings } from 'lucide-react';
+import { Plus, RefreshCw, Sparkles, Database, Settings, Trash2 } from 'lucide-react';
 import SectionHeader from '@/components/layout/SectionHeader';
 import { useBulkUrlUpdate } from '@/hooks/exercise/useBulkUrlUpdate';
+import { useClearExercises } from '@/hooks/exercise/useClearExercises';
 
 interface ExerciseLibraryHeaderProps {
   onRefresh: () => void;
@@ -19,6 +20,14 @@ const ExerciseLibraryHeader: React.FC<ExerciseLibraryHeaderProps> = ({
   onOpenBackup
 }) => {
   const { updateAllUrls, isUpdating } = useBulkUrlUpdate();
+  const { clearAll, isClearing } = useClearExercises();
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to delete ALL exercises? This action cannot be undone.')) {
+      await clearAll();
+      onRefresh(); // Refresh the data after clearing
+    }
+  };
 
   return (
     <SectionHeader 
@@ -44,6 +53,17 @@ const ExerciseLibraryHeader: React.FC<ExerciseLibraryHeaderProps> = ({
           >
             <Database className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
             {isUpdating ? 'Fixing URLs...' : 'Fix URLs'}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleClearAll}
+            disabled={isClearing}
+            className="flex items-center gap-2 text-red-600 hover:text-red-700"
+            title="Clear all exercises from database"
+          >
+            <Trash2 className={`h-4 w-4 ${isClearing ? 'animate-spin' : ''}`} />
+            {isClearing ? 'Clearing...' : 'Clear All'}
           </Button>
           
           <Button 

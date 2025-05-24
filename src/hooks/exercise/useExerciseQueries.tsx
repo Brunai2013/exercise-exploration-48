@@ -5,18 +5,17 @@ import { getAllCategories } from '@/lib/categories';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { initializeWithSeedData } from '@/lib/db';
-import { defaultExercises } from '@/lib/defaultData';
 import { defaultCategories } from '@/lib/defaultData';
 
 export function useExerciseQueries() {
   const [initialized, setInitialized] = useState(false);
   
-  // Try to initialize the local DB with default data if needed
+  // Try to initialize the local DB with default categories only (no exercises)
   useEffect(() => {
     const initializeLocalDB = async () => {
       try {
-        await initializeWithSeedData(defaultExercises, defaultCategories, []);
-        console.log('Local DB initialized with seed data if needed');
+        await initializeWithSeedData([], defaultCategories, []);
+        console.log('Local DB initialized with categories only');
         setInitialized(true);
       } catch (error) {
         console.error('Error initializing local DB:', error);
@@ -47,7 +46,7 @@ export function useExerciseQueries() {
   useEffect(() => {
     if (exercisesError) {
       console.error('Failed to load exercises:', exercisesError);
-      toast.error('Failed to load exercises. Falling back to local data.', {
+      toast.error('Failed to load exercises. No exercises found.', {
         id: 'exercises-error',
         duration: 5000,
       });
