@@ -31,7 +31,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   // Get category from the centralized hook
   const category = exercise.category ? getCategory(exercise.category) : null;
   
-  // Check if the image URL is valid on component mount
+  // Check if the image URL is valid on component mount and correct it
   useEffect(() => {
     console.log('🖼️ CARD IMAGE PROCESSING - Processing image for exercise card:', {
       exerciseName: exercise.name,
@@ -42,39 +42,40 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     });
     
     if (exercise.imageUrl) {
-      // Use the ensureFullImageUrl utility to handle all URL formats and domain corrections
-      const fullUrl = ensureFullImageUrl(exercise.imageUrl);
+      // Always use the ensureFullImageUrl utility to handle all URL formats and domain corrections
+      const correctedUrl = ensureFullImageUrl(exercise.imageUrl);
       
-      if (fullUrl) {
-        console.log('🔍 CARD URL TEST - Testing processed URL for card:', {
+      if (correctedUrl) {
+        console.log('🔍 CARD URL TEST - Testing corrected URL for card:', {
           exerciseName: exercise.name,
           exerciseId: exercise.id,
           originalUrl: exercise.imageUrl,
-          processedUrl: fullUrl,
+          correctedUrl: correctedUrl,
+          urlWasCorrected: correctedUrl !== exercise.imageUrl,
           timestamp: new Date().toISOString()
         });
         
-        // Test if the URL actually works
+        // Always test if the corrected URL actually works
         const img = new Image();
         img.onload = () => {
           console.log('✅ CARD IMAGE SUCCESS - Image loaded successfully in card:', {
             exerciseName: exercise.name,
-            url: fullUrl,
+            url: correctedUrl,
             timestamp: new Date().toISOString()
           });
-          setImageUrl(fullUrl);
+          setImageUrl(correctedUrl);
           setImageError(false);
         };
         img.onerror = () => {
           console.error('❌ CARD IMAGE FAILED - Image failed to load in card:', {
             exerciseName: exercise.name,
-            url: fullUrl,
+            url: correctedUrl,
             timestamp: new Date().toISOString()
           });
           setImageError(true);
           setImageUrl(null);
         };
-        img.src = fullUrl;
+        img.src = correctedUrl;
       } else {
         console.warn('⚠️ URL PROCESSING FAILED - Failed to process URL for card:', {
           exerciseName: exercise.name,

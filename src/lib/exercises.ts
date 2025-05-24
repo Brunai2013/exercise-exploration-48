@@ -1,10 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import * as localDB from './db';
 import { defaultExercises } from './defaultData';
-import { ensureFullImageUrl } from './storage';
+import { ensureFullImageUrl, correctAndSaveImageUrl } from './storage';
 
 // EXERCISE FUNCTIONS
 export const getAllExercises = async (): Promise<Exercise[]> => {
@@ -27,20 +28,18 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
       
       // Process image URLs before saving to local DB
       const processedExercises = data.map(item => {
-        // Check if image_url is a Storage path or a full URL
+        // Always ensure the URL is corrected when loading from database
         let imageUrl = item.image_url || '';
-        
-        // If it's from Supabase Storage but doesn't have the full URL
-        if (imageUrl && imageUrl.startsWith('exercises/') && !imageUrl.startsWith('http')) {
-          // Get the public URL
-          const { data: urlData } = supabase.storage
-            .from('exercise-images')
-            .getPublicUrl(imageUrl);
-          imageUrl = urlData.publicUrl;
-          console.log('Processed storage URL:', imageUrl);
+        if (imageUrl) {
+          imageUrl = ensureFullImageUrl(imageUrl);
+          console.log('📸 EXERCISE LOAD - Corrected image URL on load:', {
+            exerciseName: item.name,
+            originalUrl: item.image_url,
+            correctedUrl: imageUrl,
+            timestamp: new Date().toISOString()
+          });
         }
         
-        // Also store the original path for future reference
         return {
           id: item.id,
           name: item.name,
@@ -110,12 +109,18 @@ export const getExerciseById = async (id: string): Promise<Exercise | null> => {
     
     if (!data) return null;
     
+    // Correct the image URL when loading single exercise
+    let imageUrl = data.image_url || '';
+    if (imageUrl) {
+      imageUrl = ensureFullImageUrl(imageUrl);
+    }
+    
     return {
       id: data.id,
       name: data.name,
       description: data.description || '',
       category: data.category,
-      imageUrl: data.image_url || ''
+      imageUrl: imageUrl
     };
   } catch (error) {
     console.error('Failed to fetch from Supabase, falling back to local DB:', error);
@@ -133,6 +138,16 @@ export const getExerciseById = async (id: string): Promise<Exercise | null> => {
 
 export const addExercise = async (exercise: Exercise): Promise<void> => {
   try {
+    // Always correct the image URL before saving to database
+    const correctedImageUrl = exercise.imageUrl ? correctAndSaveImageUrl(exercise.imageUrl) : '';
+    
+    console.log('💾 EXERCISE ADD - Adding exercise with corrected URL:', {
+      exerciseName: exercise.name,
+      originalUrl: exercise.imageUrl,
+      correctedUrl: correctedImageUrl,
+      timestamp: new Date().toISOString()
+    });
+    
     const { error } = await supabase
       .from('exercises')
       .insert([{
@@ -140,7 +155,7 @@ export const addExercise = async (exercise: Exercise): Promise<void> => {
         name: exercise.name,
         description: exercise.description,
         category: exercise.category,
-        image_url: exercise.imageUrl
+        image_url: correctedImageUrl
       }]);
     
     if (error) {
@@ -157,13 +172,24 @@ export const addMultipleExercises = async (exercises: Exercise[]): Promise<void>
   try {
     if (exercises.length === 0) return;
     
-    const formattedExercises = exercises.map(exercise => ({
-      id: exercise.id,
-      name: exercise.name,
-      description: exercise.description,
-      category: exercise.category,
-      image_url: exercise.imageUrl
-    }));
+    const formattedExercises = exercises.map(exercise => {
+      // Correct image URLs for all exercises before bulk insert
+      const correctedImageUrl = exercise.imageUrl ? correctAndSaveImageUrl(exercise.imageUrl) : '';
+      
+      console.log('💾 BULK ADD - Correcting URL for bulk insert:', {
+        exerciseName: exercise.name,
+        originalUrl: exercise.imageUrl,
+        correctedUrl: correctedImageUrl
+      });
+      
+      return {
+        id: exercise.id,
+        name: exercise.name,
+        description: exercise.description,
+        category: exercise.category,
+        image_url: correctedImageUrl
+      };
+    });
     
     const { error } = await supabase
       .from('exercises')
@@ -181,13 +207,16 @@ export const addMultipleExercises = async (exercises: Exercise[]): Promise<void>
 
 export const updateExercise = async (exercise: Exercise): Promise<void> => {
   try {
-    // If the image is a path to Supabase Storage (not a full URL), we need to preserve it as is
-    let imageUrlToSave = exercise.imageUrl;
+    // Always correct the image URL before updating in database
+    const correctedImageUrl = exercise.imageUrl ? correctAndSaveImageUrl(exercise.imageUrl) : '';
     
-    // If we have both the URL and the original path, use the path for DB storage
-    if (exercise.imagePath && exercise.imagePath.startsWith('exercises/')) {
-      imageUrlToSave = exercise.imagePath;
-    }
+    console.log('💾 EXERCISE UPDATE - Updating exercise with corrected URL:', {
+      exerciseName: exercise.name,
+      exerciseId: exercise.id,
+      originalUrl: exercise.imageUrl,
+      correctedUrl: correctedImageUrl,
+      timestamp: new Date().toISOString()
+    });
     
     const { error } = await supabase
       .from('exercises')
@@ -195,7 +224,7 @@ export const updateExercise = async (exercise: Exercise): Promise<void> => {
         name: exercise.name,
         description: exercise.description,
         category: exercise.category,
-        image_url: imageUrlToSave,
+        image_url: correctedImageUrl,
         updated_at: new Date().toISOString()
       })
       .eq('id', exercise.id);
@@ -204,6 +233,8 @@ export const updateExercise = async (exercise: Exercise): Promise<void> => {
       console.error('Error updating exercise:', error);
       throw new Error(error.message);
     }
+    
+    console.log('✅ EXERCISE UPDATE SUCCESS - Exercise updated with corrected URL');
   } catch (error) {
     console.error('Error in updateExercise:', error);
     throw error;
@@ -223,6 +254,62 @@ export const deleteExercise = async (id: string): Promise<void> => {
     }
   } catch (error) {
     console.error('Error in deleteExercise:', error);
+    throw error;
+  }
+};
+
+// New function to bulk update all exercises with corrected URLs
+export const bulkUpdateExerciseUrls = async (): Promise<void> => {
+  try {
+    console.log('🔄 BULK URL UPDATE - Starting bulk URL correction...');
+    
+    // Get all exercises
+    const { data: exercises, error: fetchError } = await supabase
+      .from('exercises')
+      .select('*');
+    
+    if (fetchError) {
+      throw fetchError;
+    }
+    
+    if (!exercises || exercises.length === 0) {
+      console.log('No exercises found to update');
+      return;
+    }
+    
+    let updatedCount = 0;
+    
+    // Update each exercise with corrected URL
+    for (const exercise of exercises) {
+      if (exercise.image_url) {
+        const correctedUrl = correctAndSaveImageUrl(exercise.image_url);
+        
+        if (correctedUrl !== exercise.image_url) {
+          console.log('🔧 BULK UPDATE - Correcting URL for exercise:', {
+            exerciseName: exercise.name,
+            originalUrl: exercise.image_url,
+            correctedUrl: correctedUrl
+          });
+          
+          const { error: updateError } = await supabase
+            .from('exercises')
+            .update({ image_url: correctedUrl })
+            .eq('id', exercise.id);
+          
+          if (updateError) {
+            console.error('Error updating exercise URL:', updateError);
+          } else {
+            updatedCount++;
+          }
+        }
+      }
+    }
+    
+    console.log(`✅ BULK UPDATE COMPLETE - Updated ${updatedCount} exercise URLs`);
+    toast.success(`Updated ${updatedCount} exercise image URLs`);
+  } catch (error) {
+    console.error('Error in bulk URL update:', error);
+    toast.error('Failed to update exercise URLs');
     throw error;
   }
 };

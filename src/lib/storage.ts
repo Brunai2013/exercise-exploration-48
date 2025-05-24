@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -120,6 +121,23 @@ export const deleteExerciseImage = async (filePath: string): Promise<void> => {
   }
 };
 
+// Get the current correct Supabase URL from the configured client
+const getCurrentSupabaseUrl = (): string => {
+  const { data } = supabase.storage
+    .from('exercise-images')
+    .getPublicUrl('test');
+  
+  // Extract the base URL from the test URL
+  const url = new URL(data.publicUrl);
+  return `${url.protocol}//${url.host}`;
+};
+
+// List of known incorrect domains that need to be corrected
+const INCORRECT_DOMAINS = [
+  'dmmlcayednczwbojdhqs.supabase.co',
+  'muchlcaupervmqgwlspk.supabase.co' // Even this might be wrong in some cases
+];
+
 // Utility function to ensure we always have a full URL for storage paths
 export const ensureFullImageUrl = (imagePath: string): string => {
   if (!imagePath) {
@@ -132,12 +150,21 @@ export const ensureFullImageUrl = (imagePath: string): string => {
     pathType: imagePath.startsWith('http') ? 'Full URL' : 'Storage Path'
   });
   
-  // If it's already a full URL, check if it's pointing to the correct domain
+  // If it's already a full URL, check if it needs domain correction
   if (imagePath.startsWith('http')) {
-    // Check if it's pointing to the wrong Supabase domain (the actual failing domain)
-    if (imagePath.includes('muchlcaupervmqgwlspk.supabase.co') || imagePath.includes('dmmlcayednczwbojdhqs.supabase.co')) {
-      console.warn('🚨 WRONG DOMAIN - URL points to wrong Supabase domain, regenerating:', imagePath);
-      // Extract the path from the wrong URL and regenerate with correct domain
+    const url = new URL(imagePath);
+    const currentCorrectUrl = getCurrentSupabaseUrl();
+    const correctUrl = new URL(currentCorrectUrl);
+    
+    // Check if the domain needs to be corrected
+    if (INCORRECT_DOMAINS.some(domain => url.host.includes(domain)) || url.host !== correctUrl.host) {
+      console.warn('🚨 WRONG DOMAIN - URL needs domain correction:', {
+        originalUrl: imagePath,
+        originalDomain: url.host,
+        correctDomain: correctUrl.host
+      });
+      
+      // Extract the path from the URL and regenerate with correct domain
       const pathMatch = imagePath.match(/\/exercises\/[^?]+/);
       if (pathMatch) {
         const correctPath = pathMatch[0].substring(1); // Remove leading slash
@@ -145,7 +172,7 @@ export const ensureFullImageUrl = (imagePath: string): string => {
           .from('exercise-images')
           .getPublicUrl(correctPath);
         
-        console.log('🔧 DOMAIN FIXED - Corrected URL domain:', {
+        console.log('🔧 DOMAIN CORRECTED - Fixed URL domain:', {
           originalUrl: imagePath,
           extractedPath: correctPath,
           correctedUrl: data?.publicUrl,
@@ -156,7 +183,7 @@ export const ensureFullImageUrl = (imagePath: string): string => {
       }
     }
     
-    console.log('✅ ALREADY FULL URL - Path is already a complete URL:', imagePath);
+    console.log('✅ ALREADY CORRECT URL - Path is already a correct URL:', imagePath);
     return imagePath;
   }
   
@@ -220,4 +247,15 @@ export const isImageUrlValid = async (url: string): Promise<boolean> => {
     };
     img.src = url;
   });
+};
+
+// Function to correct and save URLs to database
+export const correctAndSaveImageUrl = (originalUrl: string): string => {
+  const correctedUrl = ensureFullImageUrl(originalUrl);
+  console.log('🔄 URL CORRECTION - Correcting URL for database save:', {
+    originalUrl,
+    correctedUrl,
+    timestamp: new Date().toISOString()
+  });
+  return correctedUrl;
 };
