@@ -32,18 +32,38 @@ const ImageSection: React.FC<ImageSectionProps> = ({
   // Process the imageUrl from the form to ensure it's always a full URL for preview
   React.useEffect(() => {
     const currentImageUrl = form.getValues('imageUrl');
-    if (currentImageUrl && currentImageUrl.startsWith('exercises/') && !currentImageUrl.startsWith('http')) {
-      // Convert storage path to full URL for preview
-      import('@/integrations/supabase/client').then(({ supabase }) => {
-        const { data } = supabase.storage
-          .from('exercise-images')
-          .getPublicUrl(currentImageUrl);
-        
-        if (data?.publicUrl && !imagePreview) {
-          // Only set for preview, don't change the actual form value
-          onImageChange(null, data.publicUrl);
-        }
+    console.log('🖼️ IMAGE SECTION - Processing form image URL:', {
+      currentImageUrl,
+      imagePreview,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (currentImageUrl && !imagePreview) {
+      // Use ensureFullImageUrl to correct any domain issues
+      const correctedUrl = ensureFullImageUrl(currentImageUrl);
+      
+      console.log('🔧 IMAGE SECTION - URL correction result:', {
+        originalUrl: currentImageUrl,
+        correctedUrl,
+        urlChanged: correctedUrl !== currentImageUrl,
+        timestamp: new Date().toISOString()
       });
+      
+      if (correctedUrl && correctedUrl !== currentImageUrl) {
+        // Only set for preview, don't change the actual form value unless it's clearly wrong
+        onImageChange(null, correctedUrl);
+      } else if (correctedUrl) {
+        // Test if the URL actually works before using it as preview
+        const img = new Image();
+        img.onload = () => {
+          console.log('✅ IMAGE SECTION - Image URL verified:', correctedUrl);
+          onImageChange(null, correctedUrl);
+        };
+        img.onerror = () => {
+          console.error('❌ IMAGE SECTION - Image URL failed verification:', correctedUrl);
+        };
+        img.src = correctedUrl;
+      }
     }
   }, [form, imagePreview, onImageChange]);
 
