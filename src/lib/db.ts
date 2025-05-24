@@ -1,4 +1,3 @@
-
 /**
  * IndexedDB service for persistent storage 
  */
@@ -178,6 +177,35 @@ export const saveExercise = (exercise: Exercise): Promise<Exercise> =>
 
 export const deleteExercise = (id: string): Promise<void> => 
   deleteItem(STORES.EXERCISES, id);
+
+// Clear all exercises from local database
+export const clearAllExercises = async (): Promise<void> => {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORES.EXERCISES, 'readwrite');
+      const store = transaction.objectStore(STORES.EXERCISES);
+      const request = store.clear();
+      
+      request.onsuccess = () => {
+        console.log('✅ LOCAL DB - All exercises cleared from IndexedDB');
+        resolve();
+      };
+      
+      request.onerror = () => {
+        console.error('❌ LOCAL DB - Error clearing exercises from IndexedDB:', request.error);
+        reject(request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('💥 LOCAL DB - Failed to clear exercises from IndexedDB:', error);
+    throw error;
+  }
+};
 
 // Category-specific functions
 export const getAllCategories = (): Promise<Category[]> => 
