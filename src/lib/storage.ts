@@ -37,7 +37,7 @@ export const uploadExerciseImage = async (
       timestamp: new Date().toISOString()
     });
     
-    // Get the public URL for the file
+    // Get the public URL for the file using the configured Supabase client
     const { data: urlData } = supabase.storage
       .from('exercise-images')
       .getPublicUrl(filePath);
@@ -133,13 +133,35 @@ export const ensureFullImageUrl = (imagePath: string): string => {
     pathType: imagePath.startsWith('http') ? 'Full URL' : 'Storage Path'
   });
   
-  // If it's already a full URL, return it as is
+  // If it's already a full URL, check if it's pointing to the correct domain
   if (imagePath.startsWith('http')) {
+    // Check if it's pointing to the wrong Supabase domain
+    if (imagePath.includes('dmmlcayednczwbojdhqs.supabase.co')) {
+      console.warn('🚨 WRONG DOMAIN - URL points to wrong Supabase domain, regenerating:', imagePath);
+      // Extract the path from the wrong URL and regenerate with correct domain
+      const pathMatch = imagePath.match(/\/exercises\/[^?]+/);
+      if (pathMatch) {
+        const correctPath = pathMatch[0].substring(1); // Remove leading slash
+        const { data } = supabase.storage
+          .from('exercise-images')
+          .getPublicUrl(correctPath);
+        
+        console.log('🔧 DOMAIN FIXED - Corrected URL domain:', {
+          originalUrl: imagePath,
+          extractedPath: correctPath,
+          correctedUrl: data?.publicUrl,
+          timestamp: new Date().toISOString()
+        });
+        
+        return data?.publicUrl || '';
+      }
+    }
+    
     console.log('✅ ALREADY FULL URL - Path is already a complete URL:', imagePath);
     return imagePath;
   }
   
-  // If it's a storage path, convert it to a full URL
+  // If it's a storage path, convert it to a full URL using the configured Supabase client
   if (imagePath.startsWith('exercises/')) {
     const { data } = supabase.storage
       .from('exercise-images')
@@ -154,7 +176,7 @@ export const ensureFullImageUrl = (imagePath: string): string => {
     return data?.publicUrl || '';
   }
   
-  // Handle case where path might be just a filename (this is likely the bug)
+  // Handle case where path might be just a filename
   if (!imagePath.includes('/')) {
     console.warn('🚨 FILENAME ONLY - Path appears to be just a filename, attempting to construct full path:', imagePath);
     const fullPath = `exercises/${imagePath}`;

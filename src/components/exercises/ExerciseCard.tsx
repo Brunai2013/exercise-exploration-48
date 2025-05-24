@@ -42,7 +42,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     });
     
     if (exercise.imageUrl) {
-      // Use the ensureFullImageUrl utility to handle all URL formats
+      // Use the ensureFullImageUrl utility to handle all URL formats and domain corrections
       const fullUrl = ensureFullImageUrl(exercise.imageUrl);
       
       if (fullUrl) {
