@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,11 +11,13 @@ export const uploadExerciseImage = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${folderName}/${fileName}`;
     
-    console.log('🔄 Uploading image to Supabase Storage:', {
-      fileName,
+    console.log('🔄 UPLOAD STARTING - Uploading image to Supabase Storage:', {
+      originalFileName: file.name,
+      newFileName: fileName,
       filePath,
       fileSize: file.size,
-      fileType: file.type
+      fileType: file.type,
+      timestamp: new Date().toISOString()
     });
     
     // Upload the file to Supabase Storage
@@ -25,41 +26,71 @@ export const uploadExerciseImage = async (
       .upload(filePath, file);
       
     if (uploadError) {
-      console.error('❌ Error uploading image:', uploadError);
+      console.error('❌ UPLOAD FAILED - Error uploading image:', uploadError);
       throw uploadError;
     }
     
-    console.log('✅ Upload successful, data received:', data);
+    console.log('✅ UPLOAD SUCCESS - Upload successful, data received:', {
+      uploadData: data,
+      uploadPath: data?.path,
+      timestamp: new Date().toISOString()
+    });
     
     // Get the public URL for the file
     const { data: urlData } = supabase.storage
       .from('exercise-images')
       .getPublicUrl(filePath);
     
-    console.log('🔗 Generated public URL:', {
-      path: filePath,
+    console.log('🔗 URL GENERATION - Generated public URL:', {
+      requestedPath: filePath,
       publicUrl: urlData.publicUrl,
-      fullUrlData: urlData
+      fullUrlData: urlData,
+      timestamp: new Date().toISOString()
     });
     
-    // Verify the image can be accessed
+    // Verify the image can be accessed immediately
     try {
+      console.log('🔍 TESTING URL - Testing image accessibility...');
       const response = await fetch(urlData.publicUrl, { method: 'HEAD' });
-      console.log('🔍 Image accessibility check:', {
+      console.log('📊 URL TEST RESULT - Image accessibility check:', {
         status: response.status,
         statusText: response.statusText,
-        url: urlData.publicUrl
+        url: urlData.publicUrl,
+        headers: Object.fromEntries(response.headers.entries()),
+        timestamp: new Date().toISOString()
       });
+      
+      if (!response.ok) {
+        console.warn('⚠️ URL NOT ACCESSIBLE - Image URL returned non-200 status:', {
+          status: response.status,
+          url: urlData.publicUrl
+        });
+      }
     } catch (fetchError) {
-      console.warn('⚠️ Could not verify image accessibility:', fetchError);
+      console.error('💥 URL TEST FAILED - Could not verify image accessibility:', {
+        error: fetchError,
+        url: urlData.publicUrl,
+        timestamp: new Date().toISOString()
+      });
     }
     
-    return {
+    const result = {
       path: filePath,
       url: urlData.publicUrl
     };
+    
+    console.log('🎯 UPLOAD COMPLETE - Final result:', {
+      result,
+      timestamp: new Date().toISOString()
+    });
+    
+    return result;
   } catch (error) {
-    console.error('💥 Error in uploadExerciseImage:', error);
+    console.error('💥 UPLOAD ERROR - Error in uploadExerciseImage:', {
+      error,
+      fileName: file.name,
+      timestamp: new Date().toISOString()
+    });
     throw error;
   }
 };

@@ -31,16 +31,22 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   
   // Check if the image URL is valid on component mount
   useEffect(() => {
-    console.log('🖼️ ExerciseCard processing image for:', exercise.name, {
+    console.log('🖼️ CARD IMAGE PROCESSING - Processing image for exercise card:', {
+      exerciseName: exercise.name,
       exerciseId: exercise.id,
       originalImageUrl: exercise.imageUrl,
-      imageUrlType: exercise.imageUrl ? (exercise.imageUrl.startsWith('http') ? 'Full URL' : 'Storage Path') : 'None'
+      imageUrlType: exercise.imageUrl ? (exercise.imageUrl.startsWith('http') ? 'Full URL' : 'Storage Path') : 'None',
+      timestamp: new Date().toISOString()
     });
     
     if (exercise.imageUrl) {
       // If it's from Supabase Storage but doesn't have the full URL
       if (exercise.imageUrl.startsWith('exercises/') && !exercise.imageUrl.startsWith('http')) {
-        console.log('🔄 Converting storage path to URL for:', exercise.name, exercise.imageUrl);
+        console.log('🔄 PATH CONVERSION - Converting storage path to URL for card:', {
+          exerciseName: exercise.name,
+          storagePath: exercise.imageUrl,
+          timestamp: new Date().toISOString()
+        });
         // We need to convert it to a full URL
         import('@/integrations/supabase/client').then(({ supabase }) => {
           const { data } = supabase.storage
@@ -48,10 +54,12 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
             .getPublicUrl(exercise.imageUrl);
           
           const fullUrl = data?.publicUrl;
-          console.log('🔗 Converted to full URL:', {
-            exercise: exercise.name,
+          console.log('🔗 URL CONVERTED - Storage path converted to full URL:', {
+            exerciseName: exercise.name,
+            exerciseId: exercise.id,
             originalPath: exercise.imageUrl,
-            fullUrl
+            convertedUrl: fullUrl,
+            timestamp: new Date().toISOString()
           });
           
           if (fullUrl) {
@@ -61,41 +69,79 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
             // Test if the URL actually works
             const img = new Image();
             img.onload = () => {
-              console.log('✅ Image loaded successfully:', fullUrl);
+              console.log('✅ CARD IMAGE SUCCESS - Image loaded successfully in card:', {
+                exerciseName: exercise.name,
+                url: fullUrl,
+                timestamp: new Date().toISOString()
+              });
             };
             img.onerror = () => {
-              console.error('❌ Image failed to load after conversion:', fullUrl);
+              console.error('❌ CARD IMAGE FAILED - Image failed to load in card after conversion:', {
+                exerciseName: exercise.name,
+                url: fullUrl,
+                timestamp: new Date().toISOString()
+              });
               setImageError(true);
               setImageUrl(null);
             };
             img.src = fullUrl;
           } else {
-            console.warn('⚠️ Failed to get public URL for:', exercise.imageUrl);
+            console.warn('⚠️ URL CONVERSION FAILED - Failed to get public URL for card:', {
+              exerciseName: exercise.name,
+              originalPath: exercise.imageUrl,
+              timestamp: new Date().toISOString()
+            });
             setImageError(true);
           }
         });
       } else {
         // Regular URL or already full Supabase URL
-        console.log('🔍 Testing regular/full URL:', exercise.imageUrl);
+        console.log('🔍 DIRECT URL TEST - Testing regular/full URL for card:', {
+          exerciseName: exercise.name,
+          url: exercise.imageUrl,
+          timestamp: new Date().toISOString()
+        });
         const img = new Image();
         img.onload = () => {
-          console.log('✅ Image loaded successfully:', exercise.imageUrl);
+          console.log('✅ DIRECT URL SUCCESS - Image loaded successfully for card:', {
+            exerciseName: exercise.name,
+            url: exercise.imageUrl,
+            timestamp: new Date().toISOString()
+          });
           setImageUrl(exercise.imageUrl);
           setImageError(false);
         };
         img.onerror = () => {
-          console.error('❌ Image failed to load:', exercise.imageUrl);
+          console.error('❌ DIRECT URL FAILED - Image failed to load for card:', {
+            exerciseName: exercise.name,
+            url: exercise.imageUrl,
+            timestamp: new Date().toISOString()
+          });
           setImageError(true);
           setImageUrl(null);
         };
         img.src = exercise.imageUrl;
       }
     } else {
-      console.log('📷 No image URL provided for:', exercise.name);
+      console.log('📷 NO IMAGE - No image URL provided for card:', {
+        exerciseName: exercise.name,
+        exerciseId: exercise.id,
+        timestamp: new Date().toISOString()
+      });
       setImageError(true);
       setImageUrl(null);
     }
   }, [exercise.imageUrl, exercise.name, exercise.id]);
+
+  const handleImageError = () => {
+    console.warn('🚫 IMAGE ERROR - Image error occurred in card:', {
+      exerciseName: exercise.name,
+      attemptedUrl: imageUrl,
+      timestamp: new Date().toISOString()
+    });
+    setImageError(true);
+    setImageUrl(null);
+  };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,12 +153,6 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     if (onDelete) onDelete();
   };
 
-  const handleImageError = () => {
-    console.warn('🚫 Image error occurred for:', exercise.name, imageUrl);
-    setImageError(true);
-    setImageUrl(null);
-  };
-  
   return (
     <ContextMenu>
       <ContextMenuTrigger>

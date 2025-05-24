@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addExercise, updateExercise, deleteExercise, addMultipleExercises } from '@/lib/exercises';
 import { Exercise } from '@/lib/types';
@@ -145,25 +144,36 @@ export function useExerciseMutations() {
       
       let imageUrl = exerciseData.imageUrl || '';
       
-      console.log('🔄 Updating exercise:', {
+      console.log('🔄 UPDATE STARTING - Updating exercise:', {
         exerciseId,
-        name: exerciseData.name,
+        exerciseName: exerciseData.name,
         hasUploadedImage: !!uploadedImage,
-        existingImageUrl: imageUrl
+        existingImageUrl: imageUrl,
+        uploadedImageName: uploadedImage?.name,
+        uploadedImageSize: uploadedImage?.size,
+        timestamp: new Date().toISOString()
       });
       
       // If there's an uploaded image, process it
       if (uploadedImage) {
         try {
-          console.log('📤 Uploading new image for exercise update...');
+          console.log('📤 IMAGE UPLOAD - Starting image upload for exercise update...');
           const result = await uploadExerciseImage(uploadedImage);
           imageUrl = result.path; // Store the path, not the full URL
-          console.log('✅ Image uploaded successfully:', {
-            path: result.path,
-            url: result.url
+          console.log('✅ IMAGE UPLOAD SUCCESS - Image uploaded successfully for update:', {
+            exerciseId,
+            exerciseName: exerciseData.name,
+            uploadPath: result.path,
+            uploadUrl: result.url,
+            timestamp: new Date().toISOString()
           });
         } catch (uploadError) {
-          console.error('❌ Error uploading image:', uploadError);
+          console.error('❌ IMAGE UPLOAD FAILED - Error uploading image for update:', {
+            exerciseId,
+            exerciseName: exerciseData.name,
+            uploadError,
+            timestamp: new Date().toISOString()
+          });
           toast.error('Failed to upload image, but will continue with exercise update');
         }
       }
@@ -177,14 +187,33 @@ export function useExerciseMutations() {
         imageUrl: imageUrl
       };
       
-      console.log('💾 Updating exercise in database:', exercise);
+      console.log('💾 DATABASE UPDATE - Updating exercise in database:', {
+        exercise,
+        timestamp: new Date().toISOString()
+      });
       
       // Update in database
       await updateExerciseMutation.mutateAsync(exercise);
-      console.log('✅ Exercise updated successfully');
+      console.log('✅ UPDATE COMPLETE - Exercise updated successfully:', {
+        exerciseId,
+        exerciseName: exerciseData.name,
+        finalImageUrl: imageUrl,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Force refresh the queries to ensure UI updates
+      console.log('🔄 CACHE REFRESH - Invalidating queries...');
+      await queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      console.log('✅ CACHE REFRESHED - Queries invalidated');
+      
       return true;
     } catch (error) {
-      console.error('💥 Error updating exercise:', error);
+      console.error('💥 UPDATE ERROR - Error updating exercise:', {
+        exerciseId,
+        exerciseName: exerciseData.name,
+        error,
+        timestamp: new Date().toISOString()
+      });
       return false;
     }
   };
