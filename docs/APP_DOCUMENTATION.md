@@ -3,17 +3,18 @@
 
 ## Table of Contents
 1. [Application Overview](#application-overview)
-2. [Technical Stack](#technical-stack)
-3. [Database Architecture](#database-architecture)
-4. [Application Structure](#application-structure)
-5. [Core Features](#core-features)
-6. [Pages & Components](#pages--components)
-7. [Data Models](#data-models)
-8. [Hooks & State Management](#hooks--state-management)
-9. [File Storage & Images](#file-storage--images)
-10. [UI/UX Design](#uiux-design)
-11. [Routing](#routing)
-12. [Development Setup](#development-setup)
+2. [Complete Features & Functions List](#complete-features--functions-list)
+3. [Technical Stack](#technical-stack)
+4. [Database Architecture](#database-architecture)
+5. [Application Structure](#application-structure)
+6. [Core Features](#core-features)
+7. [Pages & Components](#pages--components)
+8. [Data Models](#data-models)
+9. [Hooks & State Management](#hooks--state-management)
+10. [File Storage & Images](#file-storage--images)
+11. [UI/UX Design](#uiux-design)
+12. [Routing](#routing)
+13. [Development Setup](#development-setup)
 
 ---
 
@@ -28,6 +29,237 @@ FitTrack is a comprehensive fitness tracking web application that allows users t
 - **Workout Execution**: Guide users through workout sessions with real-time tracking
 - **Progress Monitoring**: Track workout history and performance metrics
 - **Data Persistence**: Offline-first approach with cloud synchronization
+
+---
+
+## Complete Features & Functions List
+
+### 1. Exercise Library Management
+
+#### Exercise CRUD Operations
+- **Add New Exercise**: Create exercises with name, description, category, and image
+- **Edit Exercise**: Modify existing exercise details including replacing images
+- **Delete Exercise**: Remove exercises with confirmation dialog
+- **View Exercise Details**: Display exercise information in card format
+- **Duplicate Prevention**: Validation to prevent duplicate exercise names
+
+#### Image Management
+- **Image Upload**: Direct file upload with drag-and-drop support
+- **Image URL Input**: Alternative option to use external image URLs
+- **Image Preview**: Real-time preview during upload/editing
+- **Image Validation**: Size limits (5MB), dimension requirements (400x400 min)
+- **Aspect Ratio Handling**: Auto-crop to square format for consistency
+- **Image Storage**: Supabase storage integration with automatic URL generation
+- **Image URL Correction**: Automatic fixing of malformed URLs
+- **Bulk URL Updates**: Mass correction of image URLs across all exercises
+
+#### Search & Filtering
+- **Real-time Search**: Instant search by exercise name
+- **Category Filtering**: Filter exercises by muscle group/category
+- **Alphabetical Sorting**: Sort A-Z or Z-A
+- **Combined Filters**: Use multiple filters simultaneously
+- **Clear Filters**: Reset all filters with one click
+- **Search Highlighting**: Visual indication of search matches
+
+#### Category Management
+- **Category Creation**: Add new exercise categories with custom colors
+- **Category Editing**: Modify category names and colors
+- **Category Deletion**: Remove categories with exercise reassignment
+- **Color Coding**: Visual organization with Tailwind color classes
+- **Default Categories**: Pre-loaded categories (Chest, Back, Shoulders, Arms, Legs, Core, Cardio)
+- **Category Validation**: Prevent duplicate category names
+
+#### Bulk Operations
+- **Curated Exercise Import**: Import from pre-defined exercise library
+- **Clear All Exercises**: Mass deletion of all exercises
+- **Bulk Data Operations**: Import/export functionality
+- **Exercise Selection**: Multi-select for batch operations
+
+#### Data Management
+- **Local Storage**: IndexedDB caching for offline access
+- **Cloud Sync**: Automatic Supabase synchronization
+- **Data Backup**: Export exercise data as JSON
+- **Data Restore**: Import exercises from backup files
+- **Conflict Resolution**: Handle sync conflicts between local and cloud
+
+### 2. Workout Creation & Management
+
+#### Workout Builder
+- **Create New Workout**: Design custom workout routines
+- **Edit Existing Workout**: Modify workout details and exercises
+- **Duplicate Workout**: Clone workouts for similar routines
+- **Archive Workout**: Hide workouts without deletion
+- **Delete Workout**: Permanent workout removal
+
+#### Basic Workout Information
+- **Workout Name**: Descriptive title for the workout
+- **Workout Description**: Optional detailed description
+- **Date Scheduling**: Assign specific dates to workouts
+- **Date Validation**: Ensure proper date format and logic
+
+#### Exercise Selection & Management
+- **Exercise Search**: Find exercises from library during workout creation
+- **Exercise Addition**: Add multiple exercises to workout
+- **Exercise Removal**: Remove exercises from workout
+- **Exercise Reordering**: Drag-and-drop or manual reordering
+- **Exercise Grouping**: Visual organization of related exercises
+
+#### Set Configuration
+- **Set Creation**: Add multiple sets per exercise
+- **Set Deletion**: Remove individual sets
+- **Set Parameters**: Configure reps, weight, and rest times
+- **Set Templates**: Default 3 sets with 10 reps
+- **Set Validation**: Ensure proper numeric inputs
+- **Set Copying**: Copy weight from previous set
+
+#### Advanced Workout Features
+- **Superset Support**: Group exercises for circuit training
+- **Rest Timer Integration**: Built-in rest period tracking
+- **Progress Tracking**: Monitor workout completion percentage
+- **Workout Templates**: Save and reuse workout configurations
+- **Workout History**: Track all past workout sessions
+
+### 3. Workout Session Execution
+
+#### Real-time Tracking
+- **Live Set Tracking**: Mark sets as completed during workout
+- **Weight Recording**: Log actual weights used
+- **Rep Counting**: Record actual reps performed
+- **Rest Timer**: Automatic rest period countdown
+- **Session Timer**: Total workout duration tracking
+
+#### Session Interface
+- **Exercise Navigation**: Quick jump between exercises
+- **Progress Indicators**: Visual workout completion status
+- **Exercise Cards**: Clean interface for each exercise
+- **Set Grid Display**: Organized view of all sets
+- **Quick Actions**: Fast completion marking
+
+#### Session Management
+- **Start Session**: Begin workout tracking
+- **Pause Session**: Temporary workout suspension
+- **Resume Session**: Continue paused workout
+- **Complete Session**: Finish and save workout
+- **Abandon Session**: Exit without saving
+
+### 4. Calendar & Scheduling
+
+#### Calendar View
+- **Monthly Calendar**: Full month view of scheduled workouts
+- **Date Navigation**: Move between months and years
+- **Workout Indicators**: Visual markers for scheduled workouts
+- **Multi-workout Days**: Handle multiple workouts per day
+- **Date Selection**: Click to view/create workouts for specific dates
+
+#### Scheduling Features
+- **Workout Scheduling**: Assign workouts to future dates
+- **Recurring Workouts**: Schedule repeating workout patterns
+- **Workout Rescheduling**: Move workouts to different dates
+- **Schedule Conflicts**: Handle overlapping workout times
+- **Schedule Overview**: Quick view of upcoming workouts
+
+### 5. Data Management & Backup
+
+#### Backup Operations
+- **Full Data Export**: Export all exercises, categories, and workouts
+- **Selective Export**: Choose specific data types to export
+- **Data Import**: Restore from backup files
+- **Format Validation**: Ensure imported data integrity
+- **Backup Scheduling**: Automatic periodic backups
+
+#### Database Operations
+- **Cloud Synchronization**: Automatic Supabase sync
+- **Offline Support**: Local IndexedDB fallback
+- **Data Validation**: Ensure data consistency
+- **Error Recovery**: Handle sync failures gracefully
+- **Data Migration**: Handle schema updates
+
+### 6. User Interface Features
+
+#### Navigation
+- **Top Navigation Bar**: Access to all major sections
+- **Breadcrumb Navigation**: Context-aware navigation trail
+- **Deep Linking**: Direct URLs for all features
+- **Back Navigation**: Browser-compatible navigation
+- **Quick Actions**: Floating action buttons
+
+#### Visual Design
+- **Responsive Layout**: Mobile and desktop optimization
+- **Dark/Light Themes**: Visual preference options
+- **Color Coding**: Category-based color organization
+- **Loading States**: Skeleton screens and spinners
+- **Error States**: User-friendly error messages
+
+#### Interactive Elements
+- **Drag & Drop**: Reorder exercises and sets
+- **Touch Gestures**: Mobile-optimized interactions
+- **Keyboard Shortcuts**: Power user features
+- **Context Menus**: Right-click options
+- **Modal Dialogs**: Overlay forms and confirmations
+
+### 7. Search & Discovery
+
+#### Global Search
+- **Cross-section Search**: Find exercises and workouts
+- **Search History**: Recent search terms
+- **Search Suggestions**: Auto-complete functionality
+- **Search Filters**: Combine search with categories
+- **Search Results**: Organized display of findings
+
+#### Filtering Systems
+- **Multi-level Filtering**: Combine multiple filter types
+- **Filter Persistence**: Remember filter settings
+- **Filter Indicators**: Show active filters
+- **Quick Filters**: One-click common filters
+- **Custom Filters**: User-defined filter combinations
+
+### 8. Performance & Analytics
+
+#### Workout Metrics
+- **Progress Tracking**: Monitor improvement over time
+- **Performance Charts**: Visual representation of progress
+- **Personal Records**: Track best performances
+- **Trend Analysis**: Identify progress patterns
+- **Goal Setting**: Set and track fitness goals
+
+#### Data Insights
+- **Workout Frequency**: Track exercise frequency
+- **Popular Exercises**: Most used exercises
+- **Category Distribution**: Exercise variety analysis
+- **Session Duration**: Average workout times
+- **Completion Rates**: Workout adherence tracking
+
+### 9. Data Validation & Error Handling
+
+#### Input Validation
+- **Form Validation**: Real-time input checking
+- **Data Type Validation**: Ensure proper data types
+- **Range Validation**: Check numeric ranges
+- **Required Field Validation**: Ensure complete data
+- **Format Validation**: Check data formats
+
+#### Error Recovery
+- **Graceful Degradation**: Handle missing features
+- **Retry Mechanisms**: Automatic retry for failed operations
+- **User Feedback**: Clear error messages
+- **Fallback Options**: Alternative paths when features fail
+- **Data Recovery**: Restore from local storage on errors
+
+### 10. Accessibility & Usability
+
+#### Accessibility Features
+- **Keyboard Navigation**: Full keyboard support
+- **Screen Reader Support**: ARIA labels and descriptions
+- **High Contrast Mode**: Enhanced visibility options
+- **Font Size Options**: Adjustable text sizes
+- **Focus Indicators**: Clear focus states
+
+#### Usability Enhancements
+- **Undo/Redo**: Reverse accidental actions
+- **Auto-save**: Prevent data loss
+- **Confirmation Dialogs**: Prevent accidental deletions
+- **Help Text**: Contextual assistance
+- **Tooltips**: Additional information on hover
 
 ---
 
@@ -127,7 +359,15 @@ src/
 │   │   ├── CategoryFilter.tsx
 │   │   ├── AlphabeticalFilter.tsx
 │   │   ├── CategoryManager.tsx
-│   │   └── ExerciseDialogs.tsx
+│   │   ├── ExerciseDialogs.tsx
+│   │   ├── AddExerciseDialog.tsx
+│   │   ├── EditExerciseDialog.tsx
+│   │   ├── DeleteExerciseDialog.tsx
+│   │   ├── ExerciseForm.tsx
+│   │   └── form-components/
+│   │       ├── DetailsSection.tsx
+│   │       ├── ImageSection.tsx
+│   │       └── FormActions.tsx
 │   ├── workout/
 │   │   ├── WorkoutFormContent.tsx
 │   │   ├── WorkoutBasicInfoForm.tsx
