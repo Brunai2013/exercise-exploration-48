@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -62,8 +61,8 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
       
       return processedExercises;
     } else {
-      console.warn('No exercises found in Supabase');
-      return []; // Return empty array instead of throwing error
+      console.warn('No exercises found in Supabase - database is empty');
+      return []; // Return empty array when database is empty
     }
   } catch (error) {
     console.error('Failed to fetch from Supabase, falling back to local DB:', error);
@@ -77,12 +76,12 @@ export const getAllExercises = async (): Promise<Exercise[]> => {
         console.log('Successfully loaded exercises from local DB:', localExercises.length);
         return localExercises;
       } else {
-        console.warn('No exercises found in local storage either');
-        return []; // Return empty array instead of default exercises
+        console.warn('No exercises found in local storage either - both databases are empty');
+        return []; // Return empty array when both are empty
       }
     } catch (localError) {
       console.error('Failed to fetch from local DB too:', localError);
-      return []; // Return empty array instead of default exercises
+      return []; // Return empty array on complete failure
     }
   }
 };
@@ -255,23 +254,45 @@ export const deleteExercise = async (id: string): Promise<void> => {
 // New function to clear all exercises
 export const clearAllExercises = async (): Promise<void> => {
   try {
-    console.log('🗑️ CLEAR ALL - Starting to clear all exercises...');
+    console.log('🗑️ CLEAR ALL - Starting to clear all exercises from Supabase...');
     
-    const { error } = await supabase
+    // First check how many exercises exist
+    const { data: countData, error: countError } = await supabase
+      .from('exercises')
+      .select('id', { count: 'exact', head: true });
+    
+    if (countError) {
+      console.error('Error checking exercise count:', countError);
+    } else {
+      console.log('🔢 CLEAR ALL - Found exercises to delete:', countData?.length || 0);
+    }
+    
+    // Delete all exercises
+    const { error, count } = await supabase
       .from('exercises')
       .delete()
-      .neq('id', ''); // This will delete all rows
+      .neq('id', ''); // This will delete all rows since every row has an id
     
     if (error) {
-      console.error('Error clearing all exercises:', error);
+      console.error('❌ CLEAR ALL ERROR - Error clearing all exercises:', error);
       throw new Error(error.message);
     }
     
-    console.log('✅ CLEAR ALL SUCCESS - All exercises cleared from database');
-    toast.success('All exercises have been cleared from the database');
+    console.log('✅ CLEAR ALL SUCCESS - All exercises cleared from Supabase database');
+    
+    // Also clear local database
+    try {
+      console.log('🗑️ CLEAR ALL - Clearing local database...');
+      await localDB.clearAllExercises();
+      console.log('✅ CLEAR ALL LOCAL - Local database cleared');
+    } catch (localError) {
+      console.error('⚠️ CLEAR ALL LOCAL ERROR - Error clearing local database:', localError);
+      // Don't throw here, Supabase clear was successful
+    }
+    
+    console.log('🎉 CLEAR ALL COMPLETE - All exercise databases have been cleared');
   } catch (error) {
-    console.error('Error in clearAllExercises:', error);
-    toast.error('Failed to clear exercises');
+    console.error('💥 CLEAR ALL FAILED - Error in clearAllExercises:', error);
     throw error;
   }
 };

@@ -35,7 +35,15 @@ export function useExerciseQueries() {
     failureCount: exerciseFailureCount
   } = useQuery({
     queryKey: ['exercises'],
-    queryFn: getAllExercises,
+    queryFn: async () => {
+      console.log('🔄 QUERY - Fetching exercises via React Query...');
+      const result = await getAllExercises();
+      console.log('📊 QUERY RESULT - Exercises fetched:', {
+        count: result.length,
+        exercises: result.map(ex => ({ id: ex.id, name: ex.name }))
+      });
+      return result;
+    },
     retry: 3,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
@@ -82,14 +90,15 @@ export function useExerciseQueries() {
 
   // Function to reload all data
   const refreshAllData = useCallback(() => {
+    console.log('🔄 REFRESH - Manually refreshing all data...');
     toast.info('Refreshing data...', { id: 'refresh-data' });
     Promise.all([refetchExercises(), refetchCategories()])
       .then(() => {
-        console.log('Data refreshed successfully');
+        console.log('✅ REFRESH SUCCESS - Data refreshed successfully');
         toast.success('Data refreshed successfully', { id: 'refresh-data' });
       })
       .catch((error) => {
-        console.error('Refresh failed:', error);
+        console.error('❌ REFRESH FAILED - Refresh failed:', error);
         toast.error(`Refresh failed: ${error.message}`, { id: 'refresh-data' });
       });
   }, [refetchExercises, refetchCategories]);
