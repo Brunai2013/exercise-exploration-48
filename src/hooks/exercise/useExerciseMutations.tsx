@@ -70,14 +70,25 @@ export function useExerciseMutations() {
       const exerciseId = uuidv4();
       let imageUrl = exerciseData.imageUrl || '';
       
+      console.log('🔄 Creating exercise:', {
+        exerciseId,
+        name: exerciseData.name,
+        hasUploadedImage: !!uploadedImage,
+        existingImageUrl: imageUrl
+      });
+      
       // If there's an uploaded image, process it
       if (uploadedImage) {
         try {
+          console.log('📤 Uploading new image for exercise creation...');
           const result = await uploadExerciseImage(uploadedImage);
-          imageUrl = result.url;
-          console.log('Image uploaded successfully:', result);
+          imageUrl = result.path; // Store the path, not the full URL
+          console.log('✅ Image uploaded successfully:', {
+            path: result.path,
+            url: result.url
+          });
         } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
+          console.error('❌ Error uploading image:', uploadError);
           toast.error('Failed to upload image, but will continue with exercise creation');
         }
       }
@@ -91,13 +102,14 @@ export function useExerciseMutations() {
         imageUrl: imageUrl
       };
       
-      console.log('Creating exercise with data:', exercise);
+      console.log('💾 Saving exercise to database:', exercise);
       
       // Save to database
       await createExerciseMutation.mutateAsync(exercise);
+      console.log('✅ Exercise created successfully');
       return true;
     } catch (error) {
-      console.error('Error adding exercise:', error);
+      console.error('💥 Error adding exercise:', error);
       return false;
     }
   };
@@ -133,13 +145,25 @@ export function useExerciseMutations() {
       
       let imageUrl = exerciseData.imageUrl || '';
       
+      console.log('🔄 Updating exercise:', {
+        exerciseId,
+        name: exerciseData.name,
+        hasUploadedImage: !!uploadedImage,
+        existingImageUrl: imageUrl
+      });
+      
       // If there's an uploaded image, process it
       if (uploadedImage) {
         try {
+          console.log('📤 Uploading new image for exercise update...');
           const result = await uploadExerciseImage(uploadedImage);
-          imageUrl = result.url;
+          imageUrl = result.path; // Store the path, not the full URL
+          console.log('✅ Image uploaded successfully:', {
+            path: result.path,
+            url: result.url
+          });
         } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
+          console.error('❌ Error uploading image:', uploadError);
           toast.error('Failed to upload image, but will continue with exercise update');
         }
       }
@@ -153,11 +177,14 @@ export function useExerciseMutations() {
         imageUrl: imageUrl
       };
       
+      console.log('💾 Updating exercise in database:', exercise);
+      
       // Update in database
       await updateExerciseMutation.mutateAsync(exercise);
+      console.log('✅ Exercise updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating exercise:', error);
+      console.error('💥 Error updating exercise:', error);
       return false;
     }
   };

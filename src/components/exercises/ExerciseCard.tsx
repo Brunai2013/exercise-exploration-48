@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Exercise } from '@/lib/types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -32,50 +31,71 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   
   // Check if the image URL is valid on component mount
   useEffect(() => {
+    console.log('🖼️ ExerciseCard processing image for:', exercise.name, {
+      exerciseId: exercise.id,
+      originalImageUrl: exercise.imageUrl,
+      imageUrlType: exercise.imageUrl ? (exercise.imageUrl.startsWith('http') ? 'Full URL' : 'Storage Path') : 'None'
+    });
+    
     if (exercise.imageUrl) {
-      console.log('Trying to load image for exercise:', exercise.name, exercise.imageUrl);
-      
       // If it's from Supabase Storage but doesn't have the full URL
       if (exercise.imageUrl.startsWith('exercises/') && !exercise.imageUrl.startsWith('http')) {
-        console.log('Converting storage path to URL:', exercise.imageUrl);
-        // We need to convert it to a full URL - this should have been done in the API layer
-        // but we'll handle it here as a fallback
+        console.log('🔄 Converting storage path to URL for:', exercise.name, exercise.imageUrl);
+        // We need to convert it to a full URL
         import('@/integrations/supabase/client').then(({ supabase }) => {
           const { data } = supabase.storage
             .from('exercise-images')
             .getPublicUrl(exercise.imageUrl);
           
           const fullUrl = data?.publicUrl;
-          console.log('Converted to full URL:', fullUrl);
+          console.log('🔗 Converted to full URL:', {
+            exercise: exercise.name,
+            originalPath: exercise.imageUrl,
+            fullUrl
+          });
           
           if (fullUrl) {
             setImageUrl(fullUrl);
             setImageError(false);
+            
+            // Test if the URL actually works
+            const img = new Image();
+            img.onload = () => {
+              console.log('✅ Image loaded successfully:', fullUrl);
+            };
+            img.onerror = () => {
+              console.error('❌ Image failed to load after conversion:', fullUrl);
+              setImageError(true);
+              setImageUrl(null);
+            };
+            img.src = fullUrl;
           } else {
-            console.warn('Failed to get public URL for:', exercise.imageUrl);
+            console.warn('⚠️ Failed to get public URL for:', exercise.imageUrl);
             setImageError(true);
           }
         });
       } else {
         // Regular URL or already full Supabase URL
-        // Create a new Image object to check if the URL is valid
+        console.log('🔍 Testing regular/full URL:', exercise.imageUrl);
         const img = new Image();
         img.onload = () => {
+          console.log('✅ Image loaded successfully:', exercise.imageUrl);
           setImageUrl(exercise.imageUrl);
           setImageError(false);
         };
         img.onerror = () => {
-          console.warn('Image failed to load:', exercise.imageUrl);
+          console.error('❌ Image failed to load:', exercise.imageUrl);
           setImageError(true);
           setImageUrl(null);
         };
         img.src = exercise.imageUrl;
       }
     } else {
+      console.log('📷 No image URL provided for:', exercise.name);
       setImageError(true);
       setImageUrl(null);
     }
-  }, [exercise.imageUrl, exercise.name]);
+  }, [exercise.imageUrl, exercise.name, exercise.id]);
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,7 +108,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   };
 
   const handleImageError = () => {
-    console.warn('Image error occurred for:', exercise.name);
+    console.warn('🚫 Image error occurred for:', exercise.name, imageUrl);
     setImageError(true);
     setImageUrl(null);
   };
