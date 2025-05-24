@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw, Sparkles, Database, Settings } from 'lucide-react';
-import { SectionHeader } from '@/components/layout/SectionHeader';
+import SectionHeader from '@/components/layout/SectionHeader';
 import { useBulkUrlUpdate } from '@/hooks/exercise/useBulkUrlUpdate';
 
 interface ExerciseLibraryHeaderProps {
