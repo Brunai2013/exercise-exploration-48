@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -135,8 +134,8 @@ export const ensureFullImageUrl = (imagePath: string): string => {
   
   // If it's already a full URL, check if it's pointing to the correct domain
   if (imagePath.startsWith('http')) {
-    // Check if it's pointing to the wrong Supabase domain
-    if (imagePath.includes('dmmlcayednczwbojdhqs.supabase.co')) {
+    // Check if it's pointing to the wrong Supabase domain (the actual failing domain)
+    if (imagePath.includes('muchlcaupervmqgwlspk.supabase.co') || imagePath.includes('dmmlcayednczwbojdhqs.supabase.co')) {
       console.warn('🚨 WRONG DOMAIN - URL points to wrong Supabase domain, regenerating:', imagePath);
       // Extract the path from the wrong URL and regenerate with correct domain
       const pathMatch = imagePath.match(/\/exercises\/[^?]+/);
