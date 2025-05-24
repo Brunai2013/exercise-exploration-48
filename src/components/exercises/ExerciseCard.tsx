@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Exercise } from '@/lib/types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } from '@/components/ui/context-menu';
 import { Edit, Trash, Dumbbell } from 'lucide-react';
 import { useCategoryColors } from '@/hooks/useCategoryColors';
+import { ensureFullImageUrl } from '@/lib/storage';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -40,87 +42,46 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     });
     
     if (exercise.imageUrl) {
-      // If it's from Supabase Storage but doesn't have the full URL
-      if (exercise.imageUrl.startsWith('exercises/') && !exercise.imageUrl.startsWith('http')) {
-        console.log('🔄 PATH CONVERSION - Converting storage path to URL for card:', {
+      // Use the ensureFullImageUrl utility to handle all URL formats
+      const fullUrl = ensureFullImageUrl(exercise.imageUrl);
+      
+      if (fullUrl) {
+        console.log('🔍 CARD URL TEST - Testing processed URL for card:', {
           exerciseName: exercise.name,
-          storagePath: exercise.imageUrl,
+          exerciseId: exercise.id,
+          originalUrl: exercise.imageUrl,
+          processedUrl: fullUrl,
           timestamp: new Date().toISOString()
         });
-        // We need to convert it to a full URL
-        import('@/integrations/supabase/client').then(({ supabase }) => {
-          const { data } = supabase.storage
-            .from('exercise-images')
-            .getPublicUrl(exercise.imageUrl);
-          
-          const fullUrl = data?.publicUrl;
-          console.log('🔗 URL CONVERTED - Storage path converted to full URL:', {
-            exerciseName: exercise.name,
-            exerciseId: exercise.id,
-            originalPath: exercise.imageUrl,
-            convertedUrl: fullUrl,
-            timestamp: new Date().toISOString()
-          });
-          
-          if (fullUrl) {
-            setImageUrl(fullUrl);
-            setImageError(false);
-            
-            // Test if the URL actually works
-            const img = new Image();
-            img.onload = () => {
-              console.log('✅ CARD IMAGE SUCCESS - Image loaded successfully in card:', {
-                exerciseName: exercise.name,
-                url: fullUrl,
-                timestamp: new Date().toISOString()
-              });
-            };
-            img.onerror = () => {
-              console.error('❌ CARD IMAGE FAILED - Image failed to load in card after conversion:', {
-                exerciseName: exercise.name,
-                url: fullUrl,
-                timestamp: new Date().toISOString()
-              });
-              setImageError(true);
-              setImageUrl(null);
-            };
-            img.src = fullUrl;
-          } else {
-            console.warn('⚠️ URL CONVERSION FAILED - Failed to get public URL for card:', {
-              exerciseName: exercise.name,
-              originalPath: exercise.imageUrl,
-              timestamp: new Date().toISOString()
-            });
-            setImageError(true);
-          }
-        });
-      } else {
-        // Regular URL or already full Supabase URL
-        console.log('🔍 DIRECT URL TEST - Testing regular/full URL for card:', {
-          exerciseName: exercise.name,
-          url: exercise.imageUrl,
-          timestamp: new Date().toISOString()
-        });
+        
+        // Test if the URL actually works
         const img = new Image();
         img.onload = () => {
-          console.log('✅ DIRECT URL SUCCESS - Image loaded successfully for card:', {
+          console.log('✅ CARD IMAGE SUCCESS - Image loaded successfully in card:', {
             exerciseName: exercise.name,
-            url: exercise.imageUrl,
+            url: fullUrl,
             timestamp: new Date().toISOString()
           });
-          setImageUrl(exercise.imageUrl);
+          setImageUrl(fullUrl);
           setImageError(false);
         };
         img.onerror = () => {
-          console.error('❌ DIRECT URL FAILED - Image failed to load for card:', {
+          console.error('❌ CARD IMAGE FAILED - Image failed to load in card:', {
             exerciseName: exercise.name,
-            url: exercise.imageUrl,
+            url: fullUrl,
             timestamp: new Date().toISOString()
           });
           setImageError(true);
           setImageUrl(null);
         };
-        img.src = exercise.imageUrl;
+        img.src = fullUrl;
+      } else {
+        console.warn('⚠️ URL PROCESSING FAILED - Failed to process URL for card:', {
+          exerciseName: exercise.name,
+          originalUrl: exercise.imageUrl,
+          timestamp: new Date().toISOString()
+        });
+        setImageError(true);
       }
     } else {
       console.log('📷 NO IMAGE - No image URL provided for card:', {

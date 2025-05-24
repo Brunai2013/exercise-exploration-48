@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -122,13 +123,19 @@ export const deleteExerciseImage = async (filePath: string): Promise<void> => {
 
 // Utility function to ensure we always have a full URL for storage paths
 export const ensureFullImageUrl = (imagePath: string): string => {
-  if (!imagePath) return '';
+  if (!imagePath) {
+    console.log('⚠️ EMPTY PATH - No image path provided');
+    return '';
+  }
   
-  console.log('🔄 Processing image path:', imagePath);
+  console.log('🔄 URL PROCESSING - Processing image path:', {
+    originalPath: imagePath,
+    pathType: imagePath.startsWith('http') ? 'Full URL' : 'Storage Path'
+  });
   
   // If it's already a full URL, return it as is
   if (imagePath.startsWith('http')) {
-    console.log('✅ Already a full URL:', imagePath);
+    console.log('✅ ALREADY FULL URL - Path is already a complete URL:', imagePath);
     return imagePath;
   }
   
@@ -138,15 +145,34 @@ export const ensureFullImageUrl = (imagePath: string): string => {
       .from('exercise-images')
       .getPublicUrl(imagePath);
     
-    console.log('🔗 Converted storage path to URL:', {
+    console.log('🔗 PATH CONVERTED - Storage path converted to full URL:', {
       originalPath: imagePath,
-      publicUrl: data?.publicUrl
+      publicUrl: data?.publicUrl,
+      timestamp: new Date().toISOString()
     });
     
     return data?.publicUrl || '';
   }
   
-  console.log('⚠️ Unknown image path format:', imagePath);
+  // Handle case where path might be just a filename (this is likely the bug)
+  if (!imagePath.includes('/')) {
+    console.warn('🚨 FILENAME ONLY - Path appears to be just a filename, attempting to construct full path:', imagePath);
+    const fullPath = `exercises/${imagePath}`;
+    const { data } = supabase.storage
+      .from('exercise-images')
+      .getPublicUrl(fullPath);
+    
+    console.log('🔧 FILENAME FIXED - Constructed full URL from filename:', {
+      originalFilename: imagePath,
+      constructedPath: fullPath,
+      publicUrl: data?.publicUrl,
+      timestamp: new Date().toISOString()
+    });
+    
+    return data?.publicUrl || '';
+  }
+  
+  console.warn('⚠️ UNKNOWN FORMAT - Unknown image path format, returning as-is:', imagePath);
   // Return the original path if it doesn't match any patterns
   return imagePath;
 };

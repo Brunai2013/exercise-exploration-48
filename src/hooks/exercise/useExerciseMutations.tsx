@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addExercise, updateExercise, deleteExercise, addMultipleExercises } from '@/lib/exercises';
 import { Exercise } from '@/lib/types';
@@ -69,25 +70,29 @@ export function useExerciseMutations() {
       const exerciseId = uuidv4();
       let imageUrl = exerciseData.imageUrl || '';
       
-      console.log('🔄 Creating exercise:', {
+      console.log('🔄 EXERCISE CREATE - Creating exercise:', {
         exerciseId,
         name: exerciseData.name,
         hasUploadedImage: !!uploadedImage,
-        existingImageUrl: imageUrl
+        existingImageUrl: imageUrl,
+        timestamp: new Date().toISOString()
       });
       
       // If there's an uploaded image, process it
       if (uploadedImage) {
         try {
-          console.log('📤 Uploading new image for exercise creation...');
+          console.log('📤 IMAGE UPLOAD CREATE - Uploading new image for exercise creation...');
           const result = await uploadExerciseImage(uploadedImage);
-          imageUrl = result.path; // Store the path, not the full URL
-          console.log('✅ Image uploaded successfully:', {
+          // Store the full URL instead of just the path
+          imageUrl = result.url;
+          console.log('✅ IMAGE UPLOAD CREATE SUCCESS - Image uploaded successfully:', {
             path: result.path,
-            url: result.url
+            url: result.url,
+            storingUrl: imageUrl,
+            timestamp: new Date().toISOString()
           });
         } catch (uploadError) {
-          console.error('❌ Error uploading image:', uploadError);
+          console.error('❌ IMAGE UPLOAD CREATE FAILED - Error uploading image:', uploadError);
           toast.error('Failed to upload image, but will continue with exercise creation');
         }
       }
@@ -101,14 +106,17 @@ export function useExerciseMutations() {
         imageUrl: imageUrl
       };
       
-      console.log('💾 Saving exercise to database:', exercise);
+      console.log('💾 DATABASE CREATE - Saving exercise to database:', {
+        exercise,
+        timestamp: new Date().toISOString()
+      });
       
       // Save to database
       await createExerciseMutation.mutateAsync(exercise);
-      console.log('✅ Exercise created successfully');
+      console.log('✅ EXERCISE CREATE SUCCESS - Exercise created successfully');
       return true;
     } catch (error) {
-      console.error('💥 Error adding exercise:', error);
+      console.error('💥 EXERCISE CREATE ERROR - Error adding exercise:', error);
       return false;
     }
   };
@@ -144,7 +152,7 @@ export function useExerciseMutations() {
       
       let imageUrl = exerciseData.imageUrl || '';
       
-      console.log('🔄 UPDATE STARTING - Updating exercise:', {
+      console.log('🔄 EXERCISE UPDATE - Updating exercise:', {
         exerciseId,
         exerciseName: exerciseData.name,
         hasUploadedImage: !!uploadedImage,
@@ -157,18 +165,20 @@ export function useExerciseMutations() {
       // If there's an uploaded image, process it
       if (uploadedImage) {
         try {
-          console.log('📤 IMAGE UPLOAD - Starting image upload for exercise update...');
+          console.log('📤 IMAGE UPLOAD UPDATE - Starting image upload for exercise update...');
           const result = await uploadExerciseImage(uploadedImage);
-          imageUrl = result.path; // Store the path, not the full URL
-          console.log('✅ IMAGE UPLOAD SUCCESS - Image uploaded successfully for update:', {
+          // Store the full URL instead of just the path
+          imageUrl = result.url;
+          console.log('✅ IMAGE UPLOAD UPDATE SUCCESS - Image uploaded successfully for update:', {
             exerciseId,
             exerciseName: exerciseData.name,
             uploadPath: result.path,
             uploadUrl: result.url,
+            storingUrl: imageUrl,
             timestamp: new Date().toISOString()
           });
         } catch (uploadError) {
-          console.error('❌ IMAGE UPLOAD FAILED - Error uploading image for update:', {
+          console.error('❌ IMAGE UPLOAD UPDATE FAILED - Error uploading image for update:', {
             exerciseId,
             exerciseName: exerciseData.name,
             uploadError,
@@ -194,7 +204,7 @@ export function useExerciseMutations() {
       
       // Update in database
       await updateExerciseMutation.mutateAsync(exercise);
-      console.log('✅ UPDATE COMPLETE - Exercise updated successfully:', {
+      console.log('✅ EXERCISE UPDATE SUCCESS - Exercise updated successfully:', {
         exerciseId,
         exerciseName: exerciseData.name,
         finalImageUrl: imageUrl,
@@ -208,7 +218,7 @@ export function useExerciseMutations() {
       
       return true;
     } catch (error) {
-      console.error('💥 UPDATE ERROR - Error updating exercise:', {
+      console.error('💥 EXERCISE UPDATE ERROR - Error updating exercise:', {
         exerciseId,
         exerciseName: exerciseData.name,
         error,
