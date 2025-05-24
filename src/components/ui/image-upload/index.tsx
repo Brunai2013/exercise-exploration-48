@@ -34,10 +34,12 @@ export function ImageUpload({
     if (!files || files.length === 0) return;
     
     const file = files[0];
+    console.log('Processing new file:', file.name);
     processImage(
       file,
       { maxSizeMB, minWidth, minHeight, maxWidth, maxHeight, aspectRatio },
       (optimizedFile, optimizedDataUrl) => {
+        console.log('Image processed successfully');
         setPreview(optimizedDataUrl);
         onImageChange(optimizedFile, optimizedDataUrl);
       }
@@ -45,9 +47,17 @@ export function ImageUpload({
   };
 
   const removeImage = () => {
+    console.log('Removing image');
     setPreview(null);
     if (inputRef.current) inputRef.current.value = "";
     onImageChange(null, null);
+  };
+
+  const replaceImage = () => {
+    console.log('Replace image triggered, opening file dialog');
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -72,7 +82,9 @@ export function ImageUpload({
   };
 
   const handleClick = () => {
-    inputRef.current?.click();
+    if (!preview) {
+      inputRef.current?.click();
+    }
   };
 
   return (
@@ -94,7 +106,7 @@ export function ImageUpload({
             previewUrl={preview}
             alt={alt}
             onRemove={removeImage}
-            onReplace={handleClick}
+            onReplace={replaceImage}
           />
         ) : (
           <>
@@ -107,17 +119,19 @@ export function ImageUpload({
               aspectRatio={aspectRatio}
               onClick={handleClick}
             />
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(e) => handleFileChange(e.target.files)}
-              {...props}
-            />
           </>
         )}
       </div>
+      
+      {/* Hidden file input that's always present */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => handleFileChange(e.target.files)}
+        {...props}
+      />
       
       {helpText && !preview && (
         <p className="text-xs text-muted-foreground">{helpText}</p>

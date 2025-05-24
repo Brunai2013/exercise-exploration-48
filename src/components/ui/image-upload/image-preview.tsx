@@ -16,6 +16,20 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
   onRemove,
   onReplace,
 }) => {
+  const handleReplaceClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Replace Image button clicked');
+    onReplace();
+  };
+
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Remove Image button clicked');
+    onRemove();
+  };
+
   return (
     <div className="relative w-full">
       <img
@@ -28,10 +42,7 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
         variant="destructive"
         size="icon"
         className="absolute top-2 right-2"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
+        onClick={handleRemoveClick}
       >
         <X className="h-4 w-4" />
       </Button>
@@ -39,8 +50,8 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
         type="button" 
         variant="secondary"
         size="sm"
-        className="mt-2"
-        onClick={onReplace}
+        className="mt-2 w-full"
+        onClick={handleReplaceClick}
       >
         <Upload className="h-4 w-4 mr-2" />
         Replace Image

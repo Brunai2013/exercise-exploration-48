@@ -64,7 +64,7 @@ const ImageSection: React.FC<ImageSectionProps> = ({
         
         {imagePreview && (
           <p className="text-xs text-muted-foreground mt-2">
-            Current image is displayed above. Click the image to replace it.
+            Current image is displayed above. Click "Replace Image" to change it.
           </p>
         )}
       </div>
