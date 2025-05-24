@@ -120,7 +120,7 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
       {individualExercises.length > 0 && (
         <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
           {exercisePairs.map((pair, pairIndex) => (
-            <React.Fragment key={`pair-${pairIndex}`}>
+            <div key={`pair-${pairIndex}`}>
               {pair.map((exerciseItem) => {
                 const exerciseIndex = exerciseIndexMap[exerciseItem.id];
                 
@@ -143,7 +143,7 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
                   />
                 );
               })}
-            </React.Fragment>
+            </div>
           ))}
         </div>
       )}
